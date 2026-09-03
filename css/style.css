@@ -1,4 +1,4 @@
-/* Google Fonts: Hind Siliguri (মার্জিত বাংলা) + Inter (Gemini Style English) */
+/* Google Fonts: Hind Siliguri + Inter */
 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
@@ -37,7 +37,6 @@ body {
     position: relative;
 }
 
-/* টাইটেল ও সাব-টাইটেল ফন্ট স্টাইলিং */
 h1, h2, h3, .title, .btn-submit, .btn-ghost, .btn-gen {
     font-family: 'Hind Siliguri', 'Inter', sans-serif;
     font-weight: 700;
@@ -48,7 +47,7 @@ p, p.desc, input, .mobile-toggle {
     font-weight: 400;
 }
 
-/* ইনলাইন নোটিফিকেশন টোস্ট */
+/* নোটিফিকেশন টোস্ট */
 .notification-toast {
     position: fixed;
     top: 20px;
@@ -129,7 +128,6 @@ p, p.desc, input, .mobile-toggle {
     z-index: 2;
 }
 
-/* কাস্টম স্ক্রোলবার */
 .form-box::-webkit-scrollbar {
     width: 4px;
 }
@@ -151,7 +149,6 @@ p, p.desc, input, .mobile-toggle {
     pointer-events: none;
 }
 
-/* স্লাইড অ্যানিমেশন স্টেট */
 .auth-card.active .sign-in-box {
     opacity: 0;
     pointer-events: none;
@@ -208,7 +205,7 @@ p, p.desc, input, .mobile-toggle {
     text-align: center;
 }
 
-/* লোগো সেকশন - হালকা একটু ছোট ও ব্যালেন্সড সাইজ */
+/* লোগো সেকশন */
 .brand-logo {
     display: flex;
     justify-content: center;
@@ -284,7 +281,7 @@ p.desc {
 
 .input-group input {
     width: 100%;
-    padding: 11px 40px 11px 42px; /* ডানপাশে আইকনের জন্য স্পেস */
+    padding: 11px 40px 11px 42px;
     background: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
@@ -310,7 +307,6 @@ p.desc {
     pointer-events: none;
 }
 
-/* পাসওয়ার্ড শো/হাইড আইকন স্টাইলিং */
 .toggle-password {
     position: absolute;
     right: 14px;
@@ -325,6 +321,26 @@ p.desc {
 
 .toggle-password:hover {
     color: var(--primary-pink);
+}
+
+/* পাসওয়ার্ড ভুলে গেছেন স্টাইলিং */
+.forgot-pass-wrap {
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 0px;
+}
+
+.forgot-pass-wrap a {
+    color: var(--primary-pink);
+    font-size: 0.65rem;
+    text-decoration: none;
+    transition: color 0.3s, text-shadow 0.3s;
+    
+}
+
+.forgot-pass-wrap a:hover {
+    color: #ffffff;
+    text-shadow: 0 0 8px var(--glow-pink);
 }
 
 /* ইউজারনেম জেনারেটর */
@@ -466,6 +482,7 @@ p.desc {
         100% { transform: scale(0.8); }
     }
 }
+
 /* Footer Navigation Links */
 .auth-footer {
     position: absolute;
@@ -503,10 +520,9 @@ p.desc {
     font-size: 0.8rem;
 }
 
-/* Mobile Responsiveness for Footer */
 @media (max-width: 768px) {
     body {
-        padding-bottom: 50px; /* ফুটারের জন্য বাড়তি জায়গা */
+        padding-bottom: 50px;
     }
     .auth-footer {
         bottom: 12px;
