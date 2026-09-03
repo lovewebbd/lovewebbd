@@ -33,7 +33,7 @@ function showNotification(msg, type = 'error') {
     clearTimeout(notifTimeout);
     notifTimeout = setTimeout(() => {
         notification.classList.remove('show');
-    }, 2800);
+    }, 3200);
 }
 
 // পেজ লোড হওয়ার সময় সক্রিয় সেশন পরীক্ষা ও অটো-ফিল লজিক
@@ -58,7 +58,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// "পাসওয়ার্ড ভুলে গেছেন?" লিঙ্কে ক্লিক করলে ইমেইল সেভ করা ও রিডাইরেক্ট করা
+// "পাসওয়ার্ড ভুলে গেছেন?" লিঙ্কে ক্লিক করলে ইমেইল সেভ করা
 if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener('click', (e) => {
         sessionStorage.setItem('allow_reset_access', 'true');
@@ -306,6 +306,17 @@ async function checkUsernameExists(username) {
     return data && data.length > 0;
 }
 
+// ইমেইলের পূর্ব অস্তিত্ব পরীক্ষা (Supabase)
+async function checkEmailExists(email) {
+    const { data, error } = await _supabase
+        .from('User_Information')
+        .select('email')
+        .eq('email', email);
+    
+    if (error) return false;
+    return data && data.length > 0;
+}
+
 // সাইন-আপ ফর্ম সাবমিট
 const signUpForm = document.getElementById('signUpForm');
 if (signUpForm) {
@@ -416,7 +427,7 @@ if (signInForm) {
 }
 
 // =========================================
-// পাসওয়ার্ড রিসেট রিকোয়েস্ট লজিক (reset-password/index.html)
+// পাসওয়ার্ড রিসেট রিকোয়েস্ট লজিক (Database Validation সহ)
 // =========================================
 const resetRequestForm = document.getElementById('reset-request-form');
 if (resetRequestForm) {
@@ -436,12 +447,22 @@ if (resetRequestForm) {
             return;
         }
 
-        // ইমেইল স্টোর করা যাতে verification.html পেজে পাওয়া যায়
+        // ১. ডেটাবেজে ইমেইলটির অস্তিত্ব রয়েছে কিনা পরীক্ষা
+        showNotification('অ্যাকাউন্ট অনুসন্ধান করা হচ্ছে...', 'success');
+        const exists = await checkEmailExists(emailValue);
+
+        // ২. ইমেইল না থাকলে ওয়ার্নিং নোটিফিকেশন প্রদর্শন
+        if (!exists) {
+            showNotification('আপনার এই ইমেইলে কোনো অ্যাকাউন্ট নিবন্ধিত নেই। দয়া করে সাইন আপ করুন।', 'error');
+            return;
+        }
+
+        // ৩. ইমেইল পাওয়া গেলে রিসেট প্রসেস শুরু করা
         localStorage.setItem('reset_email_target', emailValue);
-        showNotification('কোড পাঠানো হচ্ছে...', 'success');
+        showNotification('ভেরিফিকেশন কোড পাঠানো হচ্ছে...', 'success');
 
         setTimeout(() => {
             window.location.href = `verification.html?email=${encodeURIComponent(emailValue)}`;
-        }, 1000);
+        }, 1200);
     });
 }
