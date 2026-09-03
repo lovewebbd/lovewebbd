@@ -17,7 +17,7 @@ const phoneInput = document.getElementById('signUpPhone');
 const emailInput = document.getElementById('signUpEmail');
 const passwordInput = document.getElementById('signUpPassword');
 const confirmPasswordInput = document.getElementById('signUpConfirmPassword');
-const strengthMeter = document.getElementById('strengthMeter');
+const strengthMeter = document.getElementById('strengthMeter') || document.getElementById('strengthBar');
 const strengthText = document.getElementById('strengthText');
 const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 
@@ -66,7 +66,6 @@ if (forgotPasswordLink) {
         const signInIdentifier = document.getElementById('signInIdentifier');
         if (signInIdentifier) {
             const val = signInIdentifier.value.trim().toLowerCase();
-            // ইউজার ইমেইল ইনপুট দিয়ে থাকলে তা সেভ করা হবে
             if (val.includes('@')) {
                 localStorage.setItem('reset_email_target', val);
             }
@@ -102,7 +101,6 @@ function preventSpaces(elementId) {
     }
 }
 
-// সাইন-ইন, সাইন-আপ ও রিসেট ফিল্ডে স্পেস ব্লক
 preventSpaces('signInIdentifier');
 preventSpaces('signInPassword');
 preventSpaces('signUpUsername');
@@ -111,6 +109,8 @@ preventSpaces('signUpPhone');
 preventSpaces('signUpPassword');
 preventSpaces('signUpConfirmPassword');
 preventSpaces('reset-email');
+preventSpaces('newPassword');
+preventSpaces('confirmNewPassword');
 
 // =========================================
 // পাসওয়ার্ড দেখা ও আড়াল করার লজিক
@@ -427,8 +427,10 @@ if (signInForm) {
 }
 
 // =========================================
-// পাসওয়ার্ড রিসেট রিকোয়েস্ট লজিক (Database Validation সহ)
+// পাসওয়ার্ড রিসেট, OTP ভেরিফিকেশন ও লাইভ টাইমার লজিক
 // =========================================
+
+// ১. রিসেট রিকোয়েস্ট (reset-password/index.html)
 const resetRequestForm = document.getElementById('reset-request-form');
 if (resetRequestForm) {
     resetRequestForm.addEventListener('submit', async (e) => {
@@ -436,107 +438,292 @@ if (resetRequestForm) {
         const resetEmailInput = document.getElementById('reset-email');
         const emailValue = resetEmailInput ? resetEmailInput.value.trim().toLowerCase() : '';
 
-        if (!emailValue) {
-            showNotification('অনুগ্রহ করে একটি ইমেইল প্রদান করুন।', 'error');
-            return;
-        }
+        if (!emailValue) return showNotification('অনুগ্রহ করে একটি ইমেইল প্রদান করুন।', 'error');
 
         const emailValidation = checkAllowedEmail(emailValue);
-        if (!emailValidation.isValid) {
-            showNotification(emailValidation.msg, 'error');
-            return;
-        }
+        if (!emailValidation.isValid) return showNotification(emailValidation.msg, 'error');
 
-        // ১. ডেটাবেজে ইমেইলটির অস্তিত্ব রয়েছে কিনা পরীক্ষা
         showNotification('অ্যাকাউন্ট অনুসন্ধান করা হচ্ছে...', 'success');
         const exists = await checkEmailExists(emailValue);
 
-        // ২. ইমেইল না থাকলে ওয়ার্নিং নোটিফিকেশন প্রদর্শন
         if (!exists) {
-            showNotification('আপনার এই ইমেইলে কোনো অ্যাকাউন্ট নিবন্ধিত নেই। দয়া করে সাইন আপ করুন।', 'error');
-            return;
+            return showNotification('আপনার এই ইমেইলে কোনো অ্যাকাউন্ট নিবন্ধিত নেই।', 'error');
         }
 
-        // ৩. ইমেইল পাওয়া গেলে রিসেট প্রসেস শুরু করা
-        localStorage.setItem('reset_email_target', emailValue);
-        showNotification('ভেরিফিকেশন কোড পাঠানো হচ্ছে...', 'success');
+        // ২০ মিনিট রিসেন্ড চেক
+        const lastSentTime = localStorage.getItem(`otp_sent_time_${emailValue}`);
+        if (lastSentTime) {
+            const timeDiff = (Date.now() - parseInt(lastSentTime)) / (1000 * 60);
+            if (timeDiff < 20) {
+                const waitTime = Math.ceil(20 - timeDiff);
+                return showNotification(`অনুরোধ ব্যর্থ হয়েছে! অনুগ্রহ করে ${waitTime} মিনিট পর পুনরায় চেষ্টা করুন।`, 'error');
+            }
+        }
 
+        // ৬ ডিজিট OTP জেনারেট এবং ১০ মিনিটের মেয়াদ নির্ধারণ
+        const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        const now = Date.now();
+        const expiresAt = new Date(now + 10 * 60 * 1000).toISOString(); // ১০ মিনিট
+
+        const { error } = await _supabase
+            .from('Password_Resets')
+            .insert([{ email: emailValue, otp_code: generatedOTP, expires_at: expiresAt }]);
+
+        if (error) {
+            return showNotification('কোড পাঠাতে সমস্যা হয়েছে: ' + error.message, 'error');
+        }
+
+        localStorage.setItem(`otp_sent_time_${emailValue}`, now.toString());
+        localStorage.setItem(`otp_expiry_time_${emailValue}`, (now + 10 * 60 * 1000).toString());
+        sessionStorage.setItem('reset_verified_email', emailValue);
+        sessionStorage.setItem('reset_step', 'verification');
+
+        showNotification('ভেরিফিকেশন কোড পাঠানো হয়েছে! (১০ মিনিট মেয়াদ)', 'success');
         setTimeout(() => {
             window.location.href = `verification.html?email=${encodeURIComponent(emailValue)}`;
         }, 1200);
     });
 }
 
-// =========================================
-// ভেরিফিকেশন পেজ এক্সেস গার্ড এবং OTP ইনপুট হ্যান্ডলার
-// =========================================
+// ২. ভেরিফিকেশন পেজ (reset-password/verification.html)
 if (window.location.pathname.includes('verification.html')) {
-    
-    // --- ১. এক্সেস গার্ড লজিক (Access Control Guard) ---
     const urlParams = new URLSearchParams(window.location.search);
     const emailParam = urlParams.get('email');
     const referrer = document.referrer.toLowerCase();
-    
-    // রেফারার চেক (reset-password/index.html অথবা settings/index.html থেকে এসেছে কিনা)
-    const isValidReferrer = referrer.includes('reset-password/index.html') || 
-                            referrer.includes('reset-password/') || 
-                            referrer.includes('settings/index.html') || 
-                            referrer.includes('settings/');
+    const currentStep = sessionStorage.getItem('reset_step');
 
-    // ইমেইল প্যারামিটার এবং সঠিক পেজ থেকে না আসলে অ্যাক্সেস রিডাইরেক্ট করবে
-    if (!emailParam || !isValidReferrer) {
-        showNotification('অবৈধ প্রবেশ চেষ্টা! সঠিক উপায়ে অনুরোধ করুন।', 'error');
-        setTimeout(() => {
-            window.location.href = '../sign-in/index.html';
-        }, 1500);
+    const isValidReferrer = referrer.includes('reset-password/index.html') || referrer.includes('reset-password/') || referrer.includes('settings/');
+
+    if (!emailParam || !isValidReferrer || currentStep !== 'verification') {
+        showNotification('অবৈধ প্রবেশ চেষ্টা! সঠিক উপায়ে চেষ্টা করুন।', 'error');
+        setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
     }
 
-    // --- ২. স্মুথ OTP ইনপুট ও অটো-ফোকাস লজিক ---
-    const otpInputs = document.querySelectorAll('.otp-input');
+    // --- লাইভ ১০ মিনিট এক্সপায়ারি এবং ২০ মিনিট রিসেন্ড টাইমার লজিক ---
+    let expiryInterval, resendInterval;
 
+    function startLiveTimers() {
+        const otpExpiryEl = document.getElementById('otpExpiryTimer');
+        const resendCountdownEl = document.getElementById('resendCountdown');
+        const resendTimerText = document.getElementById('resendTimerText');
+        const btnResendCode = document.getElementById('btnResendCode');
+        const btnSubmitOtp = document.getElementById('btnSubmitOtp');
+
+        const expiryTimestamp = parseInt(localStorage.getItem(`otp_expiry_time_${emailParam}`) || '0');
+        const sentTimestamp = parseInt(localStorage.getItem(`otp_sent_time_${emailParam}`) || '0');
+
+        // ১. ১০ মিনিটের লাইভ OTP এক্সপায়ারি টাইমার
+        clearInterval(expiryInterval);
+        expiryInterval = setInterval(() => {
+            const now = Date.now();
+            const remainingMs = expiryTimestamp - now;
+
+            if (remainingMs <= 0) {
+                clearInterval(expiryInterval);
+                if (otpExpiryEl) otpExpiryEl.innerText = "মেয়াদ শেষ!";
+                if (btnSubmitOtp) btnSubmitOtp.disabled = true;
+                showNotification('ভেরিফিকেশন কোডের ১০ মিনিটের মেয়াদ শেষ হয়ে গেছে।', 'error');
+            } else {
+                const totalSeconds = Math.floor(remainingMs / 1000);
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = totalSeconds % 60;
+                if (otpExpiryEl) {
+                    otpExpiryEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }
+        }, 1000);
+
+        // ২. ২০ মিনিটের লাইভ রিসেন্ড লক টাইমার
+        clearInterval(resendInterval);
+        resendInterval = setInterval(() => {
+            const now = Date.now();
+            const resendMs = (sentTimestamp + 20 * 60 * 1000) - now; // ২০ মিনিট
+
+            if (resendMs <= 0) {
+                clearInterval(resendInterval);
+                if (btnResendCode) btnResendCode.disabled = false;
+                if (resendTimerText) resendTimerText.style.display = 'none';
+            } else {
+                if (btnResendCode) btnResendCode.disabled = true;
+                if (resendTimerText) resendTimerText.style.display = 'block';
+                const totalSeconds = Math.floor(resendMs / 1000);
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = totalSeconds % 60;
+                if (resendCountdownEl) {
+                    resendCountdownEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }
+        }, 1000);
+    }
+
+    startLiveTimers();
+
+    const otpInputs = document.querySelectorAll('.otp-input');
     if (otpInputs.length > 0) {
         otpInputs.forEach((input, index) => {
-            
-            // টাইপ করার সাথে সাথে পরের ফিল্ডে ফোকাস যাওয়া
             input.addEventListener('input', (e) => {
-                const value = e.target.value;
-                // শুধুমাত্র সংখ্যা নিশ্চিত করা
-                e.target.value = value.replace(/[^0-9]/g, '');
-
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
                 if (e.target.value.length === 1 && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
             });
 
-            // ব্যাকস্পেস (Backspace) প্রেস করলে আগের ফিল্ডে ফোকাস যাওয়া
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !input.value && index > 0) {
                     otpInputs[index - 1].focus();
                 }
             });
 
-            // পুরো ৬ ডিজিট কপি-পেস্ট (Paste) করার সুবিধা
             input.addEventListener('paste', (e) => {
                 e.preventDefault();
-                const pastedData = (e.clipboardData || window.clipboardData)
-                                    .getData('text')
-                                    .replace(/[^0-9]/g, ''); // শুধুমাত্র সংখ্যা ফিল্টার করা
-
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
                 if (pastedData) {
                     const digits = pastedData.split('');
-                    otpInputs.forEach((inp, idx) => {
-                        if (digits[idx]) {
-                            inp.value = digits[idx];
-                        }
-                    });
-                    
-                    // পেস্ট করার পর শেষ ইনপুটটিতে ফোকাস নেওয়া
+                    otpInputs.forEach((inp, idx) => { if (digits[idx]) inp.value = digits[idx]; });
                     const nextFocusIndex = Math.min(digits.length, otpInputs.length) - 1;
-                    if (nextFocusIndex >= 0) {
-                        otpInputs[nextFocusIndex].focus();
-                    }
+                    if (nextFocusIndex >= 0) otpInputs[nextFocusIndex].focus();
                 }
             });
+        });
+    }
+
+    // OTP নিশ্চিতকরণ ফর্ম
+    const verificationForm = document.getElementById('verificationForm');
+    if (verificationForm) {
+        verificationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            let enteredCode = '';
+            otpInputs.forEach(input => enteredCode += input.value);
+
+            if (enteredCode.length !== 6) return showNotification('৬ ডিজিটের পুরো কোডটি দিন।', 'error');
+
+            showNotification('কোড যাচাই করা হচ্ছে...', 'success');
+
+            const { data, error } = await _supabase
+                .from('Password_Resets')
+                .select('*')
+                .eq('email', emailParam)
+                .eq('otp_code', enteredCode)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (error || !data || data.length === 0) {
+                return showNotification('ভুল ভেরিফিকেশন কোড প্রদান করা হয়েছে।', 'error');
+            }
+
+            const record = data[0];
+            if (new Date() > new Date(record.expires_at)) {
+                return showNotification('ভেরিফিকেশন কোডের মেয়াদ (১০ মিনিট) শেষ হয়ে গেছে।', 'error');
+            }
+
+            sessionStorage.setItem('reset_step', 'new_password');
+            showNotification('কোড সঠিকভাবে যাচাই করা হয়েছে!', 'success');
+            setTimeout(() => {
+                window.location.href = `new-password.html?email=${encodeURIComponent(emailParam)}`;
+            }, 1000);
+        });
+    }
+
+    // রিসেন্ড কোড বাটন
+    const btnResendCode = document.getElementById('btnResendCode');
+    if (btnResendCode) {
+        btnResendCode.addEventListener('click', async () => {
+            const now = Date.now();
+            const lastSentTime = localStorage.getItem(`otp_sent_time_${emailParam}`);
+            
+            if (lastSentTime) {
+                const timeDiff = (now - parseInt(lastSentTime)) / (1000 * 60);
+                if (timeDiff < 20) {
+                    const waitTime = Math.ceil(20 - timeDiff);
+                    return showNotification(`পুনরায় কোড পাঠাতে আরও ${waitTime} মিনিট অপেক্ষা করুন।`, 'error');
+                }
+            }
+
+            const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
+
+            await _supabase.from('Password_Resets').insert([{ email: emailParam, otp_code: generatedOTP, expires_at: expiresAt }]);
+            
+            localStorage.setItem(`otp_sent_time_${emailParam}`, now.toString());
+            localStorage.setItem(`otp_expiry_time_${emailParam}`, (now + 10 * 60 * 1000).toString());
+
+            const btnSubmitOtp = document.getElementById('btnSubmitOtp');
+            if (btnSubmitOtp) btnSubmitOtp.disabled = false;
+
+            startLiveTimers();
+            showNotification('নতুন ভেরিফিকেশন কোড পাঠানো হয়েছে।', 'success');
+        });
+    }
+}
+
+// ৩. নতুন পাসওয়ার্ড সেট পেজ (reset-password/new-password.html)
+if (window.location.pathname.includes('new-password.html')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get('email');
+    const referrer = document.referrer.toLowerCase();
+    const currentStep = sessionStorage.getItem('reset_step');
+
+    const isValidReferrer = referrer.includes('verification.html');
+
+    if (!emailParam || !isValidReferrer || currentStep !== 'new_password') {
+        showNotification('অবৈধ এক্সেস! আপনি এই পেজে সরাসরি প্রবেশ করতে পারবেন না।', 'error');
+        setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
+    }
+
+    setupPasswordToggle('newPassword', 'toggleNewPassword');
+    setupPasswordToggle('confirmNewPassword', 'toggleConfirmPassword');
+
+    const newPasswordInput = document.getElementById('newPassword');
+    if (newPasswordInput) {
+        newPasswordInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            if (val.length === 0) {
+                if (strengthMeter) strengthMeter.style.width = '0%';
+                if (strengthText) strengthText.innerText = '';
+                return;
+            }
+
+            const result = checkPasswordStrength(val);
+            if (strengthMeter) {
+                strengthMeter.style.width = result.percent + '%';
+                strengthMeter.style.backgroundColor = result.color;
+            }
+
+            if (strengthText) {
+                strengthText.innerText = `পাসওয়ার্ডের মান: ${result.label}`;
+                strengthText.style.color = result.color;
+            }
+        });
+    }
+
+    const newPasswordForm = document.getElementById('newPasswordForm');
+    if (newPasswordForm) {
+        newPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value.trim();
+
+            if (newPassword.length < 8) return showNotification('পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।', 'error');
+            if (newPassword !== confirmNewPassword) return showNotification('পাসওয়ার্ড দুটি মিলছে না।', 'error');
+
+            const pwdStrength = checkPasswordStrength(newPassword);
+            if (pwdStrength.isWeak) return showNotification('দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়।', 'error');
+
+            showNotification('পাসওয়ার্ড আপডেট করা হচ্ছে...', 'success');
+
+            const { error } = await _supabase
+                .from('User_Information')
+                .update({ password: newPassword })
+                .eq('email', emailParam);
+
+            if (error) {
+                showNotification('পাসওয়ার্ড আপডেট করতে ব্যর্থ: ' + error.message, 'error');
+            } else {
+                sessionStorage.removeItem('reset_step');
+                sessionStorage.removeItem('reset_verified_email');
+                showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! লগইন করুন।', 'success');
+                setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
+            }
         });
     }
 }

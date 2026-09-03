@@ -15,6 +15,23 @@
 
     <!-- External CSS -->
     <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        .timer-box {
+            background: rgba(255, 42, 109, 0.1);
+            color: #ff2a6d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .btn-resend:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
 
@@ -40,6 +57,11 @@
             <h2 class="title">পিন ভেরিফিকেশন</h2>
             <p class="desc">আপনার ইমেইলে পাঠানো ৬ ডিজিটের ভেরিফিকেশন কোডটি নিচে দিন।</p>
 
+            <!-- 10 Minutes OTP Live Expiry Timer Container -->
+            <div id="otpExpiryTimerBox" class="timer-box">
+                <i class="fa-solid fa-clock"></i> কোডের মেয়াদ বাকি: <span id="otpExpiryTimer">10:00</span>
+            </div>
+
             <form id="verificationForm">
                 <!-- 6-Digit OTP Input Container -->
                 <div class="otp-container">
@@ -51,21 +73,24 @@
                     <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
                 </div>
 
-                <button type="submit" class="btn-submit">
+                <button type="submit" class="btn-submit" id="btnSubmitOtp">
                     কোড নিশ্চিত করুন <i class="fa-solid fa-circle-check" style="margin-left: 6px; font-size: 0.9rem;"></i>
                 </button>
             </form>
 
-            <!-- Resend Code Option -->
-            <div class="resend-wrap">
+            <!-- Resend Code Option with 20 Min Timer -->
+            <div class="resend-wrap" style="margin-top: 15px; text-align: center;">
                 <span>কোড পাননি?</span>
                 <button type="button" id="btnResendCode" class="btn-resend">পুনরায় পাঠান</button>
+                <div id="resendTimerText" style="font-size: 0.8rem; color: var(--text-sub); margin-top: 5px; display: none;">
+                    পুনরায় পাঠাতে পারবেন: <span id="resendCountdown" style="color: #ff2a6d; font-weight: 600;">20:00</span>
+                </div>
             </div>
 
             <!-- Back to Sign-in -->
             <div style="text-align: center; margin-top: 20px;">
                 <a href="../sign-in/index.html" class="footer-link">
-                    <i class="fa-solid fa-arrow-left"></i> মূল পেজে ফিরে যান
+                    <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান
                 </a>
             </div>
 
@@ -82,8 +107,8 @@
             <i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী
         </a>
     </footer>
-    
-        <!-- Script Link (Add this at the end of body) -->
+
+    <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/auth.js"></script>
 
