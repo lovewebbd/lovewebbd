@@ -450,20 +450,26 @@ if (resetRequestForm) {
             return showNotification('আপনার এই ইমেইলে কোনো অ্যাকাউন্ট নিবন্ধিত নেই।', 'error');
         }
 
-        // ২০ মিনিট রিসেন্ড চেক
+        const now = Date.now();
         const lastSentTime = localStorage.getItem(`otp_sent_time_${emailValue}`);
+
+        // যদি আগে থেকেই ১০ মিনিটের ভেতরে পাঠানো কোনো ওটিপি থাকে, তবে নতুন ওটিপি ডেটাবেজে ঢুকবে না, সে সরাসরি ভেরিফিকেশন পেজে চলে যাবে।
         if (lastSentTime) {
-            const timeDiff = (Date.now() - parseInt(lastSentTime)) / (1000 * 60);
-            if (timeDiff < 20) {
-                const waitTime = Math.ceil(20 - timeDiff);
-                return showNotification(`অনুরোধ ব্যর্থ হয়েছে! অনুগ্রহ করে ${waitTime} মিনিট পর পুনরায় চেষ্টা করুন।`, 'error');
+            const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
+            if (timeDiffMinutes < 10) {
+                sessionStorage.setItem('reset_verified_email', emailValue);
+                sessionStorage.setItem('reset_step', 'verification');
+                showNotification('আপনার পূর্বের ওটিপি কোডটি এখনো কার্যকর আছে।', 'success');
+                setTimeout(() => {
+                    window.location.href = `verification.html?email=${encodeURIComponent(emailValue)}`;
+                }, 1000);
+                return;
             }
         }
 
-        // ৬ ডিজিট OTP জেনারেট এবং ১০ মিনিটের মেয়াদ নির্ধারণ
+        // ১০ মিনিট পার হয়ে গেলে নতুন OTP তৈরি হবে
         const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-        const now = Date.now();
-        const expiresAt = new Date(now + 10 * 60 * 1000).toISOString(); // ১০ মিনিট
+        const expiresAt = new Date(now + 10 * 60 * 1000).toISOString(); // ১০ মিনিট মেয়াদ
 
         const { error } = await _supabase
             .from('Password_Resets')
@@ -533,11 +539,11 @@ if (window.location.pathname.includes('verification.html')) {
             }
         }, 1000);
 
-        // ২. ২০ মিনিটের লাইভ রিসেন্ড লক টাইমার
+        // ২. ২০ মিনিটের লাইভ রিসেন্ড লক টাইমার (২০ মিনিট না হওয়া পর্যন্ত ডেটাবেজে নতুন ওটিপি যাবে না)
         clearInterval(resendInterval);
         resendInterval = setInterval(() => {
             const now = Date.now();
-            const resendMs = (sentTimestamp + 20 * 60 * 1000) - now; // ২০ মিনিট
+            const resendMs = (sentTimestamp + 20 * 60 * 1000) - now; // ২০ মিনিট হিসাব
 
             if (resendMs <= 0) {
                 clearInterval(resendInterval);
@@ -624,21 +630,23 @@ if (window.location.pathname.includes('verification.html')) {
         });
     }
 
-    // রিসেন্ড কোড বাটন
+    // "পুনরায় পাঠান" (Resend Code) বাটন
     const btnResendCode = document.getElementById('btnResendCode');
     if (btnResendCode) {
         btnResendCode.addEventListener('click', async () => {
             const now = Date.now();
             const lastSentTime = localStorage.getItem(`otp_sent_time_${emailParam}`);
             
+            // ২০ মিনিট পার না হওয়া পর্যন্ত নতুন ওটিপি ঢুকবে না
             if (lastSentTime) {
-                const timeDiff = (now - parseInt(lastSentTime)) / (1000 * 60);
-                if (timeDiff < 20) {
-                    const waitTime = Math.ceil(20 - timeDiff);
+                const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
+                if (timeDiffMinutes < 20) {
+                    const waitTime = Math.ceil(20 - timeDiffMinutes);
                     return showNotification(`পুনরায় কোড পাঠাতে আরও ${waitTime} মিনিট অপেক্ষা করুন।`, 'error');
                 }
             }
 
+            // ২০ মিনিট পার হওয়ার পরেই কেবল ডেটাবেজে নতুন OTP যাবে
             const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
 
@@ -651,7 +659,7 @@ if (window.location.pathname.includes('verification.html')) {
             if (btnSubmitOtp) btnSubmitOtp.disabled = false;
 
             startLiveTimers();
-            showNotification('নতুন ভেরিফিকেশন কোড পাঠানো হয়েছে।', 'success');
+            showNotification('নতুন ভেরিফিকেশন কোড ডেটাবেজে যুক্ত করা হয়েছে ও পাঠানো হয়েছে।', 'success');
         });
     }
 }
