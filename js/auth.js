@@ -516,7 +516,7 @@ if (window.location.pathname.includes('verification.html')) {
         setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
     }
 
-    // --- লাইভ ১০ মিনিট এক্সপায়ারি এবং ২০ মিনিট রিসেন্ড টাইমার লজিক ---
+    // --- লাইভ ১০ মিনিট এক্সপায়ারি এবং ৫ মিনিট রিসেন্ড টাইমার লজিক ---
     let expiryInterval, resendInterval;
 
     function startLiveTimers() {
@@ -550,11 +550,11 @@ if (window.location.pathname.includes('verification.html')) {
             }
         }, 1000);
 
-        // ২. ২০ মিনিটের রিসেন্ড লক টাইমার
+        // ২. ৫ মিনিটের রিসেন্ড লক টাইমার (আপডেট করা হয়েছে)
         clearInterval(resendInterval);
         resendInterval = setInterval(() => {
             const now = Date.now();
-            const resendMs = (sentTimestamp + 20 * 60 * 1000) - now;
+            const resendMs = (sentTimestamp + 5 * 60 * 1000) - now; // ২০ মিনিটের জায়গায় ৫ মিনিট করা হলো
 
             if (resendMs <= 0) {
                 clearInterval(resendInterval);
@@ -650,8 +650,8 @@ if (window.location.pathname.includes('verification.html')) {
             
             if (lastSentTime) {
                 const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
-                if (timeDiffMinutes < 20) {
-                    const waitTime = Math.ceil(20 - timeDiffMinutes);
+                if (timeDiffMinutes < 5) { // ২০ মিনিটের জায়গায় ৫ মিনিট চেক করা হচ্ছে
+                    const waitTime = Math.ceil(5 - timeDiffMinutes);
                     return showNotification(`পুনরায় কোড পাঠাতে আরও ${waitTime} মিনিট অপেক্ষা করুন।`, 'error');
                 }
             }
@@ -719,7 +719,7 @@ if (window.location.pathname.includes('new-password.html')) {
         });
     }
 
-    // পাসওয়ার্ড আপডেট ও সাইন-ইন পেজে রিডাইরেক্ট (Heading)
+    // পাসওয়ার্ড আপডেট ও সাইন-ইন পেজে রিডাইরেক্ট
     const newPasswordForm = document.getElementById('newPasswordForm');
     if (newPasswordForm) {
         newPasswordForm.addEventListener('submit', async (e) => {

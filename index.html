@@ -4,11 +4,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+
   <title></title>
 </head>
 
 <body>
   <a href="/sign-in">go to login</a>
+  <button id="logoutBtn" class="logout-btn">লগআউট (Logout)</button>
+
+  <script type="text/javascript" charset="utf-8">
+    // লগআউট লজিক (Root index.html)
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', () => {
+              // সেশন ও স্টোরেজ ক্লিয়ার করা
+              localStorage.removeItem('loveweb_session');
+              sessionStorage.clear();
+              
+              showNotification('সফলভাবে লগআউট করা হয়েছে।', 'success');
+              
+              // সঠিক সাইন-ইন পেজ পাথ
+              setTimeout(() => {
+                  window.location.href = 'sign-in/index.html'; 
+              }, 1000);
+          });
+      }
+
+  </script>
 </body>
 
 </html>
