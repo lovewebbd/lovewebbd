@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons CDN (For Password Eye Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+    
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <!-- Dynamic Notification Toast -->
+    <div id="notification" class="notification-toast">
+        <span id="notifMessage"></span>
+    </div>
+
+    <!-- Main Card Container -->
+    <div class="auth-card" id="authCard">
+        
+        <!-- Watermark Background -->
+        <img src="../img/watermark.png" alt="LoveWeb Watermark" class="watermark-bg" onerror="this.style.display='none'">
+
+        <div class="forms-container">
+            
+            <!-- Sign In Box -->
+            <div class="form-box sign-in-box">
+                <div class="brand-logo">
+                    <img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img">
+                </div>
+                <h2 class="title">লগইন করুন</h2>
+                <p class="desc">প্রিয়জনের মুখে হাসি ফোটাতে আপনার অ্যাকাউন্টে সাইন ইন করুন।</p>
+                
+                <form id="signInForm">
+                    <div class="input-group">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <input type="text" id="signInIdentifier" placeholder="ইউজারনেম অথবা ইমেল" required>
+                    </div>
+
+                    <div class="input-group" style="position: relative;">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <input type="password" id="signInPassword" placeholder="পাসওয়ার্ড" required style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye toggle-password" id="toggleSignInPassword" style="position: absolute; right: 15px; cursor: pointer; color: #888;"></i>
+                    </div>
+
+                    <button type="submit" class="btn-submit">প্রবেশ করুন</button>
+                    <div class="mobile-toggle">অ্যাকাউন্ট নেই? <span id="mobileToSignUp">নতুন তৈরি করুন</span></div>
+                </form>
+            </div>
+
+            <!-- Sign Up Box -->
+            <div class="form-box sign-up-box">
+                <div class="brand-logo">
+                    <img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img">
+                </div>
+                <h2 class="title">নতুন অ্যাকাউন্ট</h2>
+                <p class="desc">আপনার প্রিয়জনের উইশিং সাইট তৈরি করতে আজই যুক্ত হন!</p>
+                
+                <form id="signUpForm">
+                    <div class="input-group">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <input type="text" id="signUpFullName" placeholder="আপনার পুরো নাম" required>
+                    </div>
+
+                    <div class="input-group-wrapper">
+                        <div class="username-wrapper">
+                            <div class="input-group">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
+                                <input type="text" id="signUpUsername" placeholder="ইউজারনেম" required>
+                            </div>
+                            <button type="button" class="btn-gen" id="btnGenerateUsername">Generate</button>
+                        </div>
+                        <div id="usernameError" class="inline-error"></div>
+                    </div>
+
+                    <div class="input-group">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <input type="email" id="signUpEmail" placeholder="ইমেল অ্যাড্রেস (example@gmail.com)" required>
+                    </div>
+
+                    <div class="input-group">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                        <input type="tel" id="signUpPhone" placeholder="ফোন নম্বর (01XXXXXXXXX)" maxlength="11" required>
+                    </div>
+
+                    <!-- Sign Up Password Field -->
+                    <div class="input-group" style="position: relative;">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <input type="password" id="signUpPassword" placeholder="পাসওয়ার্ড" required style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye toggle-password" id="toggleSignUpPassword" style="position: absolute; right: 15px; cursor: pointer; color: #888;"></i>
+                    </div>
+
+                    <!-- Password Strength Meter -->
+                    <div id="strengthMeter" style="height: 4px; width: 0%; transition: 0.3s; margin-top: -8px; margin-bottom: 6px; border-radius: 2px;"></div>
+                    <div id="strengthText" style="font-size: 0.75rem; margin-top: -4px; margin-bottom: 8px; text-align: left;"></div>
+
+                    <!-- Confirm Password Field -->
+                    <div class="input-group" style="position: relative;">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <input type="password" id="signUpConfirmPassword" placeholder="পাসওয়ার্ড নিশ্চিত করুন" required style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye toggle-password" id="toggleConfirmPassword" style="position: absolute; right: 15px; cursor: pointer; color: #888;"></i>
+                    </div>
+
+                    <button type="submit" class="btn-submit">অ্যাকাউন্ট খুলুন</button>
+                    <div class="mobile-toggle">ইতিমধ্যে অ্যাকাউন্ট আছে? <span id="mobileToSignIn">লগইন করুন</span></div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- Overlay for Desktop Transition -->
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h2 class="title">ফিরে আসায় স্বাগতম!</h2>
+                    <p class="desc">প্রিয়জনের বার্ষিকী বা বিশেষ দিনের উইশিং ওয়েবসাইটের আপডেট দেখতে সাইন ইন করুন।</p>
+                    <button class="btn-ghost" id="overlayBtnSignIn">লগইন করুন</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h2 class="title">নতুন যাত্রার শুরু!</h2>
+                    <p class="desc">আপনার ভালোবাসার সম্পর্ককে আরও সুন্দর ও রঙিন করতে আজই যুক্ত হন LoveWeb-এ।</p>
+                    <button class="btn-ghost" id="overlayBtnSignUp">সাইন আপ করুন</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- Footer Links for Help and Privacy -->
+    <footer class="auth-footer">
+        <a href="../help/index.html" class="footer-link">
+         <i class="fa-solid fa-circle-question"></i> সাহায্য
+         </a>
+          <span class="footer-divider">•</span>
+         <a href="../privacy-and-rules/index.html" class="footer-link">
+              <i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী
+         </a>
+    </footer>
+
+
+    <!-- External JavaScript Logic -->
+    <script src="../js/auth.js"></script>
+</body>
+</html>

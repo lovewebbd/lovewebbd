@@ -1,0 +1,383 @@
+// Supabase Credentials
+const SUPABASE_URL = "https://xotiwgyalsnqpzbvodmd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdGl3Z3lhbHNucXB6YnZvZG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTY2NDMsImV4cCI6MjEwMzkzMjY0M30.RoSQVbj0ZSPKlLEnD8MP5ECjDUUg0yNkJF2B6QHc-x8";
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// DOM Elements
+const authCard = document.getElementById('authCard');
+const overlayBtnSignIn = document.getElementById('overlayBtnSignIn');
+const overlayBtnSignUp = document.getElementById('overlayBtnSignUp');
+const mobileToSignUp = document.getElementById('mobileToSignUp');
+const mobileToSignIn = document.getElementById('mobileToSignIn');
+const notification = document.getElementById('notification');
+const notifMessage = document.getElementById('notifMessage');
+
+const usernameInput = document.getElementById('signUpUsername');
+const phoneInput = document.getElementById('signUpPhone');
+const emailInput = document.getElementById('signUpEmail');
+const passwordInput = document.getElementById('signUpPassword');
+const confirmPasswordInput = document.getElementById('signUpConfirmPassword');
+const strengthMeter = document.getElementById('strengthMeter');
+const strengthText = document.getElementById('strengthText');
+
+// ডাইনামিক নোটিফিকেশন প্রদর্শন ব্যবস্থা
+let notifTimeout;
+function showNotification(msg, type = 'error') {
+    notifMessage.innerText = msg;
+    notification.className = `notification-toast show ${type}`;
+    
+    clearTimeout(notifTimeout);
+    notifTimeout = setTimeout(() => {
+        notification.classList.remove('show');
+    }, 2800);
+}
+
+// পেজ লোড হওয়ার সময় সক্রিয় সেশন পরীক্ষা
+window.addEventListener('DOMContentLoaded', () => {
+    const activeSession = localStorage.getItem('loveweb_session');
+    if (activeSession) {
+        window.location.href = '../index.html';
+    }
+});
+
+// প্যানেল পরিবর্তনের অ্যানিমেশন
+if (overlayBtnSignUp) overlayBtnSignUp.addEventListener('click', () => authCard.classList.add('active'));
+if (overlayBtnSignIn) overlayBtnSignIn.addEventListener('click', () => authCard.classList.remove('active'));
+if (mobileToSignUp) mobileToSignUp.addEventListener('click', () => authCard.classList.add('mobile-active'));
+if (mobileToSignIn) mobileToSignIn.addEventListener('click', () => authCard.classList.remove('mobile-active'));
+
+// =========================================
+// স্পেস নিয়ন্ত্রণ ব্যবস্থা (শুধুমাত্র পুরো নাম ব্যতীত অন্যান্য ফিল্ডে)
+// =========================================
+function preventSpaces(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        // স্পেস কি প্রেস রোধন করা
+        el.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.keyCode === 32) {
+                e.preventDefault();
+                showNotification('এই ফিল্ডটিতে স্পেস ব্যবহার গ্রহণযোগ্য নয়।', 'error');
+            }
+        });
+
+        // পেস্ট করার ক্ষেত্রে স্বয়ংক্রিয়ভাবে স্পেস অপসারণ
+        el.addEventListener('input', (e) => {
+            if (e.target.value.includes(' ')) {
+                e.target.value = e.target.value.replace(/\s+/g, '');
+                showNotification('অপ্রয়োজনীয় স্পেস অপসারণ করা হয়েছে।', 'error');
+            }
+        });
+    }
+}
+
+// 'signUpFullName' ব্যতীত সকল ইনপুট ফিল্ডে স্পেস রোধন প্রয়োগ
+preventSpaces('signInIdentifier');
+preventSpaces('signInPassword');
+preventSpaces('signUpUsername');
+preventSpaces('signUpEmail');
+preventSpaces('signUpPhone');
+preventSpaces('signUpPassword');
+preventSpaces('signUpConfirmPassword');
+
+// =========================================
+// পাসওয়ার্ড দেখা ও আড়াল করার লজিক
+// =========================================
+function setupPasswordToggle(inputId, toggleIconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(toggleIconId);
+
+    if (input && icon) {
+        icon.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            icon.classList.toggle('fa-eye', !isPassword);
+            icon.classList.toggle('fa-eye-slash', isPassword);
+        });
+    }
+}
+
+setupPasswordToggle('signInPassword', 'toggleSignInPassword');
+setupPasswordToggle('signUpPassword', 'toggleSignUpPassword');
+setupPasswordToggle('signUpConfirmPassword', 'toggleConfirmPassword');
+
+// রিয়েল-টাইম ইউজারনেম দৈর্ঘ্য যাচাই (সর্বনিম্ন ৬ অক্ষর)
+if (usernameInput) {
+    usernameInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (val.length === 0) return;
+
+        if (val.length < 6) {
+            showNotification(`ইউজারনেম অন্তত ৬ অক্ষরের হতে হবে (আরও ${6 - val.length} টি অক্ষর প্রয়োজন)`, 'error');
+        } else {
+            showNotification('ইউজারনেমের দৈর্ঘ্য সঠিক রয়েছে।', 'success');
+        }
+    });
+}
+
+// রিয়েল-টাইম ফোন নম্বর যাচাই (১১ ডিজিট ও '01' দিয়ে শুরু)
+if (phoneInput) {
+    phoneInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, ''); // কেবল সংখ্যা
+        const val = e.target.value;
+
+        if (val.length === 0) return;
+
+        if (!val.startsWith('01')) {
+            showNotification('ফোন নম্বরটি অবশ্যই 01 দিয়ে শুরু হতে হবে।', 'error');
+        } else if (val.length < 11) {
+            showNotification(`১১ ডিজিট পূর্ণ হতে আরও ${11 - val.length} টি সংখ্যা প্রয়োজন`, 'error');
+        } else if (val.length === 11) {
+            showNotification('ফোন নম্বরটি সঠিকভাবে প্রদান করা হয়েছে।', 'success');
+        }
+    });
+}
+
+// অনুমোদিত ইমেল ডোমেইন যাচাইকরণ
+function checkAllowedEmail(email) {
+    const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'];
+    const parts = email.split('@');
+    
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+        return { isValid: false, msg: 'একটি বৈধ ইমেল ঠিকানা প্রদান করুন।' };
+    }
+
+    const domain = parts[1].toLowerCase();
+
+    if (!allowedDomains.includes(domain)) {
+        return { isValid: false, msg: 'শুধুমাত্র gmail, yahoo, outlook, hotmail বা icloud ইমেল গ্রহণযোগ্য।' };
+    }
+
+    return { isValid: true, msg: 'ইমেল ঠিকানাটি সঠিকভাবে প্রদান করা হয়েছে।' };
+}
+
+// রিয়েল-টাইম ইমেল যাচাই
+if (emailInput) {
+    emailInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim().toLowerCase();
+        if (val.length === 0) return;
+
+        if (!val.includes('@')) {
+            showNotification('ইমেল ঠিকানায় অবশ্যই "@" চিহ্নটি থাকতে হবে।', 'error');
+            return;
+        }
+
+        const result = checkAllowedEmail(val);
+        if (!result.isValid) {
+            showNotification(result.msg, 'error');
+        } else {
+            showNotification(result.msg, 'success');
+        }
+    });
+}
+
+// পাসওয়ার্ডের গ্রহণযোগ্যতা ও শক্তি মূল্যায়ন
+function checkPasswordStrength(pwd) {
+    let score = 0;
+
+    if (pwd.length >= 8) score += 1;
+    if (pwd.length >= 11) score += 1;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+
+    switch (score) {
+        case 1:
+        case 2:
+            return { label: 'দুর্বল (Weak)', color: '#ff4d4d', percent: 25, isWeak: true };
+        case 3:
+            return { label: 'মাঝারি (Medium)', color: '#ffaa00', percent: 50, isWeak: false };
+        case 4:
+            return { label: 'উত্তম (Good)', color: '#00bcd4', percent: 75, isWeak: false };
+        case 5:
+            return { label: 'অত্যন্ত শক্তিশালী (Strong)', color: '#00e676', percent: 100, isWeak: false };
+        default:
+            return { label: 'অত্যন্ত দুর্বল (Weak)', color: '#ff4d4d', percent: 10, isWeak: true };
+    }
+}
+
+// পাসওয়ার্ডের মান নির্দেশক ও রিয়েল-টাইম পরীক্ষা
+if (passwordInput) {
+    passwordInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+
+        if (val.length === 0) {
+            if (strengthMeter) strengthMeter.style.width = '0%';
+            if (strengthText) strengthText.innerText = '';
+            return;
+        }
+
+        if (val.length < 8) {
+            showNotification('পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।', 'error');
+        }
+
+        const result = checkPasswordStrength(val);
+
+        if (strengthMeter) {
+            strengthMeter.style.width = result.percent + '%';
+            strengthMeter.style.backgroundColor = result.color;
+        }
+
+        if (strengthText) {
+            strengthText.innerText = `পাসওয়ার্ডের মান: ${result.label}`;
+            strengthText.style.color = result.color;
+        }
+    });
+}
+
+// নিশ্চিতকরণ পাসওয়ার্ড মেলানোর রিয়েল-টাইম পরীক্ষা
+if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', (e) => {
+        const pwd = passwordInput.value;
+        const confirmPwd = e.target.value;
+
+        if (confirmPwd.length === 0) return;
+
+        if (pwd !== confirmPwd) {
+            showNotification('পাসওয়ার্ড দুটি মিলছে না।', 'error');
+        } else {
+            showNotification('পাসওয়ার্ড সফলভাবে মিলেছে।', 'success');
+        }
+    });
+}
+
+// স্বয়ংক্রিয় অনন্য ইউজারনেম তৈরি
+document.getElementById('btnGenerateUsername').addEventListener('click', () => {
+    const fullName = document.getElementById('signUpFullName').value.trim();
+    if (!fullName) {
+        showNotification('ইউজারনেম তৈরি করতে প্রথমে আপনার পুরো নাম লিখুন।', 'error');
+        return;
+    }
+    let cleanName = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (cleanName.length < 3) cleanName = (cleanName + 'user').slice(0, 4);
+    
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const generatedUsername = `${cleanName}${randomNum}`;
+    
+    document.getElementById('signUpUsername').value = generatedUsername;
+    const usernameErrEl = document.getElementById('usernameError');
+    if (usernameErrEl) usernameErrEl.style.display = 'none';
+    showNotification(`নতুন ইউজারনেম তৈরি হয়েছে: ${generatedUsername}`, 'success');
+});
+
+// ডাটাবেজে ইউজারনেমের পূর্ব অস্তিত্ব পরীক্ষা
+async function checkUsernameExists(username) {
+    const { data } = await _supabase
+        .from('User_Information')
+        .select('username')
+        .eq('username', username);
+    
+    return data && data.length > 0;
+}
+
+// ফর্ম জমাদান: সাইন-আপ (নতুন অ্যাকাউন্ট)
+document.getElementById('signUpForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const fullName = document.getElementById('signUpFullName').value.trim();
+    const username = document.getElementById('signUpUsername').value.trim();
+    const email = document.getElementById('signUpEmail').value.trim();
+    const phone = document.getElementById('signUpPhone').value.trim();
+    const password = document.getElementById('signUpPassword').value.trim();
+    const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : '';
+    const usernameErrEl = document.getElementById('usernameError');
+
+    // ইউজারনেম দৈর্ঘ্য পরীক্ষা
+    if (username.length < 6) {
+        showNotification('ইউজারনেম অন্তত ৬ অক্ষরের হওয়া আবশ্যক।', 'error');
+        return;
+    }
+
+    // ফোন নম্বর পরীক্ষা
+    if (!phone.startsWith('01') || phone.length !== 11) {
+        showNotification('১১ ডিজিটের সঠিক ফোন নম্বর প্রদান করুন (01XXXXXXXXX)।', 'error');
+        return;
+    }
+
+    // ইমেল পরীক্ষা
+    const emailValidation = checkAllowedEmail(email);
+    if (!emailValidation.isValid) {
+        showNotification(emailValidation.msg, 'error');
+        return;
+    }
+
+    // পাসওয়ার্ড পরীক্ষা
+    if (password.length < 8) {
+        showNotification('পাসওয়ার্ড বাধ্যতামূলকভাবে অন্তত ৮ অক্ষরের হতে হবে।', 'error');
+        return;
+    }
+
+    // নিশ্চিতকরণ পাসওয়ার্ড পরীক্ষা
+    if (password !== confirmPassword) {
+        showNotification('প্রদত্ত পাসওয়ার্ড দুটি একে অপরের সাথে মিলছে না।', 'error');
+        return;
+    }
+
+    // দুর্বল পাসওয়ার্ড প্রতিরোধ
+    const pwdStrength = checkPasswordStrength(password);
+    if (pwdStrength.isWeak) {
+        showNotification('দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়। সংখ্যা ও বিশেষ চিহ্ন যোগ করুন।', 'error');
+        return;
+    }
+
+    // ইউজারনেমের পুনরাবৃত্তি পরীক্ষা
+    const isTaken = await checkUsernameExists(username);
+    if (isTaken) {
+        if (usernameErrEl) {
+            usernameErrEl.innerText = "এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হয়েছে।";
+            usernameErrEl.style.display = "block";
+        }
+        showNotification("এই ইউজারনেমটি অনন্য নয়, অনুগ্রহ করে অন্য একটি চেষ্টা করুন।", "error");
+        return;
+    }
+    if (usernameErrEl) usernameErrEl.style.display = "none";
+
+    // ডাটাবেজে তথ্য সংরক্ষণ
+    const { data, error } = await _supabase
+        .from('User_Information')
+        .insert([
+            { full_name: fullName, username: username, email: email, phone: phone, password: password }
+        ])
+        .select();
+
+    if (error) {
+        showNotification("নিবন্ধন ব্যর্থ হয়েছে: " + error.message, "error");
+    } else {
+        showNotification("অ্যাকেউন্ট সফলভাবে তৈরি হয়েছে!", "success");
+        localStorage.setItem('loveweb_session', JSON.stringify(data[0]));
+        setTimeout(() => {
+            window.location.href = '../index.html';
+        }, 1200);
+    }
+});
+
+// ফর্ম জমাদান: সাইন-ইন (লগইন)
+document.getElementById('signInForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const identifier = document.getElementById('signInIdentifier').value.trim();
+    const password = document.getElementById('signInPassword').value.trim();
+
+    // ১. প্রথমে ইউজারনেম বা ইমেলের অস্তিত্ব পরীক্ষা
+    const { data: userCheck, error: userError } = await _supabase
+        .from('User_Information')
+        .select('*')
+        .or(`email.eq.${identifier},username.eq.${identifier}`);
+
+    if (userError || !userCheck || userCheck.length === 0) {
+        showNotification("এই তথ্যের সাথে নিবন্ধিত কোনো অ্যাকাউন্ট পাওয়া যায়নি।", "error");
+        return;
+    }
+
+    // ২. পাসওয়ার্ড যাচাই
+    const matchedUser = userCheck.find(user => user.password === password);
+
+    if (!matchedUser) {
+        showNotification("আপনার প্রদানকৃত পাসওয়ার্ডটি সঠিক নয়।", "error");
+    } else {
+        showNotification("লগইন সফল হয়েছে। অপেক্ষা করুন...", "success");
+        localStorage.setItem('loveweb_session', JSON.stringify(matchedUser));
+        setTimeout(() => {
+            window.location.href = '../index.html';
+        }, 1000);
+    }
+});

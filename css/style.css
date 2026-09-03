@@ -1,0 +1,515 @@
+/* Google Fonts: Hind Siliguri (মার্জিত বাংলা) + Inter (Gemini Style English) */
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-pink: #ff2a6d;
+    --hover-pink: #d90452;
+    --glow-pink: rgba(255, 42, 109, 0.45);
+    --bg-dark: #0d0e15;
+    --card-bg: rgba(23, 25, 35, 0.88);
+    --input-bg: rgba(255, 255, 255, 0.06);
+    --text-main: #ffffff;
+    --text-sub: #a0a5b5;
+    --error-red: #ff4d4d;
+    --success-green: #00e676;
+    --border-color: rgba(255, 255, 255, 0.12);
+    --transition-smooth: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Hind Siliguri', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 15% 20%, rgba(255, 42, 109, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(255, 42, 109, 0.12) 0%, transparent 45%);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* টাইটেল ও সাব-টাইটেল ফন্ট স্টাইলিং */
+h1, h2, h3, .title, .btn-submit, .btn-ghost, .btn-gen {
+    font-family: 'Hind Siliguri', 'Inter', sans-serif;
+    font-weight: 700;
+}
+
+p, p.desc, input, .mobile-toggle {
+    font-family: 'Hind Siliguri', 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+/* ইনলাইন নোটিফিকেশন টোস্ট */
+.notification-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: rgba(20, 20, 28, 0.95);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    transform: translateY(-100px);
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 1000;
+}
+
+.notification-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.notification-toast.error {
+    border-color: var(--error-red);
+    box-shadow: 0 5px 20px rgba(255, 77, 77, 0.25);
+}
+
+.notification-toast.success {
+    border-color: var(--success-green);
+    box-shadow: 0 5px 20px rgba(0, 230, 118, 0.25);
+}
+
+/* মূল কার্ড কন্টেইনার */
+.auth-card {
+    position: relative;
+    width: 880px;
+    max-width: 92%;
+    height: 650px;
+    background: var(--card-bg);
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    display: flex;
+}
+
+/* ওয়াটারমার্ক ব্যাকগ্রাউন্ড */
+.watermark-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65%;
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ফর্ম কন্টেইনার */
+.forms-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.form-box {
+    width: 50%;
+    height: 100%;
+    padding: 25px 35px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
+    z-index: 2;
+}
+
+/* কাস্টম স্ক্রোলবার */
+.form-box::-webkit-scrollbar {
+    width: 4px;
+}
+.form-box::-webkit-scrollbar-thumb {
+    background: rgba(255, 42, 109, 0.3);
+    border-radius: 4px;
+}
+
+.sign-in-box {
+    position: absolute;
+    left: 0;
+    opacity: 1;
+}
+
+.sign-up-box {
+    position: absolute;
+    left: 50%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* স্লাইড অ্যানিমেশন স্টেট */
+.auth-card.active .sign-in-box {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-20%);
+}
+
+.auth-card.active .sign-up-box {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0%);
+}
+
+/* ওভারলে সেকশন */
+.overlay-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+    z-index: 5;
+    border-radius: 0 24px 24px 0;
+}
+
+.auth-card.active .overlay-container {
+    transform: translateX(-100%);
+    border-radius: 24px 0 0 24px;
+}
+
+.overlay {
+    background: linear-gradient(135deg, #ff2a6d 0%, #80002a 100%);
+    height: 100%;
+    width: 200%;
+    position: relative;
+    left: -100%;
+    transform: translateX(0);
+    transition: var(--transition-smooth);
+    display: flex;
+}
+
+.auth-card.active .overlay {
+    transform: translateX(50%);
+}
+
+.overlay-panel {
+    width: 50%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+}
+
+/* লোগো সেকশন - হালকা একটু ছোট ও ব্যালেন্সড সাইজ */
+.brand-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.logo-img {
+    width: 110px;
+    height: auto;
+    object-fit: contain;
+    transform: scale(0.85);
+    filter: drop-shadow(0 0 10px rgba(255, 42, 109, 0.6)) 
+            drop-shadow(0 0 20px rgba(255, 42, 109, 0.3));
+    animation: logoPulse 3s infinite ease-in-out;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.logo-img:hover {
+    transform: scale(0.95) rotate(-1deg);
+    filter: drop-shadow(0 0 15px rgba(255, 42, 109, 0.8)) 
+            drop-shadow(0 0 30px rgba(255, 42, 109, 0.45));
+}
+
+@keyframes logoPulse {
+    0% {
+        transform: scale(0.85);
+        filter: drop-shadow(0 0 8px rgba(255, 42, 109, 0.5));
+    }
+    50% {
+        transform: scale(0.90);
+        filter: drop-shadow(0 0 16px rgba(255, 42, 109, 0.8)) 
+                drop-shadow(0 0 28px rgba(255, 42, 109, 0.35));
+    }
+    100% {
+        transform: scale(0.85);
+        filter: drop-shadow(0 0 8px rgba(255, 42, 109, 0.5));
+    }
+}
+
+h2.title {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+    text-align: center;
+    background: linear-gradient(45deg, #ffffff, var(--primary-pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+p.desc {
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    margin-bottom: 16px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+/* ইনপুট ফিল্ডস */
+.input-group-wrapper {
+    margin-bottom: 10px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 11px 40px 11px 42px; /* ডানপাশে আইকনের জন্য স্পেস */
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.9rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 12px var(--glow-pink);
+}
+
+.input-group .icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    stroke: var(--text-sub);
+    pointer-events: none;
+}
+
+/* পাসওয়ার্ড শো/হাইড আইকন স্টাইলিং */
+.toggle-password {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 3;
+}
+
+.toggle-password:hover {
+    color: var(--primary-pink);
+}
+
+/* ইউজারনেম জেনারেটর */
+.username-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.username-wrapper .input-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.btn-gen {
+    background: var(--input-bg);
+    border: 1px solid var(--primary-pink);
+    color: var(--primary-pink);
+    padding: 0 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.3s;
+    white-space: nowrap;
+}
+
+.btn-gen:hover {
+    background: var(--primary-pink);
+    color: #fff;
+    box-shadow: 0 0 10px var(--glow-pink);
+}
+
+/* বাটন্স */
+.btn-submit {
+    width: 100%;
+    padding: 11px;
+    background: var(--primary-pink);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px var(--glow-pink);
+}
+
+.btn-submit:hover {
+    background: var(--hover-pink);
+    transform: translateY(-1px);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    padding: 10px 26px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: 0.3s;
+}
+
+.btn-ghost:hover {
+    background: #fff;
+    color: var(--primary-pink);
+}
+
+.inline-error {
+    color: var(--error-red);
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: none;
+}
+
+.mobile-toggle {
+    display: none;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.88rem;
+    color: var(--text-sub);
+}
+
+.mobile-toggle span {
+    color: var(--primary-pink);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* মোবাইল রেসপন্সিভনেস */
+@media (max-width: 768px) {
+    .auth-card {
+        height: auto;
+        min-height: 560px;
+        max-height: 90vh;
+        width: 100%;
+        margin: 15px;
+        border-radius: 20px;
+    }
+
+    .overlay-container {
+        display: none;
+    }
+
+    .form-box {
+        width: 100%;
+        position: relative;
+        left: 0 !important;
+        padding: 20px 20px 25px 20px;
+    }
+
+    .sign-up-box {
+        display: none;
+    }
+
+    .auth-card.mobile-active .sign-in-box {
+        display: none;
+    }
+
+    .auth-card.mobile-active .sign-up-box {
+        display: flex;
+        opacity: 1;
+        pointer-events: all;
+        transform: none;
+    }
+
+    .mobile-toggle {
+        display: block;
+    }
+
+    .logo-img {
+        width: 95px;
+        transform: scale(0.8);
+    }
+
+    @keyframes logoPulse {
+        0% { transform: scale(0.8); }
+        50% { transform: scale(0.85); }
+        100% { transform: scale(0.8); }
+    }
+}
+/* Footer Navigation Links */
+.auth-footer {
+    position: absolute;
+    bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+}
+
+.footer-link {
+    color: var(--text-sub);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.footer-link i {
+    font-size: 0.85rem;
+    color: var(--primary-pink);
+}
+
+.footer-link:hover {
+    color: var(--primary-pink);
+    text-shadow: 0 0 8px var(--glow-pink);
+}
+
+.footer-divider {
+    color: var(--border-color);
+    font-size: 0.8rem;
+}
+
+/* Mobile Responsiveness for Footer */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 50px; /* ফুটারের জন্য বাড়তি জায়গা */
+    }
+    .auth-footer {
+        bottom: 12px;
+        font-size: 0.8rem;
+    }
+}
