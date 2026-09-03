@@ -393,7 +393,7 @@ if (signUpForm) {
     });
 }
 
-// সাইন-ইন ফর্ম সাবমিট
+// সাইন-ইন (লগইন) ফর্ম সাবমিট
 const signInForm = document.getElementById('signInForm');
 if (signInForm) {
     signInForm.addEventListener('submit', async (e) => {
@@ -453,7 +453,7 @@ if (resetRequestForm) {
         const now = Date.now();
         const lastSentTime = localStorage.getItem(`otp_sent_time_${emailValue}`);
 
-        // যদি আগে থেকেই ১০ মিনিটের ভেতরে পাঠানো কোনো ওটিপি থাকে, তবে নতুন ওটিপি ডেটাবেজে ঢুকবে না, সে সরাসরি ভেরিফিকেশন পেজে চলে যাবে।
+        // ১০ মিনিটের ভেতরে ওটিপি পাঠানো থাকলে সরাসরি ভেরিফিকেশন পেজে যাবে
         if (lastSentTime) {
             const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
             if (timeDiffMinutes < 10) {
@@ -467,9 +467,9 @@ if (resetRequestForm) {
             }
         }
 
-        // ১০ মিনিট পার হয়ে গেলে নতুন OTP তৈরি হবে
+        // ১০ মিনিট পর নতুন OTP জেনারেট হবে
         const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(now + 10 * 60 * 1000).toISOString(); // ১০ মিনিট মেয়াদ
+        const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
 
         const { error } = await _supabase
             .from('Password_Resets')
@@ -539,11 +539,11 @@ if (window.location.pathname.includes('verification.html')) {
             }
         }, 1000);
 
-        // ২. ২০ মিনিটের লাইভ রিসেন্ড লক টাইমার (২০ মিনিট না হওয়া পর্যন্ত ডেটাবেজে নতুন ওটিপি যাবে না)
+        // ২. ২০ মিনিটের রিসেন্ড লক টাইমার
         clearInterval(resendInterval);
         resendInterval = setInterval(() => {
             const now = Date.now();
-            const resendMs = (sentTimestamp + 20 * 60 * 1000) - now; // ২০ মিনিট হিসাব
+            const resendMs = (sentTimestamp + 20 * 60 * 1000) - now;
 
             if (resendMs <= 0) {
                 clearInterval(resendInterval);
@@ -637,7 +637,6 @@ if (window.location.pathname.includes('verification.html')) {
             const now = Date.now();
             const lastSentTime = localStorage.getItem(`otp_sent_time_${emailParam}`);
             
-            // ২০ মিনিট পার না হওয়া পর্যন্ত নতুন ওটিপি ঢুকবে না
             if (lastSentTime) {
                 const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
                 if (timeDiffMinutes < 20) {
@@ -646,7 +645,6 @@ if (window.location.pathname.includes('verification.html')) {
                 }
             }
 
-            // ২০ মিনিট পার হওয়ার পরেই কেবল ডেটাবেজে নতুন OTP যাবে
             const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
 
@@ -659,7 +657,7 @@ if (window.location.pathname.includes('verification.html')) {
             if (btnSubmitOtp) btnSubmitOtp.disabled = false;
 
             startLiveTimers();
-            showNotification('নতুন ভেরিফিকেশন কোড ডেটাবেজে যুক্ত করা হয়েছে ও পাঠানো হয়েছে।', 'success');
+            showNotification('নতুন ভেরিফিকেশন কোড পাঠানো হয়েছে।', 'success');
         });
     }
 }
@@ -704,6 +702,7 @@ if (window.location.pathname.includes('new-password.html')) {
         });
     }
 
+    // পাসওয়ার্ড আপডেট ও সাইন-ইন পেজে রিডাইরেক্ট (Heading)
     const newPasswordForm = document.getElementById('newPasswordForm');
     if (newPasswordForm) {
         newPasswordForm.addEventListener('submit', async (e) => {
@@ -719,6 +718,7 @@ if (window.location.pathname.includes('new-password.html')) {
 
             showNotification('পাসওয়ার্ড আপডেট করা হচ্ছে...', 'success');
 
+            // Supabase Database-এ আগের পাসওয়ার্ড রিপ্লেস/আপডেট
             const { error } = await _supabase
                 .from('User_Information')
                 .update({ password: newPassword })
@@ -727,10 +727,16 @@ if (window.location.pathname.includes('new-password.html')) {
             if (error) {
                 showNotification('পাসওয়ার্ড আপডেট করতে ব্যর্থ: ' + error.message, 'error');
             } else {
+                // সেশন ডেটা ক্লিয়ার
                 sessionStorage.removeItem('reset_step');
                 sessionStorage.removeItem('reset_verified_email');
-                showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! লগইন করুন।', 'success');
-                setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
+                
+                showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! সাইন-ইন পেজে নিয়ে যাওয়া হচ্ছে...', 'success');
+                
+                // ১.৫ সেকেন্ড পর সাইন-ইন পেজে নিয়ে যাবে (Heading/Redirect)
+                setTimeout(() => { 
+                    window.location.href = '../sign-in/index.html'; 
+                }, 1500);
             }
         });
     }
