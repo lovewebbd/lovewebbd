@@ -466,3 +466,77 @@ if (resetRequestForm) {
         }, 1200);
     });
 }
+
+// =========================================
+// ভেরিফিকেশন পেজ এক্সেস গার্ড এবং OTP ইনপুট হ্যান্ডলার
+// =========================================
+if (window.location.pathname.includes('verification.html')) {
+    
+    // --- ১. এক্সেস গার্ড লজিক (Access Control Guard) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get('email');
+    const referrer = document.referrer.toLowerCase();
+    
+    // রেফারার চেক (reset-password/index.html অথবা settings/index.html থেকে এসেছে কিনা)
+    const isValidReferrer = referrer.includes('reset-password/index.html') || 
+                            referrer.includes('reset-password/') || 
+                            referrer.includes('settings/index.html') || 
+                            referrer.includes('settings/');
+
+    // ইমেইল প্যারামিটার এবং সঠিক পেজ থেকে না আসলে অ্যাক্সেস রিডাইরেক্ট করবে
+    if (!emailParam || !isValidReferrer) {
+        showNotification('অবৈধ প্রবেশ চেষ্টা! সঠিক উপায়ে অনুরোধ করুন।', 'error');
+        setTimeout(() => {
+            window.location.href = '../sign-in/index.html';
+        }, 1500);
+    }
+
+    // --- ২. স্মুথ OTP ইনপুট ও অটো-ফোকাস লজিক ---
+    const otpInputs = document.querySelectorAll('.otp-input');
+
+    if (otpInputs.length > 0) {
+        otpInputs.forEach((input, index) => {
+            
+            // টাইপ করার সাথে সাথে পরের ফিল্ডে ফোকাস যাওয়া
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                // শুধুমাত্র সংখ্যা নিশ্চিত করা
+                e.target.value = value.replace(/[^0-9]/g, '');
+
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            // ব্যাকস্পেস (Backspace) প্রেস করলে আগের ফিল্ডে ফোকাস যাওয়া
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+
+            // পুরো ৬ ডিজিট কপি-পেস্ট (Paste) করার সুবিধা
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData)
+                                    .getData('text')
+                                    .replace(/[^0-9]/g, ''); // শুধুমাত্র সংখ্যা ফিল্টার করা
+
+                if (pastedData) {
+                    const digits = pastedData.split('');
+                    otpInputs.forEach((inp, idx) => {
+                        if (digits[idx]) {
+                            inp.value = digits[idx];
+                        }
+                    });
+                    
+                    // পেস্ট করার পর শেষ ইনপুটটিতে ফোকাস নেওয়া
+                    const nextFocusIndex = Math.min(digits.length, otpInputs.length) - 1;
+                    if (nextFocusIndex >= 0) {
+                        otpInputs[nextFocusIndex].focus();
+                    }
+                }
+            });
+        });
+    }
+}
