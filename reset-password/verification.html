@@ -1,14 +1,87 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ভেরিফিকেশন কোড - LoveWeb</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="../css/style.css">
 </head>
-
 <body>
-  
-</body>
 
+    <!-- Dynamic Notification Toast -->
+    <div id="notification" class="notification-toast">
+        <span id="notifMessage"></span>
+    </div>
+
+    <!-- Main Card Container -->
+    <div class="auth-card reset-card">
+
+        <!-- Watermark Background -->
+        <img src="../img/watermark.png" alt="Watermark" class="watermark-bg" onerror="this.style.display='none'">
+
+        <!-- Form Box -->
+        <div class="form-box reset-form-box">
+
+            <!-- Brand Logo -->
+            <div class="brand-logo">
+                <img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=Logo'">
+            </div>
+
+            <h2 class="title">পিন ভেরিফিকেশন</h2>
+            <p class="desc">আপনার ইমেইলে পাঠানো ৬ ডিজিটের ভেরিফিকেশন কোডটি নিচে দিন।</p>
+
+            <form id="verificationForm">
+                <!-- 6-Digit OTP Input Container -->
+                <div class="otp-container">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    কোড নিশ্চিত করুন <i class="fa-solid fa-circle-check" style="margin-left: 6px; font-size: 0.9rem;"></i>
+                </button>
+            </form>
+
+            <!-- Resend Code Option -->
+            <div class="resend-wrap">
+                <span>কোড পাননি?</span>
+                <button type="button" id="btnResendCode" class="btn-resend">পুনরায় পাঠান</button>
+            </div>
+
+            <!-- Back to Sign-in -->
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="../sign-in/index.html" class="footer-link">
+                    <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer Links -->
+    <footer class="auth-footer">
+        <a href="../help/index.html" class="footer-link">
+            <i class="fa-solid fa-circle-question"></i> সাহায্য
+        </a>
+        <span class="footer-divider">•</span>
+        <a href="../privacy-and-rules/index.html" class="footer-link">
+            <i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী
+        </a>
+    </footer>
+
+</body>
 </html>

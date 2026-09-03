@@ -529,3 +529,102 @@ p.desc {
         font-size: 0.8rem;
     }
 }
+
+/* =========================================
+   Reset Password & OTP Verification Styles
+   ========================================= */
+
+.reset-card {
+    width: 460px;
+    max-width: 92%;
+    height: auto;
+    min-height: initial;
+    padding: 35px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.reset-form-box {
+    width: 100%;
+    padding: 0;
+    overflow: visible;
+}
+
+/* 6-Digit OTP Container */
+.otp-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 20px 0 25px 0;
+}
+
+.otp-input {
+    width: 48px;
+    height: 54px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 12px var(--glow-pink);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Resend Code Section */
+.resend-wrap {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.88rem;
+    color: var(--text-sub);
+}
+
+.btn-resend {
+    background: none;
+    border: none;
+    color: var(--primary-pink);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;
+    margin-left: 4px;
+    transition: color 0.3s;
+    font-family: 'Hind Siliguri', 'Inter', sans-serif;
+}
+
+.btn-resend:hover {
+    color: #ffffff;
+    text-shadow: 0 0 8px var(--glow-pink);
+}
+
+.btn-resend:disabled {
+    color: var(--text-sub);
+    cursor: not-allowed;
+    text-shadow: none;
+}
+
+/* Responsive adjustments for smaller devices */
+@media (max-width: 480px) {
+    .reset-card {
+        padding: 25px 15px;
+    }
+
+    .otp-container {
+        gap: 5px;
+    }
+
+    .otp-input {
+        width: 40px;
+        height: 48px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+    }
+}
