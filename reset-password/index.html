@@ -102,55 +102,9 @@
         </div>
     </div>
 
-    <!-- লজিক ও ইন্টারঅ্যাকশন স্ক্রিপ্ট -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const emailInput = document.getElementById('reset-email');
-            const resetForm = document.getElementById('reset-request-form');
-            const notif = document.getElementById('notification');
-            const notifMsg = document.getElementById('notif-message');
+    <!-- HTML এর একদম শেষে লিংকযুক্ত করুন -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/auth.js"></script>
 
-            // ১. অটো ইমেইল ফিল করার লজিক (URL Parameter বা LocalStorage থেকে)
-            const urlParams = new URLSearchParams(window.location.search);
-            const emailFromUrl = urlParams.get('email');
-            const savedEmail = localStorage.getItem('user_login_email');
-
-            if (emailFromUrl) {
-                emailInput.value = emailFromUrl;
-            } else if (savedEmail) {
-                emailInput.value = savedEmail;
-            }
-
-            // টোস্ট নোটিফিকেশন দেখানোর ফাংশন
-            function showToast(message, type = 'success') {
-                notifMsg.textContent = message;
-                notif.className = `notification-toast show ${type}`;
-                setTimeout(() => {
-                    notif.classList.remove('show');
-                }, 3000);
-            }
-
-            // ২. ফর্ম সাবমিট ও পরবর্তী পেজে ইমেইল পাঠানোর লজিক
-            resetForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const emailValue = emailInput.value.trim();
-
-                if (!emailValue) {
-                    showToast('অনুগ্রহ করে একটি বৈধ ইমেইল লিখুন', 'error');
-                    return;
-                }
-
-                // ইমেইল স্টোর করা যাতে পরের পেজে পাওয়া যায়
-                localStorage.setItem('reset_email_target', emailValue);
-
-                showToast('কোড পাঠানো হচ্ছে...', 'success');
-
-                // verification.html পেজে রিডাইরেক্ট করা এবং ইমেইল প্যারামিটার পাস করা
-                setTimeout(() => {
-                    window.location.href = `verification.html?email=${encodeURIComponent(emailValue)}`;
-                }, 1000);
-            });
-        });
-    </script>
 </body>
 </html>

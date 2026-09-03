@@ -10,7 +10,7 @@ const overlayBtnSignUp = document.getElementById('overlayBtnSignUp');
 const mobileToSignUp = document.getElementById('mobileToSignUp');
 const mobileToSignIn = document.getElementById('mobileToSignIn');
 const notification = document.getElementById('notification');
-const notifMessage = document.getElementById('notifMessage');
+const notifMessage = document.getElementById('notifMessage') || document.getElementById('notif-message');
 
 const usernameInput = document.getElementById('signUpUsername');
 const phoneInput = document.getElementById('signUpPhone');
@@ -24,7 +24,10 @@ const forgotPasswordLink = document.getElementById('forgotPasswordLink');
 // ডাইনামিক নোটিফিকেশন প্রদর্শন ব্যবস্থা
 let notifTimeout;
 function showNotification(msg, type = 'error') {
-    notifMessage.innerText = msg;
+    if (!notification) return;
+    const msgElement = notifMessage || notification.querySelector('span');
+    if (msgElement) msgElement.innerText = msg;
+    
     notification.className = `notification-toast show ${type}`;
     
     clearTimeout(notifTimeout);
@@ -33,18 +36,41 @@ function showNotification(msg, type = 'error') {
     }, 2800);
 }
 
-// পেজ লোড হওয়ার সময় সক্রিয় সেশন পরীক্ষা
+// পেজ লোড হওয়ার সময় সক্রিয় সেশন পরীক্ষা ও অটো-ফিল লজিক
 window.addEventListener('DOMContentLoaded', () => {
     const activeSession = localStorage.getItem('loveweb_session');
-    if (activeSession) {
+    if (activeSession && !window.location.pathname.includes('reset-password')) {
         window.location.href = '../index.html';
+    }
+
+    // পাসওয়ার্ড রিসেট পেজে অটো-ফিল ইমেইল লজিক
+    const resetEmailInput = document.getElementById('reset-email');
+    if (resetEmailInput) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const emailFromUrl = urlParams.get('email');
+        const savedEmail = localStorage.getItem('reset_email_target');
+
+        if (emailFromUrl) {
+            resetEmailInput.value = emailFromUrl;
+        } else if (savedEmail) {
+            resetEmailInput.value = savedEmail;
+        }
     }
 });
 
-// "পাসওয়ার্ড ভুলে গেছেন?" লিঙ্কে ক্লিক করলে এক্সেস অনুমতি প্রদান
+// "পাসওয়ার্ড ভুলে গেছেন?" লিঙ্কে ক্লিক করলে ইমেইল সেভ করা ও রিডাইরেক্ট করা
 if (forgotPasswordLink) {
-    forgotPasswordLink.addEventListener('click', () => {
+    forgotPasswordLink.addEventListener('click', (e) => {
         sessionStorage.setItem('allow_reset_access', 'true');
+        
+        const signInIdentifier = document.getElementById('signInIdentifier');
+        if (signInIdentifier) {
+            const val = signInIdentifier.value.trim().toLowerCase();
+            // ইউজার ইমেইল ইনপুট দিয়ে থাকলে তা সেভ করা হবে
+            if (val.includes('@')) {
+                localStorage.setItem('reset_email_target', val);
+            }
+        }
     });
 }
 
@@ -55,7 +81,7 @@ if (mobileToSignUp) mobileToSignUp.addEventListener('click', () => authCard.clas
 if (mobileToSignIn) mobileToSignIn.addEventListener('click', () => authCard.classList.remove('mobile-active'));
 
 // =========================================
-// স্পেস নিয়ন্ত্রণ ব্যবস্থা
+// স্পেস নিয়ন্ত্রণ ব্যবস্থা (Space Prevention & Removal)
 // =========================================
 function preventSpaces(elementId) {
     const el = document.getElementById(elementId);
@@ -76,6 +102,7 @@ function preventSpaces(elementId) {
     }
 }
 
+// সাইন-ইন, সাইন-আপ ও রিসেট ফিল্ডে স্পেস ব্লক
 preventSpaces('signInIdentifier');
 preventSpaces('signInPassword');
 preventSpaces('signUpUsername');
@@ -83,6 +110,7 @@ preventSpaces('signUpEmail');
 preventSpaces('signUpPhone');
 preventSpaces('signUpPassword');
 preventSpaces('signUpConfirmPassword');
+preventSpaces('reset-email');
 
 // =========================================
 // পাসওয়ার্ড দেখা ও আড়াল করার লজিক
@@ -246,23 +274,27 @@ if (confirmPasswordInput) {
 }
 
 // স্বয়ংক্রিয় অনন্য ইউজারনেম তৈরি
-document.getElementById('btnGenerateUsername').addEventListener('click', () => {
-    const fullName = document.getElementById('signUpFullName').value.trim();
-    if (!fullName) {
-        showNotification('ইউজারনেম তৈরি করতে প্রথমে আপনার পুরো নাম লিখুন।', 'error');
-        return;
-    }
-    let cleanName = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (cleanName.length < 3) cleanName = (cleanName + 'user').slice(0, 4);
-    
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const generatedUsername = `${cleanName}${randomNum}`;
-    
-    document.getElementById('signUpUsername').value = generatedUsername;
-    const usernameErrEl = document.getElementById('usernameError');
-    if (usernameErrEl) usernameErrEl.style.display = 'none';
-    showNotification(`নতুন ইউজারনেম তৈরি হয়েছে: ${generatedUsername}`, 'success');
-});
+const btnGenerateUsername = document.getElementById('btnGenerateUsername');
+if (btnGenerateUsername) {
+    btnGenerateUsername.addEventListener('click', () => {
+        const fullNameInput = document.getElementById('signUpFullName');
+        const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+        if (!fullName) {
+            showNotification('ইউজারনেম তৈরি করতে প্রথমে আপনার পুরো নাম লিখুন।', 'error');
+            return;
+        }
+        let cleanName = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanName.length < 3) cleanName = (cleanName + 'user').slice(0, 4);
+        
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const generatedUsername = `${cleanName}${randomNum}`;
+        
+        if (usernameInput) usernameInput.value = generatedUsername;
+        const usernameErrEl = document.getElementById('usernameError');
+        if (usernameErrEl) usernameErrEl.style.display = 'none';
+        showNotification(`নতুন ইউজারনেম তৈরি হয়েছে: ${generatedUsername}`, 'success');
+    });
+}
 
 // ইউজারনেমের পূর্ব অস্তিত্ব পরীক্ষা
 async function checkUsernameExists(username) {
@@ -274,105 +306,142 @@ async function checkUsernameExists(username) {
     return data && data.length > 0;
 }
 
-// সাইন-আপ ফর্ম
-document.getElementById('signUpForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const fullName = document.getElementById('signUpFullName').value.trim();
-    const username = document.getElementById('signUpUsername').value.trim();
-    const email = document.getElementById('signUpEmail').value.trim();
-    const phone = document.getElementById('signUpPhone').value.trim();
-    const password = document.getElementById('signUpPassword').value.trim();
-    const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : '';
-    const usernameErrEl = document.getElementById('usernameError');
+// সাইন-আপ ফর্ম সাবমিট
+const signUpForm = document.getElementById('signUpForm');
+if (signUpForm) {
+    signUpForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const fullName = document.getElementById('signUpFullName').value.trim();
+        const username = document.getElementById('signUpUsername').value.trim();
+        const email = document.getElementById('signUpEmail').value.trim();
+        const phone = document.getElementById('signUpPhone').value.trim();
+        const password = document.getElementById('signUpPassword').value.trim();
+        const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : '';
+        const usernameErrEl = document.getElementById('usernameError');
 
-    if (username.length < 6) {
-        showNotification('ইউজারনেম অন্তত ৬ অক্ষরের হওয়া আবশ্যক।', 'error');
-        return;
-    }
-
-    if (!phone.startsWith('01') || phone.length !== 11) {
-        showNotification('১১ ডিজিটের সঠিক ফোন নম্বর প্রদান করুন (01XXXXXXXXX)।', 'error');
-        return;
-    }
-
-    const emailValidation = checkAllowedEmail(email);
-    if (!emailValidation.isValid) {
-        showNotification(emailValidation.msg, 'error');
-        return;
-    }
-
-    if (password.length < 8) {
-        showNotification('পাসওয়ার্ড বাধ্যতামূলকভাবে অন্তত ৮ অক্ষরের হতে হবে।', 'error');
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        showNotification('প্রদত্ত পাসওয়ার্ড দুটি একে অপরের সাথে মিলছে না।', 'error');
-        return;
-    }
-
-    const pwdStrength = checkPasswordStrength(password);
-    if (pwdStrength.isWeak) {
-        showNotification('দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়। সংখ্যা ও বিশেষ চিহ্ন যোগ করুন।', 'error');
-        return;
-    }
-
-    const isTaken = await checkUsernameExists(username);
-    if (isTaken) {
-        if (usernameErrEl) {
-            usernameErrEl.innerText = "এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হয়েছে।";
-            usernameErrEl.style.display = "block";
+        if (username.length < 6) {
+            showNotification('ইউজারনেম অন্তত ৬ অক্ষরের হওয়া আবশ্যক।', 'error');
+            return;
         }
-        showNotification("এই ইউজারনেমটি অনন্য নয়, অনুগ্রহ করে অন্য একটি চেষ্টা করুন।", "error");
-        return;
-    }
-    if (usernameErrEl) usernameErrEl.style.display = "none";
 
-    const { data, error } = await _supabase
-        .from('User_Information')
-        .insert([
-            { full_name: fullName, username: username, email: email, phone: phone, password: password }
-        ])
-        .select();
+        if (!phone.startsWith('01') || phone.length !== 11) {
+            showNotification('১১ ডিজিটের সঠিক ফোন নম্বর প্রদান করুন (01XXXXXXXXX)।', 'error');
+            return;
+        }
 
-    if (error) {
-        showNotification("নিবন্ধন ব্যর্থ হয়েছে: " + error.message, "error");
-    } else {
-        showNotification("অ্যাকেউন্ট সফলভাবে তৈরি হয়েছে!", "success");
-        localStorage.setItem('loveweb_session', JSON.stringify(data[0]));
+        const emailValidation = checkAllowedEmail(email);
+        if (!emailValidation.isValid) {
+            showNotification(emailValidation.msg, 'error');
+            return;
+        }
+
+        if (password.length < 8) {
+            showNotification('পাসওয়ার্ড বাধ্যতামূলকভাবে অন্তত ৮ অক্ষরের হতে হবে।', 'error');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showNotification('প্রদত্ত পাসওয়ার্ড দুটি একে অপরের সাথে মিলছে না।', 'error');
+            return;
+        }
+
+        const pwdStrength = checkPasswordStrength(password);
+        if (pwdStrength.isWeak) {
+            showNotification('দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়। সংখ্যা ও বিশেষ চিহ্ন যোগ করুন।', 'error');
+            return;
+        }
+
+        const isTaken = await checkUsernameExists(username);
+        if (isTaken) {
+            if (usernameErrEl) {
+                usernameErrEl.innerText = "এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হয়েছে।";
+                usernameErrEl.style.display = "block";
+            }
+            showNotification("এই ইউজারনেমটি অনন্য নয়, অনুগ্রহ করে অন্য একটি চেষ্টা করুন।", "error");
+            return;
+        }
+        if (usernameErrEl) usernameErrEl.style.display = "none";
+
+        const { data, error } = await _supabase
+            .from('User_Information')
+            .insert([
+                { full_name: fullName, username: username, email: email, phone: phone, password: password }
+            ])
+            .select();
+
+        if (error) {
+            showNotification("নিবন্ধন ব্যর্থ হয়েছে: " + error.message, "error");
+        } else {
+            showNotification("অ্যাকেউন্ট সফলভাবে তৈরি হয়েছে!", "success");
+            localStorage.setItem('loveweb_session', JSON.stringify(data[0]));
+            setTimeout(() => {
+                window.location.href = '../index.html';
+            }, 1200);
+        }
+    });
+}
+
+// সাইন-ইন ফর্ম সাবমিট
+const signInForm = document.getElementById('signInForm');
+if (signInForm) {
+    signInForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const identifier = document.getElementById('signInIdentifier').value.trim();
+        const password = document.getElementById('signInPassword').value.trim();
+
+        const { data: userCheck, error: userError } = await _supabase
+            .from('User_Information')
+            .select('*')
+            .or(`email.eq.${identifier},username.eq.${identifier}`);
+
+        if (userError || !userCheck || userCheck.length === 0) {
+            showNotification("এই তথ্যের সাথে নিবন্ধিত কোনো অ্যাকাউন্ট পাওয়া যায়নি।", "error");
+            return;
+        }
+
+        const matchedUser = userCheck.find(user => user.password === password);
+
+        if (!matchedUser) {
+            showNotification("আপনার প্রদানকৃত পাসওয়ার্ডটি সঠিক নয়।", "error");
+        } else {
+            showNotification("লগইন সফল হয়েছে। অপেক্ষা করুন...", "success");
+            localStorage.setItem('loveweb_session', JSON.stringify(matchedUser));
+            setTimeout(() => {
+                window.location.href = '../index.html';
+            }, 1000);
+        }
+    });
+}
+
+// =========================================
+// পাসওয়ার্ড রিসেট রিকোয়েস্ট লজিক (reset-password/index.html)
+// =========================================
+const resetRequestForm = document.getElementById('reset-request-form');
+if (resetRequestForm) {
+    resetRequestForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const resetEmailInput = document.getElementById('reset-email');
+        const emailValue = resetEmailInput ? resetEmailInput.value.trim().toLowerCase() : '';
+
+        if (!emailValue) {
+            showNotification('অনুগ্রহ করে একটি ইমেইল প্রদান করুন।', 'error');
+            return;
+        }
+
+        const emailValidation = checkAllowedEmail(emailValue);
+        if (!emailValidation.isValid) {
+            showNotification(emailValidation.msg, 'error');
+            return;
+        }
+
+        // ইমেইল স্টোর করা যাতে verification.html পেজে পাওয়া যায়
+        localStorage.setItem('reset_email_target', emailValue);
+        showNotification('কোড পাঠানো হচ্ছে...', 'success');
+
         setTimeout(() => {
-            window.location.href = '../index.html';
-        }, 1200);
-    }
-});
-
-// সাইন-ইন ফর্ম
-document.getElementById('signInForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const identifier = document.getElementById('signInIdentifier').value.trim();
-    const password = document.getElementById('signInPassword').value.trim();
-
-    const { data: userCheck, error: userError } = await _supabase
-        .from('User_Information')
-        .select('*')
-        .or(`email.eq.${identifier},username.eq.${identifier}`);
-
-    if (userError || !userCheck || userCheck.length === 0) {
-        showNotification("এই তথ্যের সাথে নিবন্ধিত কোনো অ্যাকাউন্ট পাওয়া যায়নি।", "error");
-        return;
-    }
-
-    const matchedUser = userCheck.find(user => user.password === password);
-
-    if (!matchedUser) {
-        showNotification("আপনার প্রদানকৃত পাসওয়ার্ডটি সঠিক নয়।", "error");
-    } else {
-        showNotification("লগইন সফল হয়েছে। অপেক্ষা করুন...", "success");
-        localStorage.setItem('loveweb_session', JSON.stringify(matchedUser));
-        setTimeout(() => {
-            window.location.href = '../index.html';
+            window.location.href = `verification.html?email=${encodeURIComponent(emailValue)}`;
         }, 1000);
-    }
-});
+    });
+}
