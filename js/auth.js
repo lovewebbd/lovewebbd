@@ -8,18 +8,23 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";
 
 // সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Supabase fallback)
-async function sendOtpEmailDirect(email, otp) {
+async function sendOtpEmailDirect(email, otp, options = {}) {
     // ১. সার্ভার-সাইড জিমেইল এসএমটিপি ও অ্যাপ পাসওয়ার্ড দিয়ে সরাসরি ইমেইল পাঠানো (/api/send-otp)
     try {
         const res = await fetch('/api/send-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, otp: otp })
+            body: JSON.stringify({ email: email, otp: otp, ...options })
         });
         const result = await res.json();
-        if (result && result.success) {
+        if (res.ok && result && result.success) {
             console.log('OTP dispatched via Love Web OTP (Gmail SMTP) to:', email);
-            return { success: true };
+            return { success: true, messageId: result.messageId };
+        } else {
+            console.warn('Server /api/send-otp returned error:', result);
+            if (result && result.message) {
+                throw new Error(result.message);
+            }
         }
     } catch (apiErr) {
         console.warn('Server /api/send-otp failed, trying fallback:', apiErr);
@@ -36,7 +41,7 @@ async function sendOtpEmailDirect(email, otp) {
                 headers: {
                     'Content-Type': 'text/plain;charset=utf-8'
                 },
-                body: JSON.stringify({ email: email, otp: otp })
+                body: JSON.stringify({ email: email, otp: otp, ...options })
             });
             console.log('OTP dispatched via Google Apps Script POST to:', email);
             return { success: true };
@@ -48,7 +53,7 @@ async function sendOtpEmailDirect(email, otp) {
     // ৩. ফলব্যাক হিসেবে Supabase Edge Function কল
     try {
         const { error } = await _supabase.functions.invoke('send-otp-email', {
-            body: { email: email, otp: otp }
+            body: { email: email, otp: otp, ...options }
         });
         if (error) console.warn('Supabase invoke warning:', error);
     } catch (sbErr) {
@@ -577,18 +582,39 @@ if (signUpForm) {
         }
         if (usernameErrEl) usernameErrEl.style.display = "none";
 
+        const createdAt = new Date().toISOString();
         const { data, error } = await _supabase
             .from('User_Information')
             .insert([
-                { full_name: fullName, username: username, email: email, phone: phone, password: password }
+                { full_name: fullName, username: username, email: email, phone: phone, password: password, created_at: createdAt }
             ])
             .select();
 
         if (error) {
-            showNotification("নিবন্ধন ব্যর্থ হয়েছে: " + error.message, "error");
+            // যদি created_at কলাম স্কিমাতে না থাকে, সাধারণ ইনসার্ট দিয়ে ফলব্যাক
+            const fallbackInsert = await _supabase
+                .from('User_Information')
+                .insert([
+                    { full_name: fullName, username: username, email: email, phone: phone, password: password }
+                ])
+                .select();
+
+            if (fallbackInsert.error) {
+                showNotification("নিবন্ধন ব্যর্থ হয়েছে: " + fallbackInsert.error.message, "error");
+                return;
+            }
+            const newUser = fallbackInsert.data[0];
+            newUser.created_at = createdAt;
+            showNotification("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!", "success");
+            localStorage.setItem('loveweb_session', JSON.stringify(newUser));
+            setTimeout(() => {
+                window.location.href = '../index.html';
+            }, 1200);
         } else {
-            showNotification("অ্যাকেউন্ট সফলভাবে তৈরি হয়েছে!", "success");
-            localStorage.setItem('loveweb_session', JSON.stringify(data[0]));
+            showNotification("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!", "success");
+            const savedUser = data[0];
+            if (!savedUser.created_at) savedUser.created_at = createdAt;
+            localStorage.setItem('loveweb_session', JSON.stringify(savedUser));
             setTimeout(() => {
                 window.location.href = '../index.html';
             }, 1200);
@@ -631,6 +657,11 @@ if (signInForm) {
         } else {
             // সফল লগইনে অ্যাটেম্পট কাউন্টার ক্লিয়ার
             handleSuccessfulLogin(identifier);
+
+            // অ্যাকাউন্ট তৈরির সময় নিশ্চিত করা
+            if (!matchedUser.created_at) {
+                matchedUser.created_at = new Date().toISOString();
+            }
 
             showNotification("লগইন সফল হয়েছে। অপেক্ষা করুন...", "success");
             localStorage.setItem('loveweb_session', JSON.stringify(matchedUser));
@@ -1097,12 +1128,18 @@ if (window.location.pathname.includes('new-password.html')) {
                 sessionStorage.removeItem('reset_step');
                 sessionStorage.removeItem('reset_verified_email');
                 
-                showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! সাইন-ইন পেজে নিয়ে যাওয়া হচ্ছে...', 'success');
-                
-                // ১.৫ সেকেন্ড পর সাইন-ইন পেজে রিডাইরেক্ট করবে
-                setTimeout(() => { 
-                    window.location.href = '../sign-in/index.html'; 
-                }, 1500);
+                const hasActiveSession = !!localStorage.getItem('loveweb_session');
+                if (hasActiveSession) {
+                    showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! মূল পেজে নিয়ে যাওয়া হচ্ছে...', 'success');
+                    setTimeout(() => { 
+                        window.location.href = '../index.html'; 
+                    }, 1500);
+                } else {
+                    showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! সাইন-ইন পেজে নিয়ে যাওয়া হচ্ছে...', 'success');
+                    setTimeout(() => { 
+                        window.location.href = '../sign-in/index.html'; 
+                    }, 1500);
+                }
             }
         });
     }

@@ -20,6 +20,9 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="../css/style.css">
 
+    <!-- Theme Manager -->
+    <script src="../js/theme.js"></script>
+
     <style>
         .timer-box {
             background: rgba(255, 42, 109, 0.1);
@@ -35,9 +38,23 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .auth-theme-corner-toggle {
+            position: fixed;
+            top: 16px;
+            right: 18px;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Corner Theme Toggle -->
+    <div class="auth-theme-corner-toggle">
+        <button type="button" class="top-bar-action-btn theme-toggle-btn" onclick="window.toggleLoveWebTheme()" title="থিম পরিবর্তন করুন (লাইট / ডার্ক)">
+            <i class="fa-solid fa-sun"></i>
+            <span class="theme-text">লাইট মোড</span>
+        </button>
+    </div>
 
     <!-- Dynamic Notification Toast -->
     <div id="notification" class="notification-toast">
@@ -45,7 +62,7 @@
     </div>
 
     <!-- Main Card Container -->
-    <div class="auth-card reset-card">
+    <div class="auth-card reset-card floating-auth-card">
 
         <!-- Watermark Background -->
         <img src="../img/watermark.png" alt="Watermark" class="watermark-bg" onerror="this.style.display='none'">
@@ -55,7 +72,7 @@
 
             <!-- Brand Logo -->
             <div class="brand-logo">
-                <img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=Logo'">
+                <a href="../sign-in/index.html" id="verificationBrandLogoLink"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=Logo'"></a>
             </div>
 
             <h2 class="title">পিন ভেরিফিকেশন</h2>
@@ -104,15 +121,54 @@
                 </div>
             </div>
 
-            <!-- Back to Sign-in -->
+            <!-- Back to Sign-in or Home -->
             <div style="text-align: center; margin-top: 20px;">
-                <a href="../sign-in/index.html" class="footer-link">
+                <a href="../sign-in/index.html" class="footer-link" id="verificationBackLink">
                     <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান
                 </a>
             </div>
 
         </div>
     </div>
+
+    <!-- Dynamic Return Link Logic -->
+    <script>
+      function adaptVerificationAuthNavigation() {
+        let isLoggedIn = false;
+        try {
+          const sessionRaw = localStorage.getItem('loveweb_session');
+          if (sessionRaw) {
+            const user = JSON.parse(sessionRaw);
+            if (user && (user.username || user.email || user.id || user.full_name)) {
+              isLoggedIn = true;
+            }
+          }
+        } catch (e) {}
+
+        const backLink = document.getElementById('verificationBackLink');
+        const logoLink = document.getElementById('verificationBrandLogoLink');
+
+        if (isLoggedIn) {
+          if (backLink) {
+            backLink.href = '../index.html';
+            backLink.innerHTML = '<i class="fa-solid fa-house"></i> মূল পেজে ফিরে যান';
+          }
+          if (logoLink) {
+            logoLink.href = '../index.html';
+          }
+        } else {
+          if (backLink) {
+            backLink.href = '../sign-in/index.html';
+            backLink.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
+          }
+          if (logoLink) {
+            logoLink.href = '../sign-in/index.html';
+          }
+        }
+      }
+      adaptVerificationAuthNavigation();
+      document.addEventListener('DOMContentLoaded', adaptVerificationAuthNavigation);
+    </script>
 
     <!-- Footer Links -->
     <footer class="auth-footer">

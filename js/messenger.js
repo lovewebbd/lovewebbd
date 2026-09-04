@@ -272,6 +272,43 @@
       color: rgba(255, 255, 255, 0.6);
     }
 
+    /* =========================================
+       Light Theme Support for Messenger Widget
+       ========================================= */
+    [data-theme="light"] .messenger-chat-box {
+      background: rgba(255, 255, 255, 0.98) !important;
+      border: 1px solid rgba(255, 42, 109, 0.28) !important;
+      box-shadow: 0 16px 45px rgba(255, 42, 109, 0.16), 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    [data-theme="light"] .messenger-body {
+      color: #191e2b !important;
+    }
+
+    [data-theme="light"] .messenger-msg {
+      background: rgba(255, 42, 109, 0.04) !important;
+      border: 1px solid rgba(255, 42, 109, 0.18) !important;
+      color: #242938 !important;
+    }
+
+    [data-theme="light"] .messenger-direct-hint {
+      color: #575e70 !important;
+    }
+
+    [data-theme="light"] .messenger-online-badge {
+      border: 2px solid #ffffff !important;
+      box-shadow: 0 0 6px rgba(0, 230, 118, 0.8) !important;
+    }
+
+    [data-theme="light"] .messenger-close-btn {
+      background: rgba(255, 255, 255, 0.25) !important;
+      color: #ffffff !important;
+    }
+
+    [data-theme="light"] .messenger-close-btn:hover {
+      background: rgba(255, 255, 255, 0.45) !important;
+    }
+
     @media (max-width: 480px) {
       .loveweb-messenger-widget {
         bottom: 16px;
@@ -395,6 +432,13 @@
           chatBox.classList.remove('open');
         }
       });
+
+      // Listen to theme changes to dynamically sync widget attributes
+      window.addEventListener('loveweb-theme-changed', (e) => {
+        const currentTheme = e.detail?.theme || document.documentElement.getAttribute('data-theme') || 'dark';
+        widget.setAttribute('data-theme', currentTheme);
+      });
+      widget.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') || 'dark');
     }
   }
 

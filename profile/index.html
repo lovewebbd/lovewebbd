@@ -22,39 +22,118 @@
   <!-- External CSS -->
   <link rel="stylesheet" href="../css/style.css">
 
+  <!-- Theme Manager -->
+  <script src="../js/theme.js"></script>
+
   <style>
     .profile-card {
-      width: 540px;
-      max-width: 92%;
+      width: 600px;
+      max-width: 94%;
       height: auto;
-      padding: 35px 30px;
+      min-height: 540px;
+      padding: 38px 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
     }
 
+    .profile-avatar-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
     .profile-avatar {
-      width: 80px;
-      height: 80px;
+      width: 78px;
+      height: 78px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary-pink), #80002a);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.2rem;
+      font-size: 2.1rem;
       color: #fff;
-      margin-bottom: 15px;
-      box-shadow: 0 0 20px var(--glow-pink);
+      box-shadow: 0 8px 25px -4px var(--glow-pink);
+      border: none !important;
+      outline: none !important;
+    }
+
+    .profile-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 4px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+    }
+
+    .profile-badge-pill.normal {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .profile-badge-pill.elite {
+      background: rgba(168, 85, 247, 0.16);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.45);
+      box-shadow: 0 0 14px rgba(168, 85, 247, 0.25);
+    }
+
+    .profile-badge-pill.premium {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(234, 88, 12, 0.22));
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.55);
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.3);
+    }
+
+    .tier-tip-box {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin: 4px 0 10px 0;
+      font-size: 0.84rem;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    [data-theme="light"] .profile-badge-pill.normal {
+      background: #ecfdf5;
+      color: #059669;
+      border-color: #a7f3d0;
+    }
+
+    [data-theme="light"] .profile-badge-pill.elite {
+      background: #fbf5ff;
+      color: #9333ea;
+      border-color: #e9d5ff;
+    }
+
+    [data-theme="light"] .profile-badge-pill.premium {
+      background: #fffbeb;
+      color: #d97706;
+      border-color: #fde68a;
+    }
+
+    [data-theme="light"] .tier-tip-box {
+      background: #fffdf9;
+      border-color: rgba(255, 42, 109, 0.2);
+      color: #475569;
     }
 
     .profile-details {
       width: 100%;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.035);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      padding: 20px;
-      margin: 18px 0;
+      padding: 16px 20px;
+      margin: 14px 0;
       text-align: left;
     }
 
@@ -62,8 +141,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0;
+      padding: 11px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      gap: 12px;
     }
 
     .profile-field:last-child {
@@ -72,20 +152,29 @@
 
     .field-label {
       color: var(--text-sub);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       display: flex;
       align-items: center;
       gap: 8px;
+      white-space: nowrap;
     }
 
     .field-label i {
       color: var(--primary-pink);
+      width: 18px;
+      text-align: center;
     }
 
     .field-value {
       color: var(--text-main);
-      font-weight: 500;
-      font-size: 0.95rem;
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    [data-theme="light"] .profile-field {
+      border-bottom-color: rgba(0, 0, 0, 0.06);
     }
   </style>
 </head>
@@ -93,13 +182,45 @@
 <body>
 
   <div class="auth-card profile-card">
-    <div class="profile-avatar">
-      <i class="fa-solid fa-user"></i>
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar" id="avatarBox">
+        <i class="fa-solid fa-user"></i>
+      </div>
     </div>
 
-    <h2 class="title" id="profileName">ইউজার প্রোফাইল</h2>
-    <p class="desc">আপনার ব্যক্তিগত অ্যাকাউন্টের বিবরণ</p>
+    <h2 class="title" id="profileName" style="margin-bottom: 4px;">ইউজার প্রোফাইল</h2>
+    <div class="profile-badge-pill normal" id="profileBadge">
+      <i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য
+    </div>
 
+    <!-- শীর্ষ আর্থিক ও অর্ডার পরিসংখ্যান হাইলাইট -->
+    <div class="profile-stats-grid">
+      <div class="profile-stat-box">
+        <div class="stat-icon-wrap pink">
+          <i class="fa-solid fa-box-archive"></i>
+        </div>
+        <div class="stat-meta">
+          <span class="stat-meta-label">মোট অর্ডারসমূহ</span>
+          <span class="stat-meta-val" id="statOrderCount">০ টি</span>
+        </div>
+      </div>
+      <div class="profile-stat-box">
+        <div class="stat-icon-wrap green">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div class="stat-meta">
+          <span class="stat-meta-label">ব্যয়কৃত টাকা</span>
+          <span class="stat-meta-val" id="statTotalSpent" style="color: #10b981;">৳ ০.০০</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- মেম্বারশিপ স্ট্যাটাস ও পরবর্তী লেভেল আপগ্রেড টিপস -->
+    <div class="tier-tip-box" id="tierTipBox">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> মেম্বারশিপ তথ্য লোড হচ্ছে...
+    </div>
+
+    <!-- বিস্তারিত তথ্য কার্ড -->
     <div class="profile-details" id="profileDetails">
       <div class="profile-field">
         <span class="field-label"><i class="fa-solid fa-id-card"></i> পুরো নাম</span>
@@ -117,18 +238,59 @@
         <span class="field-label"><i class="fa-solid fa-phone"></i> ফোন নম্বর</span>
         <span class="field-value" id="valPhone">-</span>
       </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-medal"></i> মেম্বারশিপ লেভেল</span>
+        <span class="field-value" id="valMembershipTier" style="font-weight: 700;">সাধারণ সদস্য</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-tags"></i> মেম্বারশিপ ডিসকাউন্ট</span>
+        <span class="field-value" id="valMembershipDiscount" style="font-weight: 700;">-</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-box-archive"></i> আপনার দেওয়া অর্ডারসমূহ</span>
+        <span class="field-value" id="valTotalOrders">০টি অর্ডার</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-bangladeshi-taka-sign"></i> মোট অর্ডারে ব্যয়কৃত টাকা</span>
+        <span class="field-value" id="valTotalSpent" style="color: #10b981; font-weight: 700;">৳ ০.০০</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-calendar-days"></i> অ্যাকাউন্ট তৈরির তারিখ</span>
+        <span class="field-value" id="valCreatedAt">-</span>
+      </div>
     </div>
 
-    <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-      <a href="/order-details" class="btn-ghost" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; min-width: 140px;">
-        <i class="fa-solid fa-gift"></i> অর্ডার বিস্তারিত
+    <!-- সুসংগঠিত অ্যাকশন বাটনসমূহ (সেটিংস, অর্ডার, হোম ও লগআউট) -->
+    <div class="profile-actions-container">
+      <div class="profile-actions-grid">
+        <a href="/settings" class="profile-action-card" id="btnSettingsCard">
+          <div class="action-card-icon pink">
+            <i class="fa-solid fa-gear"></i>
+          </div>
+          <div class="action-card-text">
+            <span class="action-card-title">অ্যাকাউন্ট সেটিংস</span>
+            <span class="action-card-sub">পাসওয়ার্ড ও তথ্য আপডেট</span>
+          </div>
+        </a>
+
+        <a href="/order-details" class="profile-action-card" id="btnOrderCard">
+          <div class="action-card-icon blue">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <div class="action-card-text">
+            <span class="action-card-title">অর্ডার হিস্ট্রি</span>
+            <span class="action-card-sub">উইশিং ওয়েবসাইট ট্র্যাকিং</span>
+          </div>
+        </a>
+      </div>
+
+      <a href="/" class="btn-submit profile-home-btn" id="btnGoHome">
+        <i class="fa-solid fa-house"></i> হোমে ফিরে যান
       </a>
-      <a href="/settings" class="btn-ghost" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; min-width: 140px;">
-        <i class="fa-solid fa-gear"></i> সেটিংস
-      </a>
-      <a href="/dashboard" class="btn-submit" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 140px;">
-        <i class="fa-solid fa-house"></i> ড্যাশবোর্ড
-      </a>
+
+      <button type="button" class="profile-logout-btn" id="btnProfileLogout">
+        <i class="fa-solid fa-right-from-bracket"></i> অ্যাকাউন্ট থেকে লগআউট করুন
+      </button>
     </div>
   </div>
 
@@ -139,22 +301,166 @@
   </footer>
 
   <script>
+    // সংখ্যা বাংলায় রূপান্তর
+    function toBanglaNum(num) {
+      const banglaDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+      return String(num).replace(/\d/g, d => banglaDigits[d] || d);
+    }
+
+    // তারিখ বাংলায় ফরম্যাট (শুধুমাত্র তারিখ - কোনো সময় বা AM/PM নেই)
+    function formatBanglaDate(dateStr) {
+      if (!dateStr) return 'তারিখ পাওয়া যায়নি';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+
+      const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+      const day = toBanglaNum(date.getDate());
+      const month = months[date.getMonth()];
+      const year = toBanglaNum(date.getFullYear());
+
+      return `${day} ${month} ${year}`;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       const raw = localStorage.getItem('loveweb_session');
       if (raw) {
         try {
           const user = JSON.parse(raw);
-          if (user.full_name) document.getElementById('profileName').innerText = user.full_name;
-          if (user.full_name) document.getElementById('valFullName').innerText = user.full_name;
+
+          // নাম ও সাধারণ তথ্য
+          if (user.full_name) {
+            document.getElementById('profileName').innerText = user.full_name;
+            document.getElementById('valFullName').innerText = user.full_name;
+            const avatarBox = document.getElementById('avatarBox');
+            if (avatarBox) {
+              avatarBox.innerText = user.full_name.trim().charAt(0).toUpperCase();
+            }
+          }
           if (user.username) document.getElementById('valUsername').innerText = '@' + user.username;
           if (user.email) document.getElementById('valEmail').innerText = user.email;
           if (user.phone) document.getElementById('valPhone').innerText = user.phone;
-        } catch (e) {}
+
+          // অ্যাকাউন্ট তৈরির তারিখ পার্সিং ও সেভ করা (কোনো সময় বা PM নেই)
+          if (!user.created_at) {
+            user.created_at = new Date().toISOString();
+            localStorage.setItem('loveweb_session', JSON.stringify(user));
+          }
+          document.getElementById('valCreatedAt').innerText = formatBanglaDate(user.created_at);
+
+          // অর্ডার হিস্ট্রি ও মোট ব্যয় ক্যালকুলেশন
+          let userOrders = [];
+          try {
+            const rawOrders = localStorage.getItem('loveweb_orders_' + user.username) || localStorage.getItem('loveweb_orders');
+            if (rawOrders) userOrders = JSON.parse(rawOrders);
+          } catch (e) {}
+
+          const orderCount = Array.isArray(userOrders) ? userOrders.length : 0;
+          let totalSpent = 0;
+          if (Array.isArray(userOrders)) {
+            totalSpent = userOrders.reduce((sum, item) => sum + (Number(item.price || item.amount) || 0), 0);
+          }
+
+          const orderCountBn = toBanglaNum(orderCount);
+          const totalSpentBn = toBanglaNum(totalSpent.toFixed(2));
+
+          document.getElementById('valTotalOrders').innerText = `${orderCountBn}টি অর্ডার`;
+          document.getElementById('valTotalSpent').innerText = `৳ ${totalSpentBn}`;
+          document.getElementById('statOrderCount').innerText = `${orderCountBn} টি`;
+          document.getElementById('statTotalSpent').innerText = `৳ ${totalSpentBn}`;
+
+          // ==========================================
+          // মেম্বারশিপ লেভেল ও ডিসকাউন্ট পলিসি নির্ধারণ:
+          // ১) ১০০০ টাকার কম: সাধারণ সদস্য (০% ছাড়)
+          // ২) ১০০০ টাকার বেশি: এলিট মেম্বার (৪% ডিসকাউন্ট)
+          // ৩) ২০০০ টাকার বেশি: প্রিমিয়াম মেম্বার (৮% ডিসকাউন্ট)
+          // ==========================================
+          const badgeEl = document.getElementById('profileBadge');
+          const tierValEl = document.getElementById('valMembershipTier');
+          const discountValEl = document.getElementById('valMembershipDiscount');
+          const tierTipEl = document.getElementById('tierTipBox');
+
+          if (totalSpent >= 2000) {
+            // প্রিমিয়াম মেম্বার (২০০০ টাকার বেশি খরচকারী)
+            if (badgeEl) {
+              badgeEl.className = 'profile-badge-pill premium';
+              badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার (৮% ছাড়)';
+            }
+            if (tierValEl) {
+              tierValEl.innerText = 'প্রিমিয়াম মেম্বার (Premium)';
+              tierValEl.style.color = '#fbbf24';
+            }
+            if (discountValEl) {
+              discountValEl.innerText = '৮% স্পেশাল ছাড়';
+              discountValEl.style.color = '#fbbf24';
+            }
+            if (tierTipEl) {
+              tierTipEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <strong>অভিনন্দন!</strong> আপনি আমাদের সর্বোচ্চ <strong>প্রিমিয়াম মেম্বার</strong> হিসেবে প্রতিটি অর্ডারে <strong>৮% ডিসকাউন্ট</strong> ও প্রায়োরিটি সাপোর্ট উপভোগ করছেন।';
+            }
+          } else if (totalSpent >= 1000) {
+            // এলিট মেম্বার (১০০০ টাকার বেশি খরচকারী)
+            const remainingForPremium = 2000 - totalSpent;
+            if (badgeEl) {
+              badgeEl.className = 'profile-badge-pill elite';
+              badgeEl.innerHTML = '<i class="fa-solid fa-gem"></i> এলিট মেম্বার (৪% ছাড়)';
+            }
+            if (tierValEl) {
+              tierValEl.innerText = 'এলিট মেম্বার (Elite)';
+              tierValEl.style.color = '#c084fc';
+            }
+            if (discountValEl) {
+              discountValEl.innerText = '৪% বিশেষ ছাড়';
+              discountValEl.style.color = '#c084fc';
+            }
+            if (tierTipEl) {
+              tierTipEl.innerHTML = `<i class="fa-solid fa-gem" style="color: #c084fc;"></i> আপনি একজন <strong>এলিট মেম্বার</strong> (৪% ছাড় সক্রিয়)! আর মাত্র <strong>৳ ${toBanglaNum(remainingForPremium.toFixed(2))}</strong> খরচ করলেই পেয়ে যাবেন <strong>প্রিমিয়াম মেম্বারশিপ (৮% ছাড়)</strong>।`;
+            }
+          } else {
+            // সাধারণ সদস্য (১০০০ টাকার কম খরচকারী)
+            const remainingForElite = 1000 - totalSpent;
+            if (badgeEl) {
+              badgeEl.className = 'profile-badge-pill normal';
+              badgeEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য';
+            }
+            if (tierValEl) {
+              tierValEl.innerText = 'সাধারণ সদস্য';
+              tierValEl.style.color = 'var(--text-main)';
+            }
+            if (discountValEl) {
+              discountValEl.innerText = 'প্রযোজ্য নয় (১,০০০+ অর্ডারে ৪% ছাড়)';
+              discountValEl.style.color = 'var(--text-sub)';
+            }
+            if (tierTipEl) {
+              tierTipEl.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-pink);"></i> মোট <strong>৳ ১,০০০</strong> বা তার বেশি অর্ডার করলেই স্বয়ংক্রিয়ভাবে হয়ে যাবেন <strong>এলিট মেম্বার (৪% ডিসকাউন্ট)</strong>! আর মাত্র <strong>৳ ${toBanglaNum(remainingForElite.toFixed(2))}</strong> প্রয়োজন।`;
+            }
+          }
+
+        } catch (e) {
+          console.error(e);
+        }
       } else {
         window.location.href = '../sign-in/index.html';
       }
+
+      // প্রোফাইল থেকে সরাসরি লগআউট হ্যান্ডলার
+      const btnProfileLogout = document.getElementById('btnProfileLogout');
+      if (btnProfileLogout) {
+        btnProfileLogout.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (typeof window.lovewebOpenLogoutModal === 'function') {
+            window.lovewebOpenLogoutModal();
+          } else if (typeof window.lovewebDirectLogout === 'function') {
+            window.lovewebDirectLogout();
+          } else {
+            localStorage.removeItem('loveweb_session');
+            window.location.href = '../sign-in/index.html';
+          }
+        });
+      }
     });
   </script>
+
+  <!-- Official Navigation & Theme Controller -->
+  <script src="../js/official-nav.js"></script>
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>

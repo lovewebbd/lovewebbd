@@ -22,12 +22,16 @@
   <!-- External CSS -->
   <link rel="stylesheet" href="../css/style.css">
 
+  <!-- Theme Manager -->
+  <script src="../js/theme.js"></script>
+
   <style>
     .settings-card {
-      width: 560px;
+      width: 600px;
       max-width: 94%;
       height: auto;
-      padding: 35px 28px;
+      min-height: 540px;
+      padding: 42px 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -265,10 +269,10 @@
       </div>
     </div>
 
-    <!-- ড্যাশবোর্ড / হোমে ফিরে যাওয়া -->
+    <!-- হোমে ফিরে যাওয়া -->
     <div style="width: 100%; text-align: center; margin-top: 6px;">
-      <a href="/dashboard" class="btn-submit" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; width: 100%;">
-        <i class="fa-solid fa-house"></i> ড্যাশবোর্ডে ফিরে যান
+      <a href="/" class="btn-submit" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; width: 100%;">
+        <i class="fa-solid fa-house"></i> হোমে ফিরে যান
       </a>
     </div>
   </div>
@@ -447,7 +451,7 @@
        ৪. পাসওয়ার্ড পরিবর্তন মোডাল (Password Change Modal)
        ======================================================= -->
   <div class="security-modal-overlay" id="passwordModalOverlay">
-    <div class="security-modal-card">
+    <div class="security-modal-card floating-auth-card">
       <button class="modal-close-btn" id="btnClosePasswordModal" title="বন্ধ করুন">✕</button>
       
       <div style="text-align: center; margin-bottom: 16px;">
@@ -538,7 +542,7 @@
             <i class="fa-solid fa-radiation"></i> অপরিবর্তনীয় নিরাপত্তা সতর্কতা!
           </div>
           <p style="font-size: 0.8rem; color: #e0e0e0; margin: 0; line-height: 1.5;">
-            অ্যাকাউন্ট ডিলিট করলে <strong>User_Information</strong> ডাটাবেস থেকে আপনার নাম, ফোন নম্বর, ইমেইল এবং প্রোফাইলের সম্পূর্ণ তথ্য চিরতরে মুছে যাবে। এটি আর কখনো পুনরুদ্ধার করা সম্ভব হবে না।
+            অ্যাকাউন্ট ডিলিট করলে আপনার নাম, ফোন নম্বর, ইমেইল এবং প্রোফাইলের সম্পূর্ণ তথ্য চিরতরে মুছে যাবে। এটি আর কখনো পুনরুদ্ধার করা সম্ভব হবে না।
           </p>
         </div>
 
@@ -627,18 +631,23 @@
     const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";
 
     // সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Supabase fallback)
-    async function sendOtpEmailDirect(email, otp) {
+    async function sendOtpEmailDirect(email, otp, options = {}) {
       // ১. সার্ভার-সাইড জিমেইল এসএমটিপি ও অ্যাপ পাসওয়ার্ড দিয়ে সরাসরি ইমেইল পাঠানো (/api/send-otp)
       try {
         const res = await fetch('/api/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, otp: otp })
+          body: JSON.stringify({ email: email, otp: otp, ...options })
         });
         const result = await res.json();
-        if (result && result.success) {
+        if (res.ok && result && result.success) {
           console.log('OTP dispatched via Love Web OTP (Gmail SMTP) to:', email);
-          return { success: true };
+          return { success: true, messageId: result.messageId };
+        } else {
+          console.warn('Server /api/send-otp returned error:', result);
+          if (result && result.message) {
+            throw new Error(result.message);
+          }
         }
       } catch (apiErr) {
         console.warn('Server /api/send-otp failed, fallback to script:', apiErr);
@@ -655,7 +664,7 @@
             headers: {
               'Content-Type': 'text/plain;charset=utf-8'
             },
-            body: JSON.stringify({ email: email, otp: otp })
+            body: JSON.stringify({ email: email, otp: otp, ...options })
           });
           console.log('OTP dispatched via Google Apps Script POST to:', email);
           return { success: true };
@@ -667,12 +676,28 @@
       // ৩. ফলব্যাক হিসেবে Supabase Edge Function
       try {
         await _supabase.functions.invoke('send-otp-email', {
-          body: { email: email, otp: otp }
+          body: { email: email, otp: otp, ...options }
         });
       } catch (sbErr) {
         console.warn('Supabase edge function error:', sbErr);
       }
       return { success: true };
+    }
+
+    // ট্রানজেকশনাল ও নোটিফিকেশন ইমেইল পাঠানোর হেল্পার
+    async function sendNotificationEmailDirect(email, options = {}) {
+      try {
+        const res = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, ...options })
+        });
+        const result = await res.json();
+        return result && result.success;
+      } catch (err) {
+        console.warn('Notification email dispatch failed:', err);
+        return false;
+      }
     }
 
     // Common weak passwords
@@ -709,10 +734,35 @@
       try {
         currentUser = JSON.parse(rawSession);
         updateUserUI();
+        syncUserWithDatabase();
         return true;
       } catch (err) {
         window.location.href = '../sign-in/index.html';
         return false;
+      }
+    }
+
+    async function syncUserWithDatabase() {
+      if (!currentUser) return;
+      try {
+        let query = _supabase.from('User_Information').select('*');
+        if (currentUser.id) {
+          query = query.eq('id', currentUser.id);
+        } else if (currentUser.email) {
+          query = query.eq('email', currentUser.email.toLowerCase().trim());
+        } else if (currentUser.username) {
+          query = query.eq('username', currentUser.username);
+        } else {
+          return;
+        }
+        const { data, error } = await query.single();
+        if (data && !error) {
+          currentUser = { ...currentUser, ...data };
+          localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
+          updateUserUI();
+        }
+      } catch (err) {
+        console.warn('Database sync note:', err);
       }
     }
 
@@ -891,8 +941,12 @@
     if (emailStep1Form) {
       emailStep1Form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const currentEmail = currentUser.email.toLowerCase().trim();
-        const newEmail = document.getElementById('modalEmailStep1New').value.toLowerCase().trim();
+        const currentEmail = (currentUser?.email || '').toLowerCase().trim();
+        const newEmail = (document.getElementById('modalEmailStep1New')?.value || '').toLowerCase().trim();
+
+        if (!currentEmail) {
+          return showNotification('বর্তমান ইমেইল পাওয়া যায়নি। পেজ রিলোড করুন।', 'error');
+        }
 
         if (newEmail === currentEmail) {
           return showNotification('নতুন ইমেইলটি আপনার বর্তমান ইমেইল থেকে আলাদা হতে হবে।', 'error');
@@ -925,50 +979,95 @@
     }
 
     async function sendDualVerificationCodes(currentEmail, newEmail) {
-      showNotification('উভয় ইমেইলে আলাদা ভেরিফিকেশন কোড পাঠানো হচ্ছে...', 'success');
-
-      const now = Date.now();
-      const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
-      dualOtpExpiryTimestamp = now + 10 * 60 * 1000;
-
-      // ১. বর্তমান ইমেইলের জন্য আলাদা ৬ ডিজিট OTP
-      const otpForCurrent = Math.floor(100000 + Math.random() * 900000).toString();
-      // ২. নতুন ইমেইলের জন্য আলাদা ৬ ডিজিট OTP
-      let otpForNew = Math.floor(100000 + Math.random() * 900000).toString();
-      if (otpForNew === otpForCurrent) {
-        otpForNew = (parseInt(otpForCurrent) + 1).toString();
+      const btnSubmitStep1 = document.getElementById('btnSendDualEmailOtp');
+      if (btnSubmitStep1) {
+        btnSubmitStep1.disabled = true;
+        btnSubmitStep1.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> উভয় ইমেইলে কোড পাঠানো হচ্ছে...`;
+      }
+      const btnResend = document.getElementById('btnResendDualOtp');
+      if (btnResend) {
+        btnResend.disabled = true;
+        btnResend.style.opacity = '0.5';
+        btnResend.style.pointerEvents = 'none';
       }
 
-      // Supabase Password_Resets টেবিলে সেভ
-      const { error: dbError } = await _supabase
-        .from('Password_Resets')
-        .insert([
-          { email: currentEmail, otp_code: otpForCurrent, expires_at: expiresAt },
-          { email: newEmail, otp_code: otpForNew, expires_at: expiresAt }
-        ]);
+      try {
+        showNotification('উভয় ঠিকানায় আলাদা ভেরিফিকেশন কোড তৈরি করা হচ্ছে...', 'success');
 
-      if (dbError) {
-        return showNotification('কোড তৈরি করতে সমস্যা হয়েছে: ' + dbError.message, 'error');
+        const now = Date.now();
+        const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
+        dualOtpExpiryTimestamp = now + 10 * 60 * 1000;
+
+        // ১. বর্তমান ইমেইলের জন্য আলাদা ৬ ডিজিট OTP
+        const otpForCurrent = Math.floor(100000 + Math.random() * 900000).toString();
+        // ২. নতুন ইমেইলের জন্য আলাদা ৬ ডিজিট OTP
+        let otpForNew = Math.floor(100000 + Math.random() * 900000).toString();
+        while (otpForNew === otpForCurrent) {
+          otpForNew = Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Supabase Password_Resets টেবিলে সেভ
+        const { error: dbError } = await _supabase
+          .from('Password_Resets')
+          .insert([
+            { email: currentEmail, otp_code: otpForCurrent, expires_at: expiresAt },
+            { email: newEmail, otp_code: otpForNew, expires_at: expiresAt }
+          ]);
+
+        if (dbError) {
+          showNotification('কোড তৈরি করতে সমস্যা হয়েছে: ' + dbError.message, 'error');
+          return;
+        }
+
+        showNotification('সার্ভার থেকে উভয় ঠিকানায় পৃথকভাবে কোড পাঠানো হচ্ছে...', 'success');
+
+        // সার্ভার-সাইড ডেডিকেটেড ডাবল ওটিপি ডিসপ্যাচ
+        const res = await fetch('/api/send-dual-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentEmail: currentEmail,
+            newEmail: newEmail,
+            otpCurrent: otpForCurrent,
+            otpNew: otpForNew
+          })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result || !result.success) {
+          throw new Error(result?.message || 'উভয় ইমেইলে কোড পাঠাতে সমস্যা হয়েছে।');
+        }
+
+        // UI আপডেট: ধাপ ২ প্রদর্শন
+        document.getElementById('emailStep1Container').style.display = 'none';
+        document.getElementById('emailStep2Container').style.display = 'block';
+
+        const dispCur = document.getElementById('dispStep2CurrentEmailText');
+        if (dispCur) dispCur.innerHTML = `<span style="color: var(--primary-pink); font-weight: 600;">বর্তমান ইমেইল (কোড ১):</span> ${currentEmail}`;
+        const dispNew = document.getElementById('dispStep2NewEmailText');
+        if (dispNew) dispNew.innerHTML = `<span style="color: #00e676; font-weight: 600;">নতুন ইমেইল (কোড ২):</span> ${newEmail}`;
+
+        const badgeCur = document.getElementById('step2CurrentEmailBadge');
+        if (badgeCur) badgeCur.innerText = currentEmail;
+        const badgeNew = document.getElementById('step2NewEmailBadge');
+        if (badgeNew) badgeNew.innerText = newEmail;
+
+        startDualOtpTimer();
+        showNotification(`১ম কোড পাঠানো হয়েছে ${currentEmail}-এ এবং ২য় কোড পাঠানো হয়েছে ${newEmail}-এ!`, 'success');
+      } catch (sendErr) {
+        console.error('Dual OTP send error:', sendErr);
+        showNotification('কোড পাঠানো ত্রুটি: ' + sendErr.message, 'error');
+      } finally {
+        if (btnSubmitStep1) {
+          btnSubmitStep1.disabled = false;
+          btnSubmitStep1.innerHTML = `উভয় ইমেইলে কোড পাঠান <i class="fa-solid fa-paper-plane" style="margin-left: 6px;"></i>`;
+        }
+        if (btnResend) {
+          btnResend.disabled = false;
+          btnResend.style.opacity = '1';
+          btnResend.style.pointerEvents = 'auto';
+        }
       }
-
-      // Google Apps Script / Supabase-এ POST মেথডে ইমেইল নোটিফিকেশন পাঠানো
-      showNotification('উভয় ইমেইলে ওটিপি পাঠানো হচ্ছে...', 'success');
-      await Promise.allSettled([
-        sendOtpEmailDirect(currentEmail, otpForCurrent),
-        sendOtpEmailDirect(newEmail, otpForNew)
-      ]);
-
-      // UI আপডেট: ধাপ ২ প্রদর্শন
-      document.getElementById('emailStep1Container').style.display = 'none';
-      document.getElementById('emailStep2Container').style.display = 'block';
-
-      const dispCur = document.getElementById('dispStep2CurrentEmailText');
-      if (dispCur) dispCur.innerText = `বর্তমান ইমেইল: ${currentEmail}`;
-      const dispNew = document.getElementById('dispStep2NewEmailText');
-      if (dispNew) dispNew.innerText = `নতুন ইমেইল: ${newEmail}`;
-
-      startDualOtpTimer();
-      showNotification('বর্তমান ও নতুন উভয় ইমেইলেই ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে!', 'success');
     }
 
     function startDualOtpTimer() {
@@ -996,7 +1095,15 @@
     if (btnResendDualOtp) {
       btnResendDualOtp.addEventListener('click', async () => {
         if (!pendingNewEmail || !currentUser) return;
+        btnResendDualOtp.disabled = true;
+        btnResendDualOtp.innerText = 'পাঠানো হচ্ছে...';
         await sendDualVerificationCodes(currentUser.email.toLowerCase().trim(), pendingNewEmail);
+        setTimeout(() => {
+          if (btnResendDualOtp) {
+            btnResendDualOtp.disabled = false;
+            btnResendDualOtp.innerText = 'পুনরায় কোড পাঠান';
+          }
+        }, 1500);
       });
     }
 
@@ -1005,8 +1112,8 @@
     if (emailStep2Form) {
       emailStep2Form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const codeCurrent = document.getElementById('modalOtpCurrentInput').value.trim();
-        const codeNew = document.getElementById('modalOtpNewInput').value.trim();
+        const codeCurrent = (document.getElementById('modalOtpCurrentInput')?.value || '').trim();
+        const codeNew = (document.getElementById('modalOtpNewInput')?.value || '').trim();
 
         if (codeCurrent.length !== 6) {
           return showNotification('বর্তমান ইমেইলের ৬ ডিজিটের সম্পূর্ণ কোড দিন।', 'error');
@@ -1015,66 +1122,105 @@
           return showNotification('নতুন ইমেইলের ৬ ডিজিটের সম্পূর্ণ কোড দিন।', 'error');
         }
 
-        showNotification('উভয় ভেরিফিকেশন কোড যাচাই করা হচ্ছে...', 'success');
-
-        const currentEmail = currentUser.email.toLowerCase().trim();
-        const newEmail = pendingNewEmail;
-
-        // ১. বর্তমান ইমেইলের কোড যাচাই
-        const { data: curCheck, error: curErr } = await _supabase
-          .from('Password_Resets')
-          .select('*')
-          .eq('email', currentEmail)
-          .eq('otp_code', codeCurrent)
-          .order('expires_at', { ascending: false })
-          .limit(1);
-
-        if (curErr || !curCheck || curCheck.length === 0) {
-          return showNotification('বর্তমান ইমেইলে প্রেরিত ভেরিফিকেশন কোডটি সঠিক নয়।', 'error');
+        const btnSubmit = document.getElementById('btnSubmitDualOtp');
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> যাচাই করা হচ্ছে...`;
         }
 
-        if (new Date() > new Date(curCheck[0].expires_at)) {
-          return showNotification('বর্তমান ইমেইলের কোডের মেয়াদ শেষ হয়ে গেছে।', 'error');
+        try {
+          showNotification('উভয় ভেরিফিকেশন কোড যাচাই করা হচ্ছে...', 'success');
+
+          const currentEmail = (currentUser?.email || '').toLowerCase().trim();
+          const newEmail = pendingNewEmail;
+
+          // ১. বর্তমান ইমেইলের কোড যাচাই
+          const { data: curCheck, error: curErr } = await _supabase
+            .from('Password_Resets')
+            .select('*')
+            .eq('email', currentEmail)
+            .eq('otp_code', codeCurrent)
+            .order('expires_at', { ascending: false })
+            .limit(1);
+
+          if (curErr || !curCheck || curCheck.length === 0) {
+            showNotification('বর্তমান ইমেইলে প্রেরিত ভেরিফিকেশন কোডটি সঠিক নয়।', 'error');
+            return;
+          }
+
+          if (new Date() > new Date(curCheck[0].expires_at)) {
+            showNotification('বর্তমান ইমেইলের কোডের মেয়াদ শেষ হয়ে গেছে।', 'error');
+            return;
+          }
+
+          // ২. নতুন ইমেইলের কোড যাচাই
+          const { data: newCheck, error: newErr } = await _supabase
+            .from('Password_Resets')
+            .select('*')
+            .eq('email', newEmail)
+            .eq('otp_code', codeNew)
+            .order('expires_at', { ascending: false })
+            .limit(1);
+
+          if (newErr || !newCheck || newCheck.length === 0) {
+            showNotification('নতুন ইমেইলে প্রেরিত ভেরিফিকেশন কোডটি সঠিক নয়।', 'error');
+            return;
+          }
+
+          if (new Date() > new Date(newCheck[0].expires_at)) {
+            showNotification('নতুন ইমেইলের কোডের মেয়াদ শেষ হয়ে গেছে।', 'error');
+            return;
+          }
+
+          // ৩. উভয় কোড সঠিক হলে ডাটাবেজে ইমেইল পরিবর্তন
+          let updateQuery = _supabase.from('User_Information').update({ email: newEmail });
+          if (currentUser.id) {
+            updateQuery = updateQuery.eq('id', currentUser.id);
+          } else {
+            updateQuery = updateQuery.eq('email', currentEmail);
+          }
+          const { error: updateEmailErr } = await updateQuery;
+
+          if (updateEmailErr) {
+            showNotification('ইমেইল আপডেট করতে ব্যর্থ: ' + updateEmailErr.message, 'error');
+            return;
+          }
+
+          // ব্যবহৃত ওটিপি কোড ডিলিট করা
+          await _supabase.from('Password_Resets').delete().in('email', [currentEmail, newEmail]);
+
+          // সেশন আপডেট
+          currentUser.email = newEmail;
+          localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
+          updateUserUI();
+
+          clearInterval(dualOtpExpiryTimerInterval);
+          document.getElementById('emailModalOverlay').classList.remove('open');
+          showNotification('আপনার ইমেইল সফলভাবে পরিবর্তন করা হয়েছে!', 'success');
+
+          // ইমেইল পরিবর্তনের পর বর্তমান (পুরাতন) ও নতুন উভয় ইমেইলে নিশ্চিতকরণ নোটিফিকেশন ইমেইল প্রেরণ
+          sendNotificationEmailDirect(currentEmail, {
+            subject: '✅ আপনার LoveWeb অ্যাকাউন্টের ইমেইল পরিবর্তন সম্পন্ন হয়েছে',
+            title: 'ইমেইল পরিবর্তন সম্পন্ন',
+            badge: 'অ্যাকাউন্ট সিকিউরিটি',
+            message: `আপনার লাভওয়েব অ্যাকাউন্টের ইমেইল ঠিকানা পরিবর্তন করে সফলভাবে "${newEmail}" নির্ধারণ করা হয়েছে। আপনি যদি এই পরিবর্তন নিজে না করে থাকেন, তবে অবিলম্বে আমাদের সাথে যোগাযোগ করুন।`
+          });
+
+          sendNotificationEmailDirect(newEmail, {
+            subject: '🎉 অভিনন্দন! LoveWeb অ্যাকাউন্টে নতুন ইমেইল সফলভাবে সংযুক্ত হয়েছে',
+            title: 'নতুন ইমেইল সক্রিয়করণ',
+            badge: 'নিরাপত্তা কনফার্মেশন',
+            message: `আপনার লাভওয়েব অ্যাকাউন্টের প্রধান ইমেইল হিসেবে "${newEmail}" সফলভাবে সক্রিয় করা হয়েছে। এখন থেকে এই ইমেইল ব্যবহার করে আপনি লগইন করতে পারবেন।`
+          });
+        } catch (err) {
+          console.error('Email change verification error:', err);
+          showNotification('ত্রুটি: ' + err.message, 'error');
+        } finally {
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `ভেরিফাই ও পরিবর্তন <i class="fa-solid fa-circle-check" style="margin-left: 4px;"></i>`;
+          }
         }
-
-        // ২. নতুন ইমেইলের কোড যাচাই
-        const { data: newCheck, error: newErr } = await _supabase
-          .from('Password_Resets')
-          .select('*')
-          .eq('email', newEmail)
-          .eq('otp_code', codeNew)
-          .order('expires_at', { ascending: false })
-          .limit(1);
-
-        if (newErr || !newCheck || newCheck.length === 0) {
-          return showNotification('নতুন ইমেইলে প্রেরিত ভেরিফিকেশন কোডটি সঠিক নয়।', 'error');
-        }
-
-        if (new Date() > new Date(newCheck[0].expires_at)) {
-          return showNotification('নতুন ইমেইলের কোডের মেয়াদ শেষ হয়ে গেছে।', 'error');
-        }
-
-        // ৩. উভয় কোড সঠিক হলে ডাটাবেজে ইমেইল পরিবর্তন
-        const { error: updateEmailErr } = await _supabase
-          .from('User_Information')
-          .update({ email: newEmail })
-          .eq('email', currentEmail);
-
-        if (updateEmailErr) {
-          return showNotification('ইমেইল আপডেট করতে ব্যর্থ: ' + updateEmailErr.message, 'error');
-        }
-
-        // ব্যবহৃত ওটিপি কোড ডিলিট করা
-        await _supabase.from('Password_Resets').delete().in('email', [currentEmail, newEmail]);
-
-        // সেশন আপডেট
-        currentUser.email = newEmail;
-        localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
-        updateUserUI();
-
-        clearInterval(dualOtpExpiryTimerInterval);
-        document.getElementById('emailModalOverlay').classList.remove('open');
-        showNotification('আপনার ইমেইল সফলভাবে পরিবর্তন করা হয়েছে!', 'success');
       });
     }
 
@@ -1318,7 +1464,12 @@
       }
 
       // জিমেইল / সার্ভার মাধ্যমে ওটিপি পাঠানো
-      await sendOtpEmailDirect(targetEmail, generatedOtp);
+      await sendOtpEmailDirect(targetEmail, generatedOtp, {
+        subject: `🔐 LoveWeb: অ্যাকাউন্ট মুছে ফেলার ভেরিফিকেশন কোড (${generatedOtp})`,
+        title: 'অ্যাকাউন্ট মুছে ফেলার ভেরিফিকেশন',
+        badge: 'অ্যাকাউন্ট ডিলিট সতর্কতা',
+        message: 'আপনার LoveWeb অ্যাকাউন্টটি স্থায়ীভাবে মুছে ফেলতে নিচে দেওয়া ৬-ডিজিটের ভেরিফিকেশন কোডটি ব্যবহার করুন। এই কোডটি কারো সাথে শেয়ার করবেন না।'
+      });
 
       // ধাপ ২ প্রদর্শন
       document.getElementById('deleteStep1Container').style.display = 'none';
@@ -1452,6 +1603,9 @@
       loadUserSession();
     });
   </script>
+
+  <!-- Official Navigation & Theme Controller -->
+  <script src="../js/official-nav.js"></script>
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>

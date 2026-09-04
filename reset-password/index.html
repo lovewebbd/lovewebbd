@@ -15,26 +15,10 @@
     <!-- মূল CSS ফাইল -->
     <link rel="stylesheet" href="../css/style.css">
 
+    <!-- থিম ম্যানেজার -->
+    <script src="../js/theme.js"></script>
+
     <style>
-        /* লেআউট ফিক্স ও মোবাইল স্ক্রিন অপটিমাইজেশন */
-        .reset-card {
-            width: 450px;
-            max-width: 90%;
-            height: auto;
-            min-height: initial;
-            padding: 35px 25px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .reset-form-box {
-            width: 100%;
-            padding: 0;
-            overflow: visible;
-        }
-
         .input-group i.input-icon {
             position: absolute;
             left: 14px;
@@ -45,16 +29,23 @@
             pointer-events: none;
         }
 
-        @media (max-width: 768px) {
-            .reset-card {
-                width: 92%;
-                padding: 30px 20px;
-                margin: auto;
-            }
+        .auth-theme-corner-toggle {
+            position: fixed;
+            top: 16px;
+            right: 18px;
+            z-index: 999;
         }
     </style>
 </head>
 <body>
+
+    <!-- থিম টগল বাটন -->
+    <div class="auth-theme-corner-toggle">
+        <button type="button" class="top-bar-action-btn theme-toggle-btn" onclick="window.toggleLoveWebTheme()" title="থিম পরিবর্তন করুন (লাইট / ডার্ক)">
+            <i class="fa-solid fa-sun"></i>
+            <span class="theme-text">লাইট মোড</span>
+        </button>
+    </div>
 
     <!-- নোটিফিকেশন টোস্ট -->
     <div id="notification" class="notification-toast">
@@ -62,7 +53,7 @@
     </div>
 
     <!-- মূল কার্ড কন্টেইনার -->
-    <div class="auth-card reset-card">
+    <div class="auth-card reset-card floating-auth-card">
         
         <!-- ওয়াটারমার্ক ব্যাকগ্রাউন্ড -->
         <img src="../img/logo.png" alt="Watermark" class="watermark-bg" onerror="this.style.display='none'">
@@ -72,7 +63,7 @@
             
             <!-- ব্র্যান্ড লোগো -->
             <div class="brand-logo">
-                <img src="../img/logo.png" alt="Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=Logo'">
+                <a href="../sign-in/index.html" id="resetBrandLogoLink"><img src="../img/logo.png" alt="Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=Logo'"></a>
             </div>
 
             <h2 class="title" style="text-align: center;">পাসওয়ার্ড রিসেট</h2>
@@ -98,13 +89,52 @@
 
             <!-- ব্যাকে যাওয়ার লিঙ্ক -->
             <div style="text-align: center; margin-top: 20px;">
-                <a href="../sign-in/index.html" class="footer-link" style="font-size: 0.9rem;">
+                <a href="../sign-in/index.html" class="footer-link" id="resetBackLink" style="font-size: 0.9rem;">
                     <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান
                 </a>
             </div>
 
         </div>
     </div>
+
+    <!-- ডাইনামিক নেভিগেশন ও স্ক্রিপ্ট -->
+    <script>
+      function adaptResetAuthNavigation() {
+        let isLoggedIn = false;
+        try {
+          const sessionRaw = localStorage.getItem('loveweb_session');
+          if (sessionRaw) {
+            const user = JSON.parse(sessionRaw);
+            if (user && (user.username || user.email || user.id || user.full_name)) {
+              isLoggedIn = true;
+            }
+          }
+        } catch (e) {}
+
+        const backLink = document.getElementById('resetBackLink');
+        const logoLink = document.getElementById('resetBrandLogoLink');
+
+        if (isLoggedIn) {
+          if (backLink) {
+            backLink.href = '../index.html';
+            backLink.innerHTML = '<i class="fa-solid fa-house"></i> মূল পেজে ফিরে যান';
+          }
+          if (logoLink) {
+            logoLink.href = '../index.html';
+          }
+        } else {
+          if (backLink) {
+            backLink.href = '../sign-in/index.html';
+            backLink.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
+          }
+          if (logoLink) {
+            logoLink.href = '../sign-in/index.html';
+          }
+        }
+      }
+      adaptResetAuthNavigation();
+      document.addEventListener('DOMContentLoaded', adaptResetAuthNavigation);
+    </script>
 
     <!-- HTML এর একদম শেষে লিংকযুক্ত করুন -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

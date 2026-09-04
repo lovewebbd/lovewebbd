@@ -24,26 +24,20 @@
   <!-- External CSS -->
   <link rel="stylesheet" href="../css/style.css">
 
+  <!-- Theme Manager -->
+  <script src="../js/theme.js"></script>
+
   <style>
     .help-card {
       width: 720px;
-      max-width: 92%;
+      max-width: 94%;
       height: auto;
-      max-height: 88vh;
-      overflow-y: auto;
-      padding: 35px 28px;
+      padding: 34px 28px 38px 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
-    }
-
-    .help-card::-webkit-scrollbar {
-      width: 5px;
-    }
-    .help-card::-webkit-scrollbar-thumb {
-      background: rgba(255, 42, 109, 0.4);
-      border-radius: 4px;
+      margin: 10px auto 30px auto;
     }
 
     /* FAQ Container */
@@ -51,16 +45,16 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 13px;
       margin: 20px 0 24px 0;
     }
 
     .faq-item {
       background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
+      border: 1.5px solid rgba(255, 255, 255, 0.09);
+      border-radius: 16px;
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .faq-item:hover {
@@ -70,13 +64,13 @@
 
     .faq-item.active {
       border-color: var(--primary-pink);
-      box-shadow: 0 4px 18px rgba(255, 42, 109, 0.15);
-      background: rgba(26, 11, 46, 0.85);
+      box-shadow: 0 4px 22px rgba(255, 42, 109, 0.2);
+      background: rgba(255, 42, 109, 0.07);
     }
 
     .faq-header {
       width: 100%;
-      padding: 16px 20px;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -96,25 +90,49 @@
       align-items: center;
       gap: 12px;
       margin: 0;
-      line-height: 1.4;
+      line-height: 1.45;
+      color: var(--text-main);
+      flex: 1;
     }
 
-    .faq-question-title i {
+    .faq-title-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(255, 42, 109, 0.12);
       color: var(--primary-pink);
-      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
       flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .faq-item.active .faq-title-icon {
+      background: var(--primary-pink);
+      color: #ffffff;
+      box-shadow: 0 2px 10px var(--glow-pink);
     }
 
     .faq-icon-arrow {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text-sub);
-      font-size: 0.95rem;
-      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s, color 0.3s;
       flex-shrink: 0;
-      margin-left: 12px;
+      margin-left: 10px;
     }
 
     .faq-item.active .faq-icon-arrow {
       transform: rotate(180deg);
+      background: rgba(255, 42, 109, 0.2);
       color: var(--primary-pink);
     }
 
@@ -131,28 +149,29 @@
     }
 
     .faq-content {
-      padding: 0 20px 18px 44px;
-      font-size: 0.92rem;
-      color: #dfd8e8;
-      line-height: 1.65;
-      border-top: 1px dashed rgba(255, 255, 255, 0.08);
-      padding-top: 12px;
+      padding: 2px 20px 18px 20px;
+      font-size: 0.94rem;
+      color: #e2e8f0;
+      line-height: 1.7;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+      padding-top: 14px;
       margin-top: 2px;
     }
 
     .faq-content a {
       color: var(--primary-pink);
       text-decoration: underline;
+      font-weight: 600;
     }
 
     /* Contact Box */
     .contact-card-box {
       width: 100%;
       background: rgba(255, 42, 109, 0.08);
-      border: 1px solid rgba(255, 42, 109, 0.3);
+      border: 1.5px solid rgba(255, 42, 109, 0.3);
       border-radius: 16px;
       padding: 18px 22px;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -186,9 +205,10 @@
       border: 1px solid var(--border-color);
       border-radius: 10px;
       padding: 8px 14px;
-      color: #fff;
+      color: #ffffff;
       text-decoration: none;
       font-size: 0.9rem;
+      font-weight: 600;
       transition: all 0.25s;
     }
 
@@ -199,15 +219,107 @@
       box-shadow: 0 4px 12px var(--glow-pink);
     }
 
+    /* =========================================
+       Light Mode Overrides for FAQ and Help
+       ========================================= */
+    [data-theme="light"] .help-card {
+      background: #ffffff !important;
+      border-color: rgba(255, 42, 109, 0.18) !important;
+      box-shadow: 0 16px 40px -10px rgba(255, 42, 109, 0.12) !important;
+    }
+
+    [data-theme="light"] .faq-item {
+      background: #ffffff !important;
+      border-color: rgba(255, 42, 109, 0.16) !important;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    [data-theme="light"] .faq-item:hover {
+      border-color: rgba(255, 42, 109, 0.45) !important;
+      background: #fffbfd !important;
+      box-shadow: 0 4px 14px rgba(255, 42, 109, 0.1) !important;
+    }
+
+    [data-theme="light"] .faq-item.active {
+      background: #ffffff !important;
+      border-color: #ff2a6d !important;
+      box-shadow: 0 6px 24px rgba(255, 42, 109, 0.18) !important;
+    }
+
+    [data-theme="light"] .faq-question-title {
+      color: #0f172a !important;
+    }
+
+    [data-theme="light"] .faq-item.active .faq-question-title {
+      color: #ff2a6d !important;
+    }
+
+    [data-theme="light"] .faq-icon-arrow {
+      background: rgba(255, 42, 109, 0.08) !important;
+      color: #64748b !important;
+    }
+
+    [data-theme="light"] .faq-item.active .faq-icon-arrow {
+      background: rgba(255, 42, 109, 0.18) !important;
+      color: #ff2a6d !important;
+    }
+
+    [data-theme="light"] .faq-content {
+      color: #334155 !important;
+      border-top-color: rgba(255, 42, 109, 0.16) !important;
+    }
+
+    [data-theme="light"] .faq-content a {
+      color: #ff2a6d !important;
+    }
+
+    [data-theme="light"] .contact-card-box {
+      background: #fff8fa !important;
+      border-color: rgba(255, 42, 109, 0.28) !important;
+      box-shadow: 0 4px 16px rgba(255, 42, 109, 0.08) !important;
+    }
+
+    [data-theme="light"] .contact-card-title {
+      color: #0f172a !important;
+    }
+
+    [data-theme="light"] .contact-pill-link {
+      background: #ffffff !important;
+      border-color: rgba(255, 42, 109, 0.22) !important;
+      color: #0f172a !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    }
+
+    [data-theme="light"] .contact-pill-link:hover {
+      background: #ff2a6d !important;
+      border-color: #ff2a6d !important;
+      color: #ffffff !important;
+    }
+
     @media (max-width: 600px) {
       .help-card {
-        padding: 25px 18px;
+        padding: 22px 15px 30px 15px;
+        max-width: 100%;
+        width: 100%;
+        margin-top: 4px;
+        margin-bottom: 24px;
+        border-radius: 18px;
       }
-      .faq-content {
-        padding-left: 20px;
+      .faq-header {
+        padding: 14px 14px;
       }
       .faq-question-title {
-        font-size: 0.95rem;
+        font-size: 0.96rem;
+        gap: 10px;
+      }
+      .faq-title-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.85rem;
+      }
+      .faq-content {
+        padding: 2px 14px 15px 14px;
+        font-size: 0.9rem;
       }
     }
   </style>
@@ -218,7 +330,7 @@
   <div class="auth-card help-card">
     <!-- Brand Logo -->
     <div class="brand-logo" style="margin-bottom: 10px;">
-      <a href="/sign-in"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 48px; width: auto;"></a>
+      <a href="/sign-in" id="helpBrandLogoLink"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 48px; width: auto;"></a>
     </div>
 
     <h2 class="title" style="margin-bottom: 6px;">সহায়তা ও সাধারণ প্রশ্নোত্তর (FAQ)</h2>
@@ -231,10 +343,10 @@
       <div class="faq-item">
         <button class="faq-header" type="button" aria-expanded="false">
           <span class="faq-question-title">
-            <i class="fa-solid fa-circle-question"></i>
-            LoveWeb কী এবং এটি কীভাবে কাজ করে?
+            <span class="faq-title-icon"><i class="fa-solid fa-circle-question"></i></span>
+            <span>LoveWeb কী এবং এটি কীভাবে কাজ করে?</span>
           </span>
-          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </button>
         <div class="faq-body-collapse">
           <div class="faq-content">
@@ -247,10 +359,10 @@
       <div class="faq-item">
         <button class="faq-header" type="button" aria-expanded="false">
           <span class="faq-question-title">
-            <i class="fa-solid fa-key"></i>
-            পাসওয়ার্ড ভুলে গেলে কীভাবে উদ্ধার করব?
+            <span class="faq-title-icon"><i class="fa-solid fa-key"></i></span>
+            <span>পাসওয়ার্ড ভুলে গেলে কীভাবে উদ্ধার করব?</span>
           </span>
-          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </button>
         <div class="faq-body-collapse">
           <div class="faq-content">
@@ -263,10 +375,10 @@
       <div class="faq-item">
         <button class="faq-header" type="button" aria-expanded="false">
           <span class="faq-question-title">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            উইশিং ওয়েবসাইট কীভাবে তৈরি করা যায়?
+            <span class="faq-title-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+            <span>উইশিং ওয়েবসাইট কীভাবে তৈরি করা যায়?</span>
           </span>
-          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </button>
         <div class="faq-body-collapse">
           <div class="faq-content">
@@ -275,14 +387,56 @@
         </div>
       </div>
 
+      <!-- Question: Membership Tiers -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <span class="faq-title-icon"><i class="fa-solid fa-crown"></i></span>
+            <span>এলিট ও প্রিমিয়াম মেম্বারশিপ কী এবং এটি কীভাবে পাওয়া যায়?</span>
+          </span>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            LoveWeb-এ অর্ডারে মোট ব্যয়ের পরিমাণের ওপর ভিত্তি করে গ্রাহকদের স্বয়ংক্রিয়ভাবে মেম্বারশিপ মর্যাদা প্রদান করা হয়:
+            <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+              <li><strong>সাধারণ সদস্য (Normal Member):</strong> ১,০০০ টাকার নিচে অর্ডার সম্পন্নকারী গ্রাহকগণ।</li>
+              <li><strong>এলিট মেম্বার (Elite Member):</strong> মোট ১,০০০ টাকার বেশি (৳১,০০০+) খরচ করলেই স্বয়ংক্রিয়ভাবে প্রোফাইল 'এলিট মেম্বার' হিসেবে আপগ্রেড হয়ে যায়।</li>
+              <li><strong>প্রিমিয়াম মেম্বার (Premium Member):</strong> মোট ২,০০০ টাকার বেশি (৳২,০০০+) ব্যয়কারী গ্রাহকগণ লাভ করেন LoveWeb-এর সর্বোচ্চ 'প্রিমিয়াম মেম্বার' পদবি।</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question: Membership Discounts -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <span class="faq-title-icon"><i class="fa-solid fa-tags"></i></span>
+            <span>এলিট ও প্রিমিয়াম মেম্বারশিপে কী কী ডিসকাউন্ট ও সুবিধা পাওয়া যায়?</span>
+          </span>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            মেম্বারদের জন্য LoveWeb-এ রয়েছে স্থায়ী ও আকর্ষণীয় ক্যাশব্যাক ও ছাড় সুবিধা:
+            <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+              <li><strong>এলিট মেম্বারদের জন্য:</strong> পরবর্তী প্রতিটি অর্ডারে নিশ্চিত <strong>৪% (4%) স্পেশাল ডিসকাউন্ট</strong>।</li>
+              <li><strong>প্রিমিয়াম মেম্বারদের জন্য:</strong> প্রতিটি অর্ডারে সর্বোচ্চ <strong>৮% (8%) এক্সক্লুসিভ ডিসকাউন্ট</strong> ও প্রায়োরিটি এক্সপ্রেস কাস্টমাইজেশন সেবা।</li>
+              <li>এই মেম্বারশিপ ডিসকাউন্ট আজীবন সচল থাকে এবং কোনো কুপন কোড ছাড়াই চেকআউটের সময় স্বয়ংক্রিয়ভাবে সমন্বিত হয়।</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <!-- Question 4 -->
       <div class="faq-item">
         <button class="faq-header" type="button" aria-expanded="false">
           <span class="faq-question-title">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            তৈরিকৃত লিংক কতদিন পর্যন্ত সক্রিয় থাকে?
+            <span class="faq-title-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+            <span>তৈরিকৃত লিংক কতদিন পর্যন্ত সক্রিয় থাকে?</span>
           </span>
-          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </button>
         <div class="faq-body-collapse">
           <div class="faq-content">
@@ -295,10 +449,10 @@
       <div class="faq-item">
         <button class="faq-header" type="button" aria-expanded="false">
           <span class="faq-question-title">
-            <i class="fa-solid fa-headset"></i>
-            সরাসরি যোগাযোগ ও সহায়তা পাওয়ার উপায় কী?
+            <span class="faq-title-icon"><i class="fa-solid fa-headset"></i></span>
+            <span>সরাসরি যোগাযোগ ও সহায়তা পাওয়ার উপায় কী?</span>
           </span>
-          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
         </button>
         <div class="faq-body-collapse">
           <div class="faq-content">
@@ -325,21 +479,69 @@
     </div>
 
     <div style="width: 100%; text-align: center;">
-      <a href="/sign-in" class="btn-submit" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; max-width: 260px;">
-        <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে যান
+      <a href="/sign-in" class="btn-submit" id="helpReturnBtn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; max-width: 260px;">
+        <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান
       </a>
     </div>
   </div>
 
   <footer class="auth-footer">
-    <a href="/sign-in" class="footer-link"><i class="fa-solid fa-right-to-bracket"></i> সাইন ইন</a>
+    <a href="/sign-in" class="footer-link" id="helpFooterAuthLink"><i class="fa-solid fa-right-to-bracket"></i> সাইন ইন</a>
     <span class="footer-divider">•</span>
     <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
   </footer>
 
-  <!-- FAQ Accordion & Smooth Scroll Script -->
+  <!-- FAQ Accordion & Dynamic Return Link Handler -->
   <script>
+    // লগইন অবস্থা যাচাই করে 'মূল পেজে ফিরে যান' অথবা 'সাইন-ইন পেজে ফিরে যান' সেট করা
+    function adaptAuthNavigation() {
+      let isLoggedIn = false;
+      try {
+        const sessionRaw = localStorage.getItem('loveweb_session');
+        if (sessionRaw) {
+          const user = JSON.parse(sessionRaw);
+          if (user && (user.username || user.email || user.id || user.full_name)) {
+            isLoggedIn = true;
+          }
+        }
+      } catch (e) {}
+
+      const returnBtn = document.getElementById('helpReturnBtn');
+      const footerAuthLink = document.getElementById('helpFooterAuthLink');
+      const brandLogoLink = document.getElementById('helpBrandLogoLink');
+
+      if (isLoggedIn) {
+        if (returnBtn) {
+          returnBtn.href = '../index.html';
+          returnBtn.innerHTML = '<i class="fa-solid fa-house"></i> মূল পেজে ফিরে যান';
+        }
+        if (footerAuthLink) {
+          footerAuthLink.href = '../index.html';
+          footerAuthLink.innerHTML = '<i class="fa-solid fa-house"></i> মূল পেজ';
+        }
+        if (brandLogoLink) {
+          brandLogoLink.href = '../index.html';
+        }
+      } else {
+        if (returnBtn) {
+          returnBtn.href = '../sign-in/index.html';
+          returnBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
+        }
+        if (footerAuthLink) {
+          footerAuthLink.href = '../sign-in/index.html';
+          footerAuthLink.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> সাইন ইন';
+        }
+        if (brandLogoLink) {
+          brandLogoLink.href = '../sign-in/index.html';
+        }
+      }
+    }
+
+    // তৎক্ষণাৎ কার্যকর করা
+    adaptAuthNavigation();
+
     document.addEventListener('DOMContentLoaded', () => {
+      adaptAuthNavigation();
       const faqItems = document.querySelectorAll('.faq-item');
 
       faqItems.forEach((item) => {
@@ -378,6 +580,9 @@
       });
     });
   </script>
+
+  <!-- Official Navigation & Theme Controller -->
+  <script src="../js/official-nav.js"></script>
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>

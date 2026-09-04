@@ -24,32 +24,26 @@
   <!-- External CSS -->
   <link rel="stylesheet" href="../css/style.css">
 
+  <!-- Theme Manager -->
+  <script src="../js/theme.js"></script>
+
   <style>
     .policy-card {
       width: 760px;
-      max-width: 92%;
+      max-width: 94%;
       height: auto;
-      max-height: 88vh;
-      overflow-y: auto;
       padding: 38px 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
-    }
-
-    .policy-card::-webkit-scrollbar {
-      width: 5px;
-    }
-    .policy-card::-webkit-scrollbar-thumb {
-      background: rgba(255, 42, 109, 0.4);
-      border-radius: 4px;
+      margin: 10px auto 30px auto;
     }
 
     .policy-section {
       background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
+      border: 1.5px solid rgba(255, 255, 255, 0.09);
+      border-radius: 16px;
       padding: 20px 24px;
       width: 100%;
       margin-bottom: 16px;
@@ -78,16 +72,16 @@
     }
 
     .policy-text {
-      font-size: 0.92rem;
-      color: #dfd8e8;
+      font-size: 0.94rem;
+      color: #e2e8f0;
       line-height: 1.68;
     }
 
     .policy-list {
       margin-top: 8px;
       padding-left: 20px;
-      color: #dfd8e8;
-      font-size: 0.9rem;
+      color: #e2e8f0;
+      font-size: 0.92rem;
       line-height: 1.65;
     }
 
@@ -106,6 +100,38 @@
       font-weight: 600;
       margin-bottom: 10px;
     }
+
+    /* Light Mode Overrides */
+    [data-theme="light"] .policy-card {
+      background: #ffffff !important;
+      border-color: rgba(255, 42, 109, 0.18) !important;
+      box-shadow: 0 16px 40px -10px rgba(255, 42, 109, 0.12) !important;
+    }
+
+    [data-theme="light"] .policy-section {
+      background: #ffffff !important;
+      border-color: rgba(255, 42, 109, 0.16) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+    }
+
+    [data-theme="light"] .policy-text,
+    [data-theme="light"] .policy-list {
+      color: #334155 !important;
+    }
+
+    @media (max-width: 600px) {
+      .policy-card {
+        padding: 24px 16px 30px 16px;
+        max-width: 100%;
+        width: 100%;
+        margin-top: 4px;
+        margin-bottom: 24px;
+        border-radius: 18px;
+      }
+      .policy-section {
+        padding: 16px 16px;
+      }
+    }
   </style>
 </head>
 
@@ -113,7 +139,7 @@
 
   <div class="auth-card policy-card">
     <div class="brand-logo" style="margin-bottom: 10px;">
-      <a href="/sign-in"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 48px; width: auto;"></a>
+      <a href="/sign-in" id="policyBrandLogoLink"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 48px; width: auto;"></a>
     </div>
 
     <span class="policy-badge">সর্বশেষ হালনাগাদ: সেপ্টেম্বর ২০২৬</span>
@@ -215,20 +241,36 @@
     <!-- Section 8 -->
     <div class="policy-section">
       <div class="policy-heading">
-        <i class="fa-solid fa-cookie-bite"></i> ৮. লোকাল স্টোরেজ ও কুকিজ ব্যবহার
+        <i class="fa-solid fa-crown"></i> ৮. মেম্বারশিপ লেভেল, এলিট ও প্রিমিয়াম সুবিধা এবং ডিসকাউন্ট নীতিমালা
       </div>
       <div class="policy-text">
-        ব্যবহারকারীর লগইন সেশন সচল রাখতে ব্রাউজারের লোকাল স্টোরেজ ও কুকিজ ব্যবহৃত হয়। এতে প্রতিবার পেজ রিফ্রেশ করার পর পুনরায় লগইন করার প্রয়োজন পড়ে না। লগআউট বাটনে ক্লিক করার সাথে সাথে এই স্টোরেজ ডাটা স্বয়ংক্রিয়ভাবে মুছে ফেলা হয়।
+        LoveWeb-এ আমাদের নিয়মিত ও বিশ্বস্ত গ্রাহকদের বিশেষ মূল্যায়ন করতে স্তরভিত্তিক মেম্বারশিপ ও ডিসকাউন্ট সুবিধা প্রদান করা হয়। অর্ডারে ব্যয়কৃত মোট টাকার হিসাব অনুযায়ী এই মেম্বারশিপ স্বয়ংক্রিয়ভাবে নির্ধারিত হয়:
+        <ul class="policy-list">
+          <li><strong>সাধারণ সদস্য (Normal Member):</strong> মোট ১,০০০ টাকার নিচে অর্ডার করা সকল নিবন্ধিত অ্যাকাউন্ট সাধারণ সদস্য হিসেবে থাকবেন এবং স্ট্যান্ডার্ড সেবা উপভোগ করবেন।</li>
+          <li><strong>এলিট মেম্বার (Elite Member):</strong> মোট ১,০০০ টাকার বেশি (৳১,০০০+) অর্ডার বা ব্যয় সম্পন্ন করলেই গ্রাহক স্বয়ংক্রিয়ভাবে 'এলিট মেম্বার' মর্যাদায় উন্নীত হবেন। এলিট মেম্বারগণ তাদের পরবর্তী প্রতিটি অর্ডারে নিশ্চিত <strong>৪% (4%) বিশেষ ডিসকাউন্ট</strong> উপভোগ করবেন।</li>
+          <li><strong>প্রিমিয়াম মেম্বার (Premium Member):</strong> মোট ২,০০০ টাকার বেশি (৳২,০০০+) ব্যয়কারী সম্মানিত গ্রাহকগণ লাভ করবেন LoveWeb-এর সর্বোচ্চ 'প্রিমিয়াম মেম্বার' স্ট্যাটাস। প্রিমিয়াম মেম্বারগণ প্রতিটি অর্ডারে নিশ্চিত <strong>৮% (8%) এক্সক্লুসিভ ডিসকাউন্ট</strong> ও প্রায়োরিটি ডেলিভারি সুবিধা পাবেন।</li>
+          <li><strong>আজীবন মেম্বারশিপ স্ট্যাটাস:</strong> একবার নির্দিষ্ট অর্ডারের শর্ত পূরণ হলে এই মেম্বারশিপ স্ট্যাটাস ও ডিসকাউন্ট সুবিধা আজীবন সচল থাকবে এবং প্রতিটি অর্ডারে সরাসরি প্রযোজ্য হবে।</li>
+        </ul>
       </div>
     </div>
 
     <!-- Section 9 -->
     <div class="policy-section">
       <div class="policy-heading">
-        <i class="fa-solid fa-headset"></i> ৯. যোগাযোগ ও সহায়তা
+        <i class="fa-solid fa-cookie-bite"></i> ৯. লোকাল স্টোরেজ ও কুকিজ ব্যবহার
       </div>
       <div class="policy-text">
-        গোপনীয়তা নীতি সম্পর্কে আপনার কোনো প্রশ্ন থাকলে বা ডেটা অপসারণের অনুরোধ করতে সরাসরি যোগাযোগ করুন:
+        ব্যবহারকারীর লগইন সেশন সচল রাখতে ব্রাউজারের লোকাল স্টোরেজ ও কুকিজ ব্যবহৃত হয়। এতে প্রতিবার পেজ রিফ্রেশ করার পর পুনরায় লগইন করার প্রয়োজন পড়ে না। লগআউট বাটনে ক্লিক করার সাথে সাথে এই স্টোরেজ ডাটা স্বয়ংক্রিয়ভাবে মুছে ফেলা হয়।
+      </div>
+    </div>
+
+    <!-- Section 10 -->
+    <div class="policy-section">
+      <div class="policy-heading">
+        <i class="fa-solid fa-headset"></i> ১০. যোগাযোগ ও সহায়তা
+      </div>
+      <div class="policy-text">
+        গোপনীয়তা নীতি বা মেম্বারশিপ ডিসকাউন্ট সম্পর্কে আপনার কোনো প্রশ্ন থাকলে সরাসরি যোগাযোগ করুন:
         <div style="margin-top: 8px;">
           • ইমেইল: <a href="mailto:lovewebbd@gmail.com" style="color: var(--primary-pink); font-weight: 600;">lovewebbd@gmail.com</a><br>
           • অফিসিয়াল মেসেঞ্জার: <a href="https://m.me/lovewebbd" target="_blank" rel="noopener noreferrer" style="color: var(--primary-pink); font-weight: 600;">@lovewebbd</a>
@@ -237,17 +279,69 @@
     </div>
 
     <div style="margin-top: 15px; width: 100%; text-align: center;">
-      <a href="/sign-in" class="btn-submit" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; max-width: 260px;">
+      <a href="/sign-in" class="btn-submit" id="policyReturnBtn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; max-width: 260px;">
         <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান
       </a>
     </div>
   </div>
 
   <footer class="auth-footer">
-    <a href="/sign-in" class="footer-link"><i class="fa-solid fa-right-to-bracket"></i> সাইন ইন</a>
+    <a href="/sign-in" class="footer-link" id="policyFooterAuthLink"><i class="fa-solid fa-right-to-bracket"></i> সাইন ইন</a>
     <span class="footer-divider">•</span>
     <a href="../help/index.html" class="footer-link"><i class="fa-solid fa-circle-question"></i> সাহায্য ও FAQ</a>
   </footer>
+
+  <script>
+    // লগইন অবস্থা যাচাই করে 'মূল পেজে ফিরে যান' অথবা 'সাইন-ইন পেজে ফিরে যান' সেট করা
+    function adaptAuthNavigation() {
+      let isLoggedIn = false;
+      try {
+        const sessionRaw = localStorage.getItem('loveweb_session');
+        if (sessionRaw) {
+          const user = JSON.parse(sessionRaw);
+          if (user && (user.username || user.email || user.id || user.full_name)) {
+            isLoggedIn = true;
+          }
+        }
+      } catch (e) {}
+
+      const returnBtn = document.getElementById('policyReturnBtn');
+      const footerAuthLink = document.getElementById('policyFooterAuthLink');
+      const brandLogoLink = document.getElementById('policyBrandLogoLink');
+
+      if (isLoggedIn) {
+        if (returnBtn) {
+          returnBtn.href = '../index.html';
+          returnBtn.innerHTML = '<i class="fa-solid fa-house"></i> মূল পেজে ফিরে যান';
+        }
+        if (footerAuthLink) {
+          footerAuthLink.href = '../index.html';
+          footerAuthLink.innerHTML = '<i class="fa-solid fa-house"></i> মূল পেজ';
+        }
+        if (brandLogoLink) {
+          brandLogoLink.href = '../index.html';
+        }
+      } else {
+        if (returnBtn) {
+          returnBtn.href = '../sign-in/index.html';
+          returnBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
+        }
+        if (footerAuthLink) {
+          footerAuthLink.href = '../sign-in/index.html';
+          footerAuthLink.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> সাইন ইন';
+        }
+        if (brandLogoLink) {
+          brandLogoLink.href = '../sign-in/index.html';
+        }
+      }
+    }
+
+    adaptAuthNavigation();
+    document.addEventListener('DOMContentLoaded', adaptAuthNavigation);
+  </script>
+
+  <!-- Official Navigation & Theme Controller -->
+  <script src="../js/official-nav.js"></script>
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>

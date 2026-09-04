@@ -4,10 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট</title>
-  <meta name="description" content="LoveWeb - Custom wishing website platform for loved ones (প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট)">
-  <meta property="og:title" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট">
-  <meta property="og:description" content="LoveWeb - Custom wishing website platform for loved ones (প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট)">
+  <title>LoveWeb - হোম</title>
+  <meta name="description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট (অফিশিয়াল প্ল্যাটফর্ম)">
+  <meta property="og:title" content="LoveWeb - হোম">
+  <meta property="og:description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট (অফিশিয়াল প্ল্যাটফর্ম)">
 
   <!-- Favicon Links -->
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
@@ -16,7 +16,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700;800&family=Pacifico&family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,42 +24,10 @@
   <!-- Main CSS -->
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- Theme Manager -->
+  <script src="js/theme.js"></script>
+
   <style>
-    .home-card {
-      width: 520px;
-      max-width: 92%;
-      padding: 40px 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      height: auto;
-      min-height: 480px;
-    }
-    .user-profile-box {
-      margin: 20px 0;
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 20px;
-      text-align: left;
-    }
-    .user-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-      color: var(--text-sub);
-      font-size: 0.95rem;
-    }
-    .user-row i {
-      color: var(--primary-pink);
-      width: 20px;
-    }
-    .user-row strong {
-      color: var(--text-main);
-    }
     .action-buttons {
       display: flex;
       flex-direction: column;
@@ -107,32 +75,9 @@
     <span id="notif-message"></span>
   </div>
 
-  <!-- Main Card -->
-  <div class="auth-card home-card" id="homeCard">
-    <!-- Watermark Background -->
-    <img src="img/logo.png" alt="LoveWeb Logo" class="watermark-bg" onerror="this.style.display='none'">
-
-    <!-- Logo -->
-    <div class="brand-logo" style="margin-bottom: 12px;">
-      <img src="img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 52px; width: auto;" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=LoveWeb'">
-    </div>
-
-    <h1 class="title" style="font-size: 1.8rem; margin-bottom: 6px;">LoveWeb</h1>
-    <p class="desc" style="font-size: 1rem;">প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট প্ল্যাটফর্ম</p>
-
-    <!-- Content based on auth state -->
-    <div id="authContent" style="width: 100%;">
-      <!-- Populated by JavaScript -->
-    </div>
-
-    <div class="action-buttons" id="actionsContainer">
-      <a href="/sign-in" id="loginLink" class="btn-action btn-primary-action">
-        <i class="fa-solid fa-arrow-right-to-bracket"></i> লগইন / সাইন আপ করুন
-      </a>
-      <button id="logoutBtn" class="btn-action btn-secondary-action" style="display: none;">
-        <i class="fa-solid fa-right-from-bracket"></i> লগআউট (Logout)
-      </button>
-    </div>
+  <!-- Dynamic Application Root (Renders Dashboard or Visitor Landing) -->
+  <div id="appRoot" style="width: 100%; min-height: 80vh; display: flex; flex-direction: column; align-items: center;">
+    <!-- Populated by JavaScript -->
   </div>
 
   <script type="text/javascript" charset="utf-8">
@@ -151,66 +96,147 @@
     }
 
     // সেশন চেক ও রেন্ডারিং
-    const authContent = document.getElementById('authContent');
-    const loginLink = document.getElementById('loginLink');
-    const logoutBtn = document.getElementById('logoutBtn');
-
     function renderAuthState() {
+      const appRoot = document.getElementById('appRoot');
+      if (!appRoot) return;
+
       const sessionRaw = localStorage.getItem('loveweb_session');
       if (sessionRaw) {
         try {
           const user = JSON.parse(sessionRaw);
-          authContent.innerHTML = `
-            <div class="user-profile-box">
-              <div class="user-row">
-                <i class="fa-solid fa-circle-user"></i>
-                <div>নাম: <strong>${user.full_name || 'ইউজার'}</strong></div>
-              </div>
-              <div class="user-row">
-                <i class="fa-solid fa-at"></i>
-                <div>ইউজারনেম: <strong>${user.username || '-'}</strong></div>
-              </div>
-              <div class="user-row">
-                <i class="fa-solid fa-envelope"></i>
-                <div>ইমেল: <strong>${user.email || '-'}</strong></div>
-              </div>
-              ${user.phone ? `
-              <div class="user-row">
-                <i class="fa-solid fa-phone"></i>
-                <div>ফোন: <strong>${user.phone}</strong></div>
-              </div>` : ''}
-            </div>
+          const userName = user.full_name || user.username || 'ইউজার';
+          const userInitial = userName.charAt(0).toUpperCase();
 
-            <!-- ড্যাশবোর্ড কুইক অ্যাকশন মেন্যু -->
-            <div class="dashboard-grid">
-              <a href="/order-details" class="dashboard-card-btn" id="btnDashOrders">
-                <i class="fa-solid fa-gift"></i>
-                <span class="card-title">অর্ডার বিস্তারিত</span>
-                <span class="card-desc">উইশিং অর্ডারের হিস্ট্রি</span>
-              </a>
-              <a href="/profile" class="dashboard-card-btn" id="btnDashProfile">
-                <i class="fa-solid fa-user"></i>
-                <span class="card-title">প্রোফাইল</span>
-                <span class="card-desc">অ্যাকাউন্ট তথ্য দেখুন</span>
-              </a>
-              <a href="/settings" class="dashboard-card-btn" id="btnDashSettings">
-                <i class="fa-solid fa-gear"></i>
-                <span class="card-title">সেটিংস</span>
-                <span class="card-desc">নিরাপত্তা ও পরিবর্তন</span>
-              </a>
-              <a href="/help" class="dashboard-card-btn" id="btnDashHelp">
-                <i class="fa-solid fa-circle-question"></i>
-                <span class="card-title">সাহায্য কেন্দ্র</span>
-                <span class="card-desc">সাপোর্ট ও নিয়মাবলী</span>
-              </a>
-            </div>
+          appRoot.innerHTML = `
+            <main class="dashboard-wrapper">
+              <!-- ১. ইউজার ওয়েলকাম হেডার -->
+              <section class="dash-welcome-section">
+                <div class="dash-user-meta">
+                  <div class="dash-avatar-circle">${userInitial}</div>
+                  <div class="dash-meta-info">
+                    <div class="dash-title-row">
+                      <h1 class="dash-greeting">স্বাগতম, <span class="dash-name">${userName}</span> 👋</h1>
+                      <span class="dash-member-chip"><i class="fa-solid fa-circle-check"></i> ভেরিফায়েড সদস্য</span>
+                    </div>
+                    <p class="dash-lead">লাভওয়েব অফিশিয়াল হোম পোর্টাল • আপনার ডিজিটাল উইশিং সেবা</p>
+                  </div>
+                </div>
+              </section>
 
-            <p style="color: var(--success-green); font-size: 0.85rem; margin-top: 10px; margin-bottom: 12px;">
-              <i class="fa-solid fa-circle-check"></i> আপনি লগইন অবস্থায় আছেন
-            </p>
+              <!-- ২. হিরো ফিচার ও অর্ডার সিওয়াইএ ব্যানার -->
+              <section class="dash-hero-banner">
+                <div class="dash-hero-info">
+                  <span class="dash-badge-glow"><i class="fa-solid fa-wand-magic-sparkles"></i> প্রিমিয়াম উইশিং ওয়েবসাইট</span>
+                  <h2 class="dash-hero-heading">প্রিয়জনের জন্য তৈরি করুন অনন্য উইশিং ওয়েবসাইট</h2>
+                  <p class="dash-hero-sub">
+                    জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ যেকোনো দিনে আকর্ষণীয় রোমান্টিক মিউজিক, ফটো গ্যালারি ও কাস্টম অ্যানিমেশনসহ ওয়েবসাইট উপহার দিন।
+                  </p>
+                  <div class="dash-hero-buttons">
+                    <a href="order-details/index.html" class="dash-cta-primary">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> নতুন ওয়েবসাইট অর্ডার করুন
+                    </a>
+                    <a href="help/index.html" class="dash-cta-outline">
+                      <i class="fa-solid fa-circle-question"></i> নিয়মাবলী ও ডেমো
+                    </a>
+                  </div>
+                </div>
+                <div class="dash-hero-visual">
+                  <div class="dash-hero-card-preview">
+                    <img src="img/logo.png" alt="LoveWeb BD" class="dash-hero-logo" onerror="this.style.display='none'">
+                    <div class="dash-hero-tagline">
+                      <span class="font-loveweb">LoveWeb</span> <span class="top-bar-badge-bd">BD</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- ৩. ড্যাশবোর্ড প্রধান সেবাসমূহ (৪টি কার্ডের প্রফেশনাল গ্রিড) -->
+              <section>
+                <div class="dash-grid-title-row">
+                  <h3 class="dash-grid-title"><i class="fa-solid fa-layer-group"></i> প্রধান সেবাসমূহ ও কন্ট্রোল</h3>
+                  <span class="dash-grid-subtitle">সহজে নেভিগেট ও পরিচালনা করুন</span>
+                </div>
+
+                <div class="dash-services-grid" style="margin-top: 14px;">
+                  <!-- কার্ড ১: অর্ডার হিস্ট্রি -->
+                  <a href="order-details/index.html" class="dash-service-card" id="cardOrderDetails">
+                    <div class="card-icon-wrap pink">
+                      <i class="fa-solid fa-box-archive"></i>
+                    </div>
+                    <div class="card-content">
+                      <h4 class="card-title">আমার অর্ডারসমূহ</h4>
+                      <p class="card-desc">আপনার চলমান ও পূর্বের সকল উইশিং ওয়েবসাইটের বর্তমান অবস্থা ও লিংক।</p>
+                    </div>
+                    <div class="card-footer-action">
+                      <span>অর্ডার হিস্ট্রি দেখুন</span>
+                      <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </a>
+
+                  <!-- কার্ড ২: প্রোফাইল -->
+                  <a href="profile/index.html" class="dash-service-card" id="cardProfile">
+                    <div class="card-icon-wrap blue">
+                      <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="card-content">
+                      <h4 class="card-title">প্রোফাইল তথ্য</h4>
+                      <p class="card-desc">আপনার অ্যাকাউন্টের নাম, ইউজারনেম ও ব্যক্তিগত তথ্য দেখুন ও পরিবর্তন করুন।</p>
+                    </div>
+                    <div class="card-footer-action">
+                      <span>প্রোফাইলে যান</span>
+                      <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </a>
+
+                  <!-- কার্ড ৩: সেটিংস ও সিকিউরিটি -->
+                  <a href="settings/index.html" class="dash-service-card" id="cardSettings">
+                    <div class="card-icon-wrap purple">
+                      <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <div class="card-content">
+                      <h4 class="card-title">সেটিংস ও নিরাপত্তা</h4>
+                      <p class="card-desc">ইমেইল ভেরিফিকেশন, পাসওয়ার্ড পরিবর্তন এবং অ্যাকাউন্ট নিরাপত্তা ব্যবস্থা।</p>
+                    </div>
+                    <div class="card-footer-action">
+                      <span>সেটিংস পরিবর্তন</span>
+                      <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </a>
+
+                  <!-- কার্ড ৪: হেল্প ও কাস্টমার সাপোর্ট -->
+                  <a href="help/index.html" class="dash-service-card" id="cardHelp">
+                    <div class="card-icon-wrap green">
+                      <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div class="card-content">
+                      <h4 class="card-title">সাহায্য ও সাপোর্ট</h4>
+                      <p class="card-desc">ওয়েবসাইট তৈরির বিস্তারিত নিয়মাবলী, সাধারণ প্রশ্নোত্তর এবং লাইভ সাপোর্ট।</p>
+                    </div>
+                    <div class="card-footer-action">
+                      <span>সাহায্য কেন্দ্র</span>
+                      <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                  </a>
+                </div>
+              </section>
+
+              <!-- ৪. লাইভ মেসেঞ্জার কুইক কানেক্ট স্ট্রিপ -->
+              <section class="dash-support-strip">
+                <div class="support-strip-left">
+                  <div class="support-icon-circle">
+                    <i class="fa-solid fa-comments"></i>
+                  </div>
+                  <div class="support-text">
+                    <h4 class="support-heading">কোনো বিশেষ কাস্টমাইজেশন বা সাহায্য প্রয়োজন?</h4>
+                    <p class="support-sub">আমাদের সাপোর্ট টিম ২৪/৭ সক্রিয় রয়েছে। যেকোনো সহায়তায় সরাসরি মেসেঞ্জারে যোগাযোগ করুন।</p>
+                  </div>
+                </div>
+                <button class="support-messenger-btn" type="button" onclick="if(window.openLoveWebMessenger) window.openLoveWebMessenger();">
+                  <i class="fa-brands fa-facebook-messenger"></i> লাইভ চ্যাট শুরু করুন
+                </button>
+              </section>
+            </main>
           `;
-          if (loginLink) loginLink.style.display = 'none';
-          if (logoutBtn) logoutBtn.style.display = 'flex';
         } catch (e) {
           showLoggedOutState();
         }
@@ -220,30 +246,52 @@
     }
 
     function showLoggedOutState() {
-      authContent.innerHTML = `
-        <div style="margin: 24px 0; color: var(--text-sub); font-size: 0.95rem;">
-          <p>আপনার প্রিয়জনের জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ মুহূর্তকে স্মরণীয় করে রাখতে নিজস্ব উইশিং পেজ তৈরি করুন।</p>
+      const appRoot = document.getElementById('appRoot');
+      if (!appRoot) return;
+      appRoot.innerHTML = `
+        <div class="auth-card landing-card" style="margin-top: 20px;">
+          <img src="img/logo.png" alt="LoveWeb Logo" class="watermark-bg" onerror="this.style.display='none'">
+          <div class="brand-logo" style="margin-bottom: 12px;">
+            <img src="img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 58px; width: auto;" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=LoveWeb'">
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px;">
+            <h1 class="title font-loveweb" style="font-size: 2.3rem; margin: 0; line-height: 1;">LoveWeb</h1>
+            <span class="top-bar-badge-bd" style="font-size: 0.72rem; padding: 2px 6px;">BD</span>
+          </div>
+          <p class="desc" style="font-size: 1.05rem; margin-bottom: 22px;">প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট প্ল্যাটফর্ম</p>
+
+          <div class="landing-features-box">
+            <div class="landing-feature-item">
+              <i class="fa-solid fa-cake-candles"></i>
+              <span>জন্মদিন ও বিবাহবার্ষিকীর আকর্ষণীয় উইশ পেজ</span>
+            </div>
+            <div class="landing-feature-item">
+              <i class="fa-solid fa-music"></i>
+              <span>কাস্টম ব্যাকগ্রাউন্ড মিউজিক ও রোমান্টিক অ্যানিমেশন</span>
+            </div>
+            <div class="landing-feature-item">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+              <span>যেকোনো ডিভাইসে পারফেক্ট ও রেসপন্সিভ ডিসপ্লে</span>
+            </div>
+          </div>
+
+          <div class="action-buttons" style="margin-top: 20px;">
+            <a href="sign-in/index.html" class="btn-action btn-primary-action">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> লগইন / সাইন আপ করুন
+            </a>
+            <a href="help/index.html" class="btn-action btn-secondary-action">
+              <i class="fa-solid fa-book-open-reader"></i> ওয়েবসাইট তৈরির নিয়মাবলী
+            </a>
+          </div>
         </div>
       `;
-      if (loginLink) loginLink.style.display = 'flex';
-      if (logoutBtn) logoutBtn.style.display = 'none';
     }
 
     renderAuthState();
-
-    // লগআউট লজিক
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('loveweb_session');
-        sessionStorage.clear();
-        showNotification('সফলভাবে লগআউট করা হয়েছে।', 'success');
-        renderAuthState();
-        setTimeout(() => {
-          window.location.href = '/sign-in'; 
-        }, 1000);
-      });
-    }
   </script>
+  <!-- Official Navigation & Theme Controller -->
+  <script src="js/official-nav.js"></script>
+
   <!-- Live Messenger Floating Widget -->
   <script src="js/messenger.js"></script>
 </body>

@@ -20,10 +20,30 @@
     <!-- External CSS -->
     <link rel="stylesheet" href="../css/style.css">
     
+    <!-- Theme Manager -->
+    <script src="../js/theme.js"></script>
+
+    <style>
+        .auth-theme-corner-toggle {
+            position: fixed;
+            top: 16px;
+            right: 18px;
+            z-index: 999;
+        }
+    </style>
+
     <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+    <!-- Corner Theme Toggle -->
+    <div class="auth-theme-corner-toggle">
+        <button type="button" class="top-bar-action-btn theme-toggle-btn" onclick="window.toggleLoveWebTheme()" title="থিম পরিবর্তন করুন (লাইট / ডার্ক)">
+            <i class="fa-solid fa-sun"></i>
+            <span class="theme-text">লাইট মোড</span>
+        </button>
+    </div>
 
     <!-- Dynamic Notification Toast -->
     <div id="notification" class="notification-toast">
@@ -31,7 +51,7 @@
     </div>
 
     <!-- Main Card Container -->
-    <div class="auth-card" id="authCard">
+    <div class="auth-card floating-auth-card" id="authCard">
         
         <!-- Watermark Background -->
         <img src="../img/watermark.png" alt="LoveWeb Watermark" class="watermark-bg" onerror="this.style.display='none'">
