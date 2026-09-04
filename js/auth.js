@@ -3,6 +3,61 @@ const SUPABASE_URL = "https://xotiwgyalsnqpzbvodmd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdGl3Z3lhbHNucXB6YnZvZG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTY2NDMsImV4cCI6MjEwMzkzMjY0M30.RoSQVbj0ZSPKlLEnD8MP5ECjDUUg0yNkJF2B6QHc-x8";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Google Apps Script Web App URL (Gmail দিয়ে সরাসরি ওটিপি পাঠানোর জন্য)
+// আপনার Google Script Deploy করার পর পাওয়া Web App URL টি এখানে দিন অথবা localStorage এ 'google_script_webapp_url' কি-তে সেট করতে পারেন
+const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";
+
+// সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Supabase fallback)
+async function sendOtpEmailDirect(email, otp) {
+    // ১. সার্ভার-সাইড জিমেইল এসএমটিপি ও অ্যাপ পাসওয়ার্ড দিয়ে সরাসরি ইমেইল পাঠানো (/api/send-otp)
+    try {
+        const res = await fetch('/api/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, otp: otp })
+        });
+        const result = await res.json();
+        if (result && result.success) {
+            console.log('OTP dispatched via Love Web OTP (Gmail SMTP) to:', email);
+            return { success: true };
+        }
+    } catch (apiErr) {
+        console.warn('Server /api/send-otp failed, trying fallback:', apiErr);
+    }
+
+    const scriptUrl = localStorage.getItem('google_script_webapp_url') || GOOGLE_SCRIPT_WEBAPP_URL;
+
+    // ২. Google Apps Script Web App-এ POST রিকোয়েস্ট (যদি সেট করা থাকে)
+    if (scriptUrl && scriptUrl.trim().startsWith('http')) {
+        try {
+            await fetch(scriptUrl.trim(), {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                },
+                body: JSON.stringify({ email: email, otp: otp })
+            });
+            console.log('OTP dispatched via Google Apps Script POST to:', email);
+            return { success: true };
+        } catch (fetchErr) {
+            console.warn('Google Apps Script fetch failed, attempting Supabase fallback:', fetchErr);
+        }
+    }
+
+    // ৩. ফলব্যাক হিসেবে Supabase Edge Function কল
+    try {
+        const { error } = await _supabase.functions.invoke('send-otp-email', {
+            body: { email: email, otp: otp }
+        });
+        if (error) console.warn('Supabase invoke warning:', error);
+    } catch (sbErr) {
+        console.warn('Supabase edge function fallback error:', sbErr);
+    }
+
+    return { success: true };
+}
+
 // DOM Elements
 const authCard = document.getElementById('authCard');
 const overlayBtnSignIn = document.getElementById('overlayBtnSignIn');
@@ -203,6 +258,154 @@ if (emailInput) {
     });
 }
 
+// সাধারণ ও দুর্বল পাসওয়ার্ডের তালিকা (Blacklist)
+const COMMON_WEAK_PASSWORDS = [
+    '12345678', '123456789', '1234567890', 'password', 'password123',
+    'admin123', 'qwerty123', 'loveweb123', 'iloveyou', 'bangladesh',
+    'bangladesh1', 'secret123', 'welcome123', 'pass1234', '11223344',
+    '87654321', '00000000', '11111111', 'abcdefgh'
+];
+
+// পাসওয়ার্ড সুরক্ষা রুলস ভ্যালিডেশন
+function validatePasswordSecurity(pwd, oldPwd = null) {
+    if (!pwd || pwd.length < 8) {
+        return { isValid: false, msg: 'পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।' };
+    }
+    if (COMMON_WEAK_PASSWORDS.includes(pwd.toLowerCase())) {
+        return { isValid: false, msg: 'অতি সাধারণ বা অনুমানযোগ্য পাসওয়ার্ড গ্রহণযোগ্য নয়। একটি নিরাপদ পাসওয়ার্ড নির্বাচন করুন।' };
+    }
+    if (!/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd)) {
+        return { isValid: false, msg: 'পাসওয়ার্ডে বড় (A-Z) ও ছোট (a-z) উভয় ইংরেজি অক্ষর থাকতে হবে।' };
+    }
+    if (!/[0-9]/.test(pwd)) {
+        return { isValid: false, msg: 'পাসওয়ার্ডে অন্তত একটি সংখ্যা (0-9) থাকা আবশ্যক।' };
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`§±]/.test(pwd)) {
+        return { isValid: false, msg: 'পাসওয়ার্ডে অন্তত একটি বিশেষ চিহ্ন (@, #, $, %, !, ইত্যাদি) থাকতে হবে।' };
+    }
+    if (oldPwd && pwd === oldPwd) {
+        return { isValid: false, msg: 'নতুন পাসওয়ার্ডটি পূর্বের পাসওয়ার্ড থেকে আলাদা হতে হবে।' };
+    }
+    return { isValid: true };
+}
+
+// সিকিউরিটি রুলস লাইভ চেকলিস্ট আপডেট
+function updateSecurityChecklist(pwd, prefix = 'signUp') {
+    const hasLength = pwd.length >= 8;
+    const hasCase = /[A-Z]/.test(pwd) && /[a-z]/.test(pwd);
+    const hasNum = /[0-9]/.test(pwd);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`§±]/.test(pwd);
+
+    function updateItem(id, valid) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = `rule-item ${valid ? 'valid' : 'invalid'}`;
+        const icon = el.querySelector('i');
+        if (icon) {
+            icon.className = valid ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+        }
+    }
+
+    updateItem(`${prefix}RuleLength`, hasLength);
+    updateItem(`${prefix}RuleCase`, hasCase);
+    updateItem(`${prefix}RuleNumber`, hasNum);
+    updateItem(`${prefix}RuleSpecial`, hasSpecial);
+}
+
+// লগইন রেট-লিমিটিং এবং ব্রুট-ফোর্স ডিফেন্স
+function checkLoginLock(identifier) {
+    if (!identifier) return { isLocked: false };
+    const key = `login_lock_${identifier.toLowerCase()}`;
+    const lockedUntil = parseInt(localStorage.getItem(key) || '0');
+    const now = Date.now();
+    if (lockedUntil > now) {
+        const remainingSec = Math.ceil((lockedUntil - now) / 1000);
+        const mins = Math.floor(remainingSec / 60);
+        const secs = remainingSec % 60;
+        const timeStr = mins > 0 ? `${mins} মিনিট ${secs} সেকেন্ড` : `${secs} সেকেন্ড`;
+        return { isLocked: true, msg: `অতিরিক্ত ভুল চেষ্টার কারণে অ্যাকাউন্ট সাময়িকভাবে লক করা হয়েছে। অপেক্ষা করুন: ${timeStr}।` };
+    }
+    return { isLocked: false };
+}
+
+function handleFailedLogin(identifier) {
+    const attemptKey = `login_fail_count_${identifier.toLowerCase()}`;
+    const current = parseInt(localStorage.getItem(attemptKey) || '0') + 1;
+    localStorage.setItem(attemptKey, current.toString());
+
+    if (current >= 5) {
+        const lockUntil = Date.now() + 5 * 60 * 1000; // ৫ মিনিট লকআউট
+        localStorage.setItem(`login_lock_${identifier.toLowerCase()}`, lockUntil.toString());
+        localStorage.removeItem(attemptKey);
+        return '৫ বার ভুল পাসওয়ার্ড দেওয়ায় অ্যাকাউন্টটি ৫ মিনিটের জন্য সাময়িকভাবে লক করা হলো।';
+    } else {
+        const remaining = 5 - current;
+        return `ভুল পাসওয়ার্ড! আর ${remaining} বার ভুল করলে অ্যাকাউন্ট ৫ মিনিটের জন্য লক হবে।`;
+    }
+}
+
+function handleSuccessfulLogin(identifier) {
+    localStorage.removeItem(`login_fail_count_${identifier.toLowerCase()}`);
+    localStorage.removeItem(`login_lock_${identifier.toLowerCase()}`);
+}
+
+// ওটিপি ৫ বার ভুল করার ১০ মিনিট লকআউট সিস্টেম
+function checkOtpBlock(email) {
+    if (!email) return { isBlocked: false };
+    const cleanEmail = email.toLowerCase().trim();
+    const key = `otp_block_${cleanEmail}`;
+    const blockedUntil = parseInt(localStorage.getItem(key) || '0');
+    const now = Date.now();
+    if (blockedUntil > now) {
+        const remainingSec = Math.ceil((blockedUntil - now) / 1000);
+        const mins = Math.floor(remainingSec / 60);
+        const secs = remainingSec % 60;
+        const timeStr = mins > 0 ? `${mins} মিনিট ${secs} সেকেন্ড` : `${secs} সেকেন্ড`;
+        return {
+            isBlocked: true,
+            remainingMs: blockedUntil - now,
+            timeStr: timeStr,
+            msg: `৫ বার ভুল ওটিপি দেওয়ায় অ্যাকাউন্ট সাময়িকভাবে ১০ মিনিটের জন্য ব্লক করা হয়েছে। অপেক্ষা করুন: ${timeStr}।`
+        };
+    }
+    // ১০ মিনিট পার হলে স্বয়ংক্রিয়ভাবে ব্লক ও ফেইল কাউন্টার রিমুভ
+    if (blockedUntil > 0 && blockedUntil <= now) {
+        localStorage.removeItem(key);
+        localStorage.removeItem(`otp_fail_count_${cleanEmail}`);
+    }
+    return { isBlocked: false };
+}
+
+function handleFailedOtpAttempt(email) {
+    const cleanEmail = email.toLowerCase().trim();
+    const attemptKey = `otp_fail_count_${cleanEmail}`;
+    const current = parseInt(localStorage.getItem(attemptKey) || '0') + 1;
+    localStorage.setItem(attemptKey, current.toString());
+
+    if (current >= 5) {
+        const lockUntil = Date.now() + 10 * 60 * 1000; // ১০ মিনিট লকআউট
+        localStorage.setItem(`otp_block_${cleanEmail}`, lockUntil.toString());
+        localStorage.removeItem(attemptKey);
+        return {
+            blocked: true,
+            msg: '৫ বার ভুল ভেরিফিকেশন কোড দেওয়ায় অ্যাকাউন্ট ১০ মিনিটের জন্য সাময়িকভাবে ব্লক করা হলো।'
+        };
+    } else {
+        const remaining = 5 - current;
+        return {
+            blocked: false,
+            remaining: remaining,
+            msg: `ভুল ভেরিফিকেশন কোড! আর ${remaining} বার চেষ্টার সুযোগ রয়েছে (এরপর ১০ মিনিটের জন্য ব্লক হবে)।`
+        };
+    }
+}
+
+function handleSuccessfulOtp(email) {
+    const cleanEmail = email.toLowerCase().trim();
+    localStorage.removeItem(`otp_fail_count_${cleanEmail}`);
+    localStorage.removeItem(`otp_block_${cleanEmail}`);
+}
+
 // পাসওয়ার্ডের মান নির্দেশক
 function checkPasswordStrength(pwd) {
     let score = 0;
@@ -211,7 +414,13 @@ function checkPasswordStrength(pwd) {
     if (pwd.length >= 11) score += 1;
     if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 1;
     if (/[0-9]/.test(pwd)) score += 1;
-    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`§±]/.test(pwd)) score += 1;
+
+    const isCommon = COMMON_WEAK_PASSWORDS.includes(pwd.toLowerCase());
+
+    if (isCommon) {
+        return { label: 'অতি সাধারণ (Unsafe)', color: '#ff4d4d', percent: 15, isWeak: true };
+    }
 
     switch (score) {
         case 1:
@@ -233,14 +442,13 @@ if (passwordInput) {
     passwordInput.addEventListener('input', (e) => {
         const val = e.target.value;
 
+        // লাইভ রুলস চেকলিস্ট আপডেট
+        updateSecurityChecklist(val, 'signUp');
+
         if (val.length === 0) {
             if (strengthMeter) strengthMeter.style.width = '0%';
             if (strengthText) strengthText.innerText = '';
             return;
-        }
-
-        if (val.length < 8) {
-            showNotification('পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।', 'error');
         }
 
         const result = checkPasswordStrength(val);
@@ -347,19 +555,14 @@ if (signUpForm) {
             return;
         }
 
-        if (password.length < 8) {
-            showNotification('পাসওয়ার্ড বাধ্যতামূলকভাবে অন্তত ৮ অক্ষরের হতে হবে।', 'error');
-            return;
-        }
-
         if (password !== confirmPassword) {
             showNotification('প্রদত্ত পাসওয়ার্ড দুটি একে অপরের সাথে মিলছে না।', 'error');
             return;
         }
 
-        const pwdStrength = checkPasswordStrength(password);
-        if (pwdStrength.isWeak) {
-            showNotification('দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়। সংখ্যা ও বিশেষ চিহ্ন যোগ করুন।', 'error');
+        const securityCheck = validatePasswordSecurity(password);
+        if (!securityCheck.isValid) {
+            showNotification(securityCheck.msg, 'error');
             return;
         }
 
@@ -402,6 +605,13 @@ if (signInForm) {
         const identifier = document.getElementById('signInIdentifier').value.trim();
         const password = document.getElementById('signInPassword').value.trim();
 
+        // ১. ব্রুট-ফোর্স লকআউট পরীক্ষা
+        const lockStatus = checkLoginLock(identifier);
+        if (lockStatus.isLocked) {
+            showNotification(lockStatus.msg, "error");
+            return;
+        }
+
         const { data: userCheck, error: userError } = await _supabase
             .from('User_Information')
             .select('*')
@@ -415,8 +625,13 @@ if (signInForm) {
         const matchedUser = userCheck.find(user => user.password === password);
 
         if (!matchedUser) {
-            showNotification("আপনার প্রদানকৃত পাসওয়ার্ডটি সঠিক নয়।", "error");
+            // ভুল পাসওয়ার্ডের ক্ষেত্রে অ্যাটেম্পট কাউন্টার বৃদ্ধি ও ওয়ার্নিং প্রদান
+            const warningMsg = handleFailedLogin(identifier);
+            showNotification(warningMsg, "error");
         } else {
+            // সফল লগইনে অ্যাটেম্পট কাউন্টার ক্লিয়ার
+            handleSuccessfulLogin(identifier);
+
             showNotification("লগইন সফল হয়েছে। অপেক্ষা করুন...", "success");
             localStorage.setItem('loveweb_session', JSON.stringify(matchedUser));
             setTimeout(() => {
@@ -439,6 +654,12 @@ if (resetRequestForm) {
         const emailValue = resetEmailInput ? resetEmailInput.value.trim().toLowerCase() : '';
 
         if (!emailValue) return showNotification('অনুগ্রহ করে একটি ইমেইল প্রদান করুন।', 'error');
+
+        // ১০ মিনিট ওটিপি ব্লক সক্রিয় আছে কি না পরীক্ষা
+        const blockStatus = checkOtpBlock(emailValue);
+        if (blockStatus.isBlocked) {
+            return showNotification(blockStatus.msg, 'error');
+        }
 
         const emailValidation = checkAllowedEmail(emailValue);
         if (!emailValidation.isValid) return showNotification(emailValidation.msg, 'error');
@@ -480,15 +701,9 @@ if (resetRequestForm) {
             return showNotification('কোড পাঠাতে সমস্যা হয়েছে: ' + dbError.message, 'error');
         }
 
-        // Supabase Edge Function থেকে জিমেইলে ইমেইল ডেসপ্যাচ
+        // Google Apps Script / Supabase-এ POST মেথডে জিমেইলে ওটিপি ডেসপ্যাচ
         showNotification('ইমেইলে ওটিপি পাঠানো হচ্ছে...', 'success');
-        const { error: fnError } = await _supabase.functions.invoke('send-otp-email', {
-            body: { email: emailValue, otp: generatedOTP }
-        });
-
-        if (fnError) {
-            return showNotification('ইমেইল পাঠাতে সমস্যা হয়েছে: ' + fnError.message, 'error');
-        }
+        await sendOtpEmailDirect(emailValue, generatedOTP);
 
         localStorage.setItem(`otp_sent_time_${emailValue}`, now.toString());
         localStorage.setItem(`otp_expiry_time_${emailValue}`, (now + 10 * 60 * 1000).toString());
@@ -505,7 +720,7 @@ if (resetRequestForm) {
 // ২. ভেরিফিকেশন পেজ (reset-password/verification.html)
 if (window.location.pathname.includes('verification.html')) {
     const urlParams = new URLSearchParams(window.location.search);
-    const emailParam = urlParams.get('email');
+    const emailParam = (urlParams.get('email') || '').toLowerCase().trim();
     const referrer = document.referrer.toLowerCase();
     const currentStep = sessionStorage.getItem('reset_step');
 
@@ -516,15 +731,67 @@ if (window.location.pathname.includes('verification.html')) {
         setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
     }
 
-    // --- লাইভ ১০ মিনিট এক্সপায়ারি এবং ৫ মিনিট রিসেন্ড টাইমার লজিক ---
-    let expiryInterval, resendInterval;
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const otpExpiryEl = document.getElementById('otpExpiryTimer');
+    const otpExpiryBox = document.getElementById('otpExpiryTimerBox');
+    const otpBlockedBox = document.getElementById('otpBlockedTimerBox');
+    const otpBlockedTimerEl = document.getElementById('otpBlockedTimer');
+    const resendCountdownEl = document.getElementById('resendCountdown');
+    const resendTimerText = document.getElementById('resendTimerText');
+    const btnResendCode = document.getElementById('btnResendCode');
+    const btnSubmitOtp = document.getElementById('btnSubmitOtp');
 
+    let expiryInterval = null;
+    let resendInterval = null;
+    let blockedCountdownInterval = null;
+
+    // --- ১০ মিনিট লকআউট সিঙ্ক্রোনাইজেশন লজিক ---
+    function syncOtpBlockUI() {
+        const block = checkOtpBlock(emailParam);
+
+        if (block.isBlocked) {
+            if (otpBlockedBox) otpBlockedBox.style.display = 'block';
+            if (otpExpiryBox) otpExpiryBox.style.display = 'none';
+            if (btnSubmitOtp) btnSubmitOtp.disabled = true;
+            if (btnResendCode) btnResendCode.disabled = true;
+            otpInputs.forEach(input => {
+                input.disabled = true;
+                input.value = '';
+            });
+
+            clearInterval(blockedCountdownInterval);
+            blockedCountdownInterval = setInterval(() => {
+                const cur = checkOtpBlock(emailParam);
+                if (cur.isBlocked) {
+                    const totalSec = Math.ceil(cur.remainingMs / 1000);
+                    const mins = Math.floor(totalSec / 60);
+                    const secs = totalSec % 60;
+                    if (otpBlockedTimerEl) {
+                        otpBlockedTimerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    }
+                } else {
+                    // ১০ মিনিট অতিক্রান্ত হয়েছে - আনব্লক ও পুনরায় চালু
+                    clearInterval(blockedCountdownInterval);
+                    if (otpBlockedBox) otpBlockedBox.style.display = 'none';
+                    if (otpExpiryBox) otpExpiryBox.style.display = 'block';
+                    if (btnSubmitOtp) btnSubmitOtp.disabled = false;
+                    if (btnResendCode) btnResendCode.disabled = false;
+                    otpInputs.forEach(input => { input.disabled = false; });
+                    showNotification('আপনার ব্লকের ১০ মিনিট শেষ হয়েছে। নতুন ভেরিফিকেশন কোডের জন্য "পুনরায় পাঠান" বাটনে ক্লিক করুন।', 'success');
+                    startLiveTimers();
+                }
+            }, 1000);
+            return true;
+        } else {
+            if (otpBlockedBox) otpBlockedBox.style.display = 'none';
+            if (otpExpiryBox) otpExpiryBox.style.display = 'block';
+            return false;
+        }
+    }
+
+    // --- লাইভ ১০ মিনিট এক্সপায়ারি এবং ৫ মিনিট রিসেন্ড টাইমার লজিক ---
     function startLiveTimers() {
-        const otpExpiryEl = document.getElementById('otpExpiryTimer');
-        const resendCountdownEl = document.getElementById('resendCountdown');
-        const resendTimerText = document.getElementById('resendTimerText');
-        const btnResendCode = document.getElementById('btnResendCode');
-        const btnSubmitOtp = document.getElementById('btnSubmitOtp');
+        if (checkOtpBlock(emailParam).isBlocked) return;
 
         const expiryTimestamp = parseInt(localStorage.getItem(`otp_expiry_time_${emailParam}`) || '0');
         const sentTimestamp = parseInt(localStorage.getItem(`otp_sent_time_${emailParam}`) || '0');
@@ -550,11 +817,11 @@ if (window.location.pathname.includes('verification.html')) {
             }
         }, 1000);
 
-        // ২. ৫ মিনিটের রিসেন্ড লক টাইমার (আপডেট করা হয়েছে)
+        // ২. ৫ মিনিটের রিসেন্ড লক টাইমার
         clearInterval(resendInterval);
         resendInterval = setInterval(() => {
             const now = Date.now();
-            const resendMs = (sentTimestamp + 5 * 60 * 1000) - now; // ২০ মিনিটের জায়গায় ৫ মিনিট করা হলো
+            const resendMs = (sentTimestamp + 5 * 60 * 1000) - now;
 
             if (resendMs <= 0) {
                 clearInterval(resendInterval);
@@ -573,9 +840,12 @@ if (window.location.pathname.includes('verification.html')) {
         }, 1000);
     }
 
-    startLiveTimers();
+    // প্রাথমিক লোডে ব্লক ও টাইমার ইনিশিয়ালাইজেশন
+    const isCurrentlyBlocked = syncOtpBlockUI();
+    if (!isCurrentlyBlocked) {
+        startLiveTimers();
+    }
 
-    const otpInputs = document.querySelectorAll('.otp-input');
     if (otpInputs.length > 0) {
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
@@ -609,6 +879,14 @@ if (window.location.pathname.includes('verification.html')) {
     if (verificationForm) {
         verificationForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // ব্লক স্ট্যাটাস পরীক্ষা
+            const block = checkOtpBlock(emailParam);
+            if (block.isBlocked) {
+                syncOtpBlockUI();
+                return showNotification(block.msg, 'error');
+            }
+
             let enteredCode = '';
             otpInputs.forEach(input => enteredCode += input.value);
 
@@ -616,21 +894,49 @@ if (window.location.pathname.includes('verification.html')) {
 
             showNotification('কোড যাচাই করা হচ্ছে...', 'success');
 
+            // ডেটাবেজে নিরাপদ কুয়েরি (created_at নির্ভরতা মুক্ত)
             const { data, error } = await _supabase
                 .from('Password_Resets')
                 .select('*')
                 .eq('email', emailParam)
-                .eq('otp_code', enteredCode)
-                .order('created_at', { ascending: false })
-                .limit(1);
+                .eq('otp_code', enteredCode);
 
-            if (error || !data || data.length === 0) {
-                return showNotification('ভুল ভেরিফিকেশন কোড প্রদান করা হয়েছে।', 'error');
+            let isCodeValid = false;
+            if (!error && data && data.length > 0) {
+                // ১০ মিনিটের মেয়াদ আছে এমন রেকর্ড ফিল্টার
+                const now = new Date();
+                const matched = data.find(r => new Date(r.expires_at) > now);
+                if (matched) {
+                    isCodeValid = true;
+                }
             }
 
-            const record = data[0];
-            if (new Date() > new Date(record.expires_at)) {
-                return showNotification('ভেরিফিকেশন কোডের মেয়াদ (১০ মিনিট) শেষ হয়ে গেছে।', 'error');
+            if (!isCodeValid) {
+                // ভুল বা মেয়াদোত্তীর্ণ কোড
+                const failResult = handleFailedOtpAttempt(emailParam);
+                if (failResult.blocked) {
+                    // ডেটাবেজ থেকে এই ইমেইলের কোড পরিষ্কার করা
+                    try {
+                        await _supabase.from('Password_Resets').delete().eq('email', emailParam);
+                    } catch (delErr) {
+                        console.error('Failed to cleanup OTP on block:', delErr);
+                    }
+                    showNotification(failResult.msg, 'error');
+                    syncOtpBlockUI();
+                    return;
+                } else {
+                    return showNotification(failResult.msg, 'error');
+                }
+            }
+
+            // সফল ভেরিফিকেশন: কাউন্টার ও ব্লক ক্লিয়ার
+            handleSuccessfulOtp(emailParam);
+
+            // ব্যবহৃত ওটিপি মুছে ফেলা
+            try {
+                await _supabase.from('Password_Resets').delete().eq('email', emailParam);
+            } catch (delErr) {
+                console.error('Failed to delete used OTP:', delErr);
             }
 
             sessionStorage.setItem('reset_step', 'new_password');
@@ -642,15 +948,21 @@ if (window.location.pathname.includes('verification.html')) {
     }
 
     // "পুনরায় পাঠান" (Resend Code) বাটন
-    const btnResendCode = document.getElementById('btnResendCode');
     if (btnResendCode) {
         btnResendCode.addEventListener('click', async () => {
+            // ব্লক স্ট্যাটাস পরীক্ষা
+            const block = checkOtpBlock(emailParam);
+            if (block.isBlocked) {
+                syncOtpBlockUI();
+                return showNotification(block.msg, 'error');
+            }
+
             const now = Date.now();
             const lastSentTime = localStorage.getItem(`otp_sent_time_${emailParam}`);
             
             if (lastSentTime) {
                 const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
-                if (timeDiffMinutes < 5) { // ২০ মিনিটের জায়গায় ৫ মিনিট চেক করা হচ্ছে
+                if (timeDiffMinutes < 5) {
                     const waitTime = Math.ceil(5 - timeDiffMinutes);
                     return showNotification(`পুনরায় কোড পাঠাতে আরও ${waitTime} মিনিট অপেক্ষা করুন।`, 'error');
                 }
@@ -659,22 +971,25 @@ if (window.location.pathname.includes('verification.html')) {
             const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
 
-            await _supabase.from('Password_Resets').insert([{ email: emailParam, otp_code: generatedOTP, expires_at: expiresAt }]);
-            
-            // Edge Function ডেকে পুনরায় ইমেইল প্রেরণ
+            const { error: dbError } = await _supabase
+                .from('Password_Resets')
+                .insert([{ email: emailParam, otp_code: generatedOTP, expires_at: expiresAt }]);
+
+            if (dbError) {
+                return showNotification('নতুন কোড তৈরি করতে সমস্যা হয়েছে: ' + dbError.message, 'error');
+            }
+
+            // Google Apps Script / Supabase-এ POST মেথডে পুনরায় ইমেইল প্রেরণ
             showNotification('নতুন ওটিপি ইমেইলে পাঠানো হচ্ছে...', 'success');
-            await _supabase.functions.invoke('send-otp-email', {
-                body: { email: emailParam, otp: generatedOTP }
-            });
+            await sendOtpEmailDirect(emailParam, generatedOTP);
 
             localStorage.setItem(`otp_sent_time_${emailParam}`, now.toString());
             localStorage.setItem(`otp_expiry_time_${emailParam}`, (now + 10 * 60 * 1000).toString());
 
-            const btnSubmitOtp = document.getElementById('btnSubmitOtp');
             if (btnSubmitOtp) btnSubmitOtp.disabled = false;
 
             startLiveTimers();
-            showNotification('নতুন ভেরিফিকেশন কোড ইমেইলে পাঠানো হয়েছে।', 'success');
+            showNotification('নতুন ভেরিফিকেশন কোড ইমেইলে পাঠানো হয়েছে। (১০ মিনিট মেয়াদ)', 'success');
         });
     }
 }
@@ -700,6 +1015,10 @@ if (window.location.pathname.includes('new-password.html')) {
     if (newPasswordInput) {
         newPasswordInput.addEventListener('input', (e) => {
             const val = e.target.value;
+
+            // লাইভ সিকিউরিটি রুলস চেকলিস্ট আপডেট
+            updateSecurityChecklist(val, 'reset');
+
             if (val.length === 0) {
                 if (strengthMeter) strengthMeter.style.width = '0%';
                 if (strengthText) strengthText.innerText = '';
@@ -727,15 +1046,30 @@ if (window.location.pathname.includes('new-password.html')) {
             const newPassword = document.getElementById('newPassword').value.trim();
             const confirmNewPassword = document.getElementById('confirmNewPassword').value.trim();
 
-            if (newPassword.length < 8) return showNotification('পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।', 'error');
-            if (newPassword !== confirmNewPassword) return showNotification('পাসওয়ার্ড দুটি মিলছে না।', 'error');
+            if (newPassword !== confirmNewPassword) {
+                return showNotification('পাসওয়ার্ড দুটি একে অপরের সাথে মিলছে না।', 'error');
+            }
 
-            const pwdStrength = checkPasswordStrength(newPassword);
-            if (pwdStrength.isWeak) return showNotification('দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়।', 'error');
+            // কঠোর পাসওয়ার্ড সিকিউরিটি যাচাই
+            const securityCheck = validatePasswordSecurity(newPassword);
+            if (!securityCheck.isValid) {
+                return showNotification(securityCheck.msg, 'error');
+            }
 
-            showNotification('পাসওয়ার্ড আপডেট করা হচ্ছে...', 'success');
+            showNotification('নিরাপত্তা যাচাই ও পাসওয়ার্ড আপডেট করা হচ্ছে...', 'success');
 
-            // Supabase Database-এ আগের পাসওয়ার্ড রিপ্লেস/আপডেট
+            // পূর্বের পাসওয়ার্ডের সাথে মেলানো (পূর্বের পাসওয়ার্ড পুনর্ব্যবহার রোধ)
+            const { data: currentUserData } = await _supabase
+                .from('User_Information')
+                .select('password')
+                .eq('email', emailParam)
+                .single();
+
+            if (currentUserData && currentUserData.password === newPassword) {
+                return showNotification('নতুন পাসওয়ার্ডটি আপনার পূর্বের পাসওয়ার্ডের মতো হতে পারবে না। ভিন্ন পাসওয়ার্ড দিন।', 'error');
+            }
+
+            // Supabase Database-এ নতুন পাসওয়ার্ড আপডেট
             const { error } = await _supabase
                 .from('User_Information')
                 .update({ password: newPassword })
@@ -744,7 +1078,22 @@ if (window.location.pathname.includes('new-password.html')) {
             if (error) {
                 showNotification('পাসওয়ার্ড আপডেট করতে ব্যর্থ: ' + error.message, 'error');
             } else {
-                // সেশন ডেটা ক্লিয়ার
+                // ব্যবহৃত ওটিপি কোড ডিলিট করে রি-প্লে আক্রমণ রোধ
+                await _supabase.from('Password_Resets').delete().eq('email', emailParam);
+
+                // সক্রিয় লোকাল সেশন থাকলে তা আপডেট
+                const rawSession = localStorage.getItem('loveweb_session');
+                if (rawSession) {
+                    try {
+                        const parsed = JSON.parse(rawSession);
+                        if (parsed && parsed.email === emailParam) {
+                            parsed.password = newPassword;
+                            localStorage.setItem('loveweb_session', JSON.stringify(parsed));
+                        }
+                    } catch (err) {}
+                }
+
+                // সেশন ও রিসেট স্টেট ক্লিয়ার
                 sessionStorage.removeItem('reset_step');
                 sessionStorage.removeItem('reset_verified_email');
                 

@@ -1,14 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>অর্ডার বিস্তারিত - LoveWeb</title>
+  <meta name="description" content="LoveWeb উইশিং ওয়েবসাইট অর্ডারের বিবরণ">
+
+  <!-- Favicon Links -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon.png">
+  <link rel="apple-touch-icon" href="../img/favicon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+    .order-card {
+      width: 580px;
+      max-width: 92%;
+      height: auto;
+      padding: 35px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .empty-order-state {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+      padding: 30px 20px;
+      margin: 20px 0;
+      text-align: center;
+      width: 100%;
+    }
+
+    .empty-order-icon {
+      font-size: 2.8rem;
+      color: var(--primary-pink);
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+  </style>
 </head>
 
 <body>
-  
+
+  <div class="auth-card order-card">
+    <div class="brand-logo" style="margin-bottom: 10px;">
+      <a href="/"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 48px; width: auto;"></a>
+    </div>
+
+    <h2 class="title" style="margin-bottom: 6px;">অর্ডার হিস্ট্রি ও বিস্তারিত</h2>
+    <p class="desc">আপনার তৈরিকৃত উইশিং ওয়েবসাইটের অর্ডারের তথ্য</p>
+
+    <div class="empty-order-state">
+      <div class="empty-order-icon">
+        <i class="fa-solid fa-gift"></i>
+      </div>
+      <h3 style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 6px;">কোনো সক্রিয় অর্ডার পাওয়া যায়নি</h3>
+      <p style="font-size: 0.88rem; color: var(--text-sub); line-height: 1.5;">
+        আপনি এখনো কোনো কাস্টম উইশিং ওয়েবসাইট অর্ডার করেননি। আপনার প্রিয়জনের জন্য বিশেষ পেজ তৈরি করতে সাইন-ইন করে শুরু করুন।
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+      <a href="/profile" class="btn-ghost" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; min-width: 140px;">
+        <i class="fa-solid fa-user"></i> প্রোফাইল
+      </a>
+      <a href="/settings" class="btn-ghost" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; min-width: 140px;">
+        <i class="fa-solid fa-gear"></i> সেটিংস
+      </a>
+      <a href="/dashboard" class="btn-submit" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 140px;">
+        <i class="fa-solid fa-house"></i> ড্যাশবোর্ড
+      </a>
+    </div>
+  </div>
+
+  <footer class="auth-footer">
+    <a href="../help/index.html" class="footer-link"><i class="fa-solid fa-circle-question"></i> সাহায্য</a>
+    <span class="footer-divider">•</span>
+    <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
+  </footer>
+
+  <!-- Live Messenger Floating Widget -->
+  <script src="../js/messenger.js"></script>
 </body>
 
 </html>

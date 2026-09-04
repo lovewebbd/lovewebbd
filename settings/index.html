@@ -1,14 +1,1460 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সেটিংস ও নিরাপত্তা - LoveWeb</title>
+  <meta name="description" content="LoveWeb অ্যাকাউন্ট, নাম, ইমেইল, পাসওয়ার্ড ও ফোন নম্বর পরিবর্তন সেটিংস">
+
+  <!-- Favicon Links -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon.png">
+  <link rel="apple-touch-icon" href="../img/favicon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+    .settings-card {
+      width: 560px;
+      max-width: 94%;
+      height: auto;
+      padding: 35px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .settings-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 14px 0 20px 0;
+    }
+
+    .settings-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--text-main);
+      transition: var(--transition-smooth);
+      cursor: pointer;
+    }
+
+    .settings-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--primary-pink);
+      transform: translateX(3px);
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .item-left i.item-icon {
+      color: var(--primary-pink);
+      font-size: 1.25rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .item-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .item-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 8px;
+      background: rgba(0, 230, 118, 0.12);
+      color: #00e676;
+      border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .action-badge {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 8px;
+      background: rgba(255, 42, 109, 0.15);
+      color: var(--primary-pink);
+      border: 1px solid rgba(255, 42, 109, 0.3);
+      font-weight: 500;
+    }
+  </style>
 </head>
 
 <body>
-  
+
+  <!-- Notification Toast -->
+  <div id="notification" class="notification-toast">
+    <span id="notifMessage"></span>
+  </div>
+
+  <div class="auth-card settings-card">
+    <div class="brand-logo" style="margin-bottom: 8px;">
+      <a href="/dashboard"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 46px; width: auto;"></a>
+    </div>
+
+    <h2 class="title" style="margin-bottom: 4px;">অ্যাকাউন্ট সেটিংস</h2>
+    <p class="desc">আপনার তথ্য, নিরাপত্তা ও যোগাযোগ সেটিংস পরিবর্তন করুন</p>
+
+    <div class="settings-list">
+      <!-- Section 1: অ্যাকাউন্ট ও নিরাপত্তা সেটিংস -->
+      <div class="settings-section-label">
+        <i class="fa-solid fa-user-shield"></i> অ্যাকাউন্ট ও নিরাপত্তা পরিবর্তন
+      </div>
+
+      <!-- ১. নাম পরিবর্তন -->
+      <div class="settings-item" id="btnOpenNameModal">
+        <div class="item-left">
+          <i class="fa-solid fa-id-card item-icon"></i>
+          <div>
+            <div class="item-title">
+              <span>নাম পরিবর্তন</span>
+              <span id="badgeCurrentName" class="setting-value-badge">লোড হচ্ছে...</span>
+            </div>
+            <div class="item-subtitle">আপনার অ্যাকাউন্টের পুরো নাম আপডেট করুন</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-pen-to-square" style="color: var(--text-sub); font-size: 0.95rem;"></i>
+      </div>
+
+      <!-- ২. ইমেইল পরিবর্তন (২ ধাপে যৌথ ভেরিফিকেশন) -->
+      <div class="settings-item" id="btnOpenEmailModal">
+        <div class="item-left">
+          <i class="fa-solid fa-envelope-circle-check item-icon"></i>
+          <div>
+            <div class="item-title">
+              <span>ইমেইল পরিবর্তন</span>
+              <span id="badgeCurrentEmail" class="setting-value-badge">লোড হচ্ছে...</span>
+            </div>
+            <div class="item-subtitle">বর্তমান ও নতুন উভয় ইমেইলে আলাদা ওটিপি যাচাই করে ইমেইল পরিবর্তন করুন</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-shield-halved" style="color: #00bcd4; font-size: 0.95rem;"></i>
+      </div>
+
+      <!-- ৩. পাস সিস্টেম / পাসওয়ার্ড পরিবর্তন -->
+      <div class="settings-item" id="btnOpenChangePassword">
+        <div class="item-left">
+          <i class="fa-solid fa-key item-icon"></i>
+          <div>
+            <div class="item-title">
+              <span>পাস সিস্টেম (পাসওয়ার্ড পরিবর্তন)</span>
+              <span class="security-badge"><i class="fa-solid fa-shield-halved"></i> সিকিউর</span>
+            </div>
+            <div class="item-subtitle">বর্তমান পাসওয়ার্ড যাচাই ও সিকিউরিটি রুলস মেনে নতুন পাসওয়ার্ড দিন</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-lock" style="color: var(--text-sub); font-size: 0.95rem;"></i>
+      </div>
+
+      <!-- ৪. ফোন নম্বর পরিবর্তন -->
+      <div class="settings-item" id="btnOpenPhoneModal">
+        <div class="item-left">
+          <i class="fa-solid fa-phone-volume item-icon"></i>
+          <div>
+            <div class="item-title">
+              <span>ফোন নম্বর পরিবর্তন</span>
+              <span id="badgeCurrentPhone" class="setting-value-badge">লোড হচ্ছে...</span>
+            </div>
+            <div class="item-subtitle">যোগাযোগ ও অ্যাকাউন্ট সুরক্ষার জন্য ফোন নম্বর আপডেট করুন</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-pen-to-square" style="color: var(--text-sub); font-size: 0.95rem;"></i>
+      </div>
+
+      <!-- Section 2: সেটিংস অর্ডারের পরে প্রোফাইল অপশন -->
+      <div class="settings-section-label" style="margin-top: 18px;">
+        <i class="fa-solid fa-compass"></i> ডিরেক্টরি ও নেভিগেশন
+      </div>
+
+      <!-- ৫. অর্ডার বিস্তারিত ও হিস্ট্রি -->
+      <a href="/order-details" class="settings-item" id="settingOrderLink">
+        <div class="item-left">
+          <i class="fa-solid fa-gift item-icon"></i>
+          <div>
+            <div class="item-title">
+              <span>অর্ডার হিস্ট্রি ও বিস্তারিত</span>
+              <span class="action-badge">অর্ডার</span>
+            </div>
+            <div class="item-subtitle">আপনার তৈরিকৃত উইশিং ওয়েবসাইটের অর্ডারের তথ্য ও স্ট্যাটাস</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="color: var(--text-sub);"></i>
+      </a>
+
+      <!-- ৬. প্রোফাইল অপশন (অর্ডারের ঠিক পরে) -->
+      <a href="/profile" class="settings-item" id="settingProfileLink">
+        <div class="item-left">
+          <i class="fa-solid fa-user item-icon"></i>
+          <div>
+            <div class="item-title">
+              <span>প্রোফাইল অপশন</span>
+              <span class="action-badge">প্রোফাইল</span>
+            </div>
+            <div class="item-subtitle">আপনার অ্যাকাউন্টের সম্পূর্ণ ব্যক্তিগত বিবরণ ও কার্ড ভিউ</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="color: var(--text-sub);"></i>
+      </a>
+
+      <!-- ৭. সাহায্য ও সহায়তা -->
+      <a href="/help" class="settings-item">
+        <div class="item-left">
+          <i class="fa-solid fa-circle-question item-icon"></i>
+          <div>
+            <div class="item-title">সাহায্য ও সাপোর্ট</div>
+            <div class="item-subtitle">সাধারণ জিজ্ঞাসা ও সরাসরি সাপোর্ট সেন্টার</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="color: var(--text-sub);"></i>
+      </a>
+
+      <!-- Section 3: অ্যাকাউন্ট সমাপ্তি (Danger Zone) -->
+      <div class="settings-section-label" style="margin-top: 18px; color: #ff4d4d;">
+        <i class="fa-solid fa-triangle-exclamation"></i> অ্যাকাউন্ট সমাপ্তি (Danger Zone)
+      </div>
+
+      <!-- ৮. অ্যাকাউন্ট ডিলিট বাটন -->
+      <div class="settings-item" id="btnOpenDeleteAccountModal" style="border-color: rgba(255, 77, 77, 0.35);">
+        <div class="item-left">
+          <i class="fa-solid fa-trash-can item-icon" style="color: #ff4d4d;"></i>
+          <div>
+            <div class="item-title" style="color: #ff4d4d;">
+              <span>অ্যাকাউন্ট ডিলিট করুন</span>
+              <span class="action-badge" style="background: rgba(255, 77, 77, 0.15); color: #ff4d4d; border-color: rgba(255, 77, 77, 0.35);">চিরতরে মুছুন</span>
+            </div>
+            <div class="item-subtitle">ইমেইল যাচাইয়ের মাধ্যমে আপনার সম্পূর্ণ অ্যাকাউন্ট ও সংরক্ষিত তথ্য স্থায়ীভাবে মুছে ফেলুন</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="color: #ff4d4d;"></i>
+      </div>
+    </div>
+
+    <!-- ড্যাশবোর্ড / হোমে ফিরে যাওয়া -->
+    <div style="width: 100%; text-align: center; margin-top: 6px;">
+      <a href="/dashboard" class="btn-submit" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; width: 100%;">
+        <i class="fa-solid fa-house"></i> ড্যাশবোর্ডে ফিরে যান
+      </a>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       ১. নাম পরিবর্তন মোডাল (Name Change Modal)
+       ======================================================= -->
+  <div class="security-modal-overlay" id="nameModalOverlay">
+    <div class="security-modal-card">
+      <button class="modal-close-btn" id="btnCloseNameModal" title="বন্ধ করুন">✕</button>
+      
+      <div style="text-align: center; margin-bottom: 18px;">
+        <i class="fa-solid fa-id-card" style="font-size: 2.2rem; color: var(--primary-pink); margin-bottom: 8px; display: inline-block;"></i>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">নাম পরিবর্তন</h3>
+        <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">আপনার অ্যাকাউন্টের নতুন পুরো নাম লিখুন</p>
+      </div>
+
+      <form id="changeNameForm">
+        <div class="input-group-wrapper" style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">বর্তমান নাম:</label>
+          <div class="input-group">
+            <i class="fa-solid fa-user input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="text" id="modalCurrentNameDisplay" readonly disabled style="opacity: 0.7; cursor: not-allowed;">
+          </div>
+        </div>
+
+        <div class="input-group-wrapper" style="margin-bottom: 20px;">
+          <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">নতুন পুরো নাম:</label>
+          <div class="input-group">
+            <i class="fa-solid fa-pen input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="text" id="modalNewNameInput" placeholder="যেমন: আবরার হাসান" required minlength="2" maxlength="60">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnSubmitName" style="width: 100%;">
+          নাম সংরক্ষণ করুন <i class="fa-solid fa-check" style="margin-left: 6px;"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       ২. ফোন নম্বর পরিবর্তন মোডাল (Phone Change Modal)
+       ======================================================= -->
+  <div class="security-modal-overlay" id="phoneModalOverlay">
+    <div class="security-modal-card">
+      <button class="modal-close-btn" id="btnClosePhoneModal" title="বন্ধ করুন">✕</button>
+      
+      <div style="text-align: center; margin-bottom: 18px;">
+        <i class="fa-solid fa-phone-volume" style="font-size: 2.2rem; color: var(--primary-pink); margin-bottom: 8px; display: inline-block;"></i>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">ফোন নম্বর পরিবর্তন</h3>
+        <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">আপনার অ্যাকাউন্টের সাথে যুক্ত ফোন নম্বর আপডেট করুন</p>
+      </div>
+
+      <form id="changePhoneForm">
+        <div class="input-group-wrapper" style="margin-bottom: 12px;">
+          <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">বর্তমান ফোন নম্বর:</label>
+          <div class="input-group">
+            <i class="fa-solid fa-phone input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="text" id="modalCurrentPhoneDisplay" readonly disabled style="opacity: 0.7; cursor: not-allowed;">
+          </div>
+        </div>
+
+        <div class="input-group-wrapper" style="margin-bottom: 20px;">
+          <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">নতুন ফোন নম্বর (১১ ডিজিট):</label>
+          <div class="input-group">
+            <i class="fa-solid fa-mobile-screen-button input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="tel" id="modalNewPhoneInput" placeholder="01XXXXXXXXX" required maxlength="11" pattern="01[3-9][0-9]{8}">
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-sub); display: block; text-align: left; margin-top: 4px;">বাংলাদেশী ১১ ডিজিটের নম্বর দিন (01XXXXXXXXX)</span>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnSubmitPhone" style="width: 100%;">
+          ফোন নম্বর সংরক্ষণ করুন <i class="fa-solid fa-check" style="margin-left: 6px;"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       ৩. ইমেইল পরিবর্তন মোডাল — ২ ধাপে যৌথ ভেরিফিকেশন (Dual Verification)
+       ======================================================= -->
+  <div class="security-modal-overlay" id="emailModalOverlay">
+    <div class="security-modal-card" style="width: 490px;">
+      <button class="modal-close-btn" id="btnCloseEmailModal" title="বন্ধ করুন">✕</button>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <i class="fa-solid fa-envelope-circle-check" style="font-size: 2.2rem; color: #00bcd4; margin-bottom: 8px; display: inline-block;"></i>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">নিরাপদ ইমেইল পরিবর্তন</h3>
+        <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">
+          নিরাপত্তার স্বার্থে আপনার <strong>বর্তমান ইমেইল</strong> ও <strong>নতুন ইমেইল</strong>—উভয় ঠিকানাতেই ভেরিফিকেশন কোড পাঠানো হবে
+        </p>
+      </div>
+
+      <!-- ধাপ ১: নতুন ইমেইল ইনপুট ও কোড পাঠানোর ধাপ -->
+      <div id="emailStep1Container">
+        <form id="emailStep1Form">
+          <div class="input-group-wrapper" style="margin-bottom: 12px;">
+            <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">বর্তমান ইমেইল (কোড যাবে ১):</label>
+            <div class="input-group">
+              <i class="fa-solid fa-envelope input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+              <input type="email" id="modalEmailStep1Current" readonly disabled style="opacity: 0.7; cursor: not-allowed;">
+            </div>
+          </div>
+
+          <div class="input-group-wrapper" style="margin-bottom: 20px;">
+            <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">নতুন ইমেইল ঠিকানা (কোড যাবে ২):</label>
+            <div class="input-group">
+              <i class="fa-solid fa-at input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+              <input type="email" id="modalEmailStep1New" placeholder="যেমন: newemail@gmail.com" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btnSendDualEmailOtp" style="width: 100%;">
+            উভয় ইমেইলে কোড পাঠান <i class="fa-solid fa-paper-plane" style="margin-left: 6px;"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- ধাপ ২: উভয় ইমেইলের আলাদা কোড যাচাইয়ের ধাপ -->
+      <div id="emailStep2Container" style="display: none;">
+        <div style="background: rgba(0, 188, 212, 0.08); border: 1px solid rgba(0, 188, 212, 0.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; text-align: left; font-size: 0.82rem; color: var(--text-main);">
+          <i class="fa-solid fa-circle-info" style="color: #00bcd4; margin-right: 6px;"></i>
+          উভয় ঠিকানায় পৃথক ৬-ডিজিটের কোড পাঠানো হয়েছে। দুটি কোডই নিচে সঠিকভাবে প্রদান করুন।
+        </div>
+
+        <form id="emailStep2Form">
+          <!-- কোড ১: বর্তমান ইমেইল -->
+          <div class="dual-otp-box highlight">
+            <div class="dual-otp-header">
+              <span>১. বর্তমান ইমেইলের ওটিপি কোড</span>
+              <span class="dual-otp-badge" id="step2CurrentEmailBadge">বর্তমান</span>
+            </div>
+            <div class="input-group">
+              <input type="text" id="modalOtpCurrentInput" maxlength="6" class="otp-digit-input" placeholder="••••••" required pattern="[0-9]{6}" autocomplete="one-time-code">
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-sub); margin-top: 4px;" id="dispStep2CurrentEmailText"></div>
+          </div>
+
+          <!-- কোড ২: নতুন ইমেইল -->
+          <div class="dual-otp-box highlight">
+            <div class="dual-otp-header">
+              <span>২. নতুন ইমেইলের ওটিপি কোড</span>
+              <span class="dual-otp-badge new" id="step2NewEmailBadge">নতুন</span>
+            </div>
+            <div class="input-group">
+              <input type="text" id="modalOtpNewInput" maxlength="6" class="otp-digit-input" placeholder="••••••" required pattern="[0-9]{6}" autocomplete="one-time-code">
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-sub); margin-top: 4px;" id="dispStep2NewEmailText"></div>
+          </div>
+
+          <!-- লাইভ কাউন্টডাউন ও রিসেন্ড বাটন -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.8rem; color: var(--text-sub);">
+            <div>
+              <i class="fa-solid fa-clock"></i> মেয়াদ: <span id="dualOtpExpiryTimer" style="color: var(--primary-pink); font-weight: 600;">10:00</span>
+            </div>
+            <button type="button" id="btnResendDualOtp" style="background: none; border: none; color: var(--primary-pink); cursor: pointer; text-decoration: underline; font-size: 0.8rem;">
+              পুনরায় কোড পাঠান
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-ghost" id="btnBackToEmailStep1" style="flex: 1; margin-top: 0; padding: 10px;">
+              <i class="fa-solid fa-arrow-left"></i> পেছনে
+            </button>
+            <button type="submit" class="btn-submit" id="btnSubmitDualOtp" style="flex: 2; margin-top: 0; padding: 10px;">
+              ভেরিফাই ও পরিবর্তন <i class="fa-solid fa-circle-check" style="margin-left: 4px;"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       ৪. পাসওয়ার্ড পরিবর্তন মোডাল (Password Change Modal)
+       ======================================================= -->
+  <div class="security-modal-overlay" id="passwordModalOverlay">
+    <div class="security-modal-card">
+      <button class="modal-close-btn" id="btnClosePasswordModal" title="বন্ধ করুন">✕</button>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <i class="fa-solid fa-shield-halved" style="font-size: 2.2rem; color: var(--primary-pink); margin-bottom: 8px; display: inline-block;"></i>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">নিরাপদ পাসওয়ার্ড পরিবর্তন</h3>
+        <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">অ্যাকাউন্ট সুরক্ষিত রাখতে একটি শক্তিশালী নতুন পাসওয়ার্ড তৈরি করুন</p>
+      </div>
+
+      <form id="settingsChangePasswordForm">
+        <!-- Current Password Field -->
+        <div class="input-group-wrapper" style="position: relative; margin-bottom: 12px;">
+          <div class="input-group">
+            <i class="fa-solid fa-lock input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="password" id="modalCurrentPassword" placeholder="বর্তমান পাসওয়ার্ড" required autocomplete="current-password">
+            <i class="fa-solid fa-eye toggle-password" id="toggleModalCurrentPassword" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-sub);"></i>
+          </div>
+        </div>
+
+        <!-- New Password Field -->
+        <div class="input-group-wrapper" style="position: relative; margin-bottom: 10px;">
+          <div class="input-group">
+            <i class="fa-solid fa-key input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="password" id="modalNewPassword" placeholder="নতুন পাসওয়ার্ড" required autocomplete="new-password">
+            <i class="fa-solid fa-eye toggle-password" id="toggleModalNewPassword" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-sub);"></i>
+          </div>
+          
+          <!-- Strength Bar -->
+          <div style="height: 4px; width: 0%; transition: 0.3s; margin-top: 5px; border-radius: 2px;" id="modalStrengthBar"></div>
+          <div id="modalStrengthText" style="font-size: 0.75rem; margin-top: 3px; text-align: left;"></div>
+
+          <!-- Password Security Rules Checklist -->
+          <div class="password-rules-checklist" id="modalPasswordChecklist">
+            <div class="rule-item" id="modalRuleLength">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>কমপক্ষে ৮ অক্ষরের দৈর্ঘ্য</span>
+            </div>
+            <div class="rule-item" id="modalRuleCase">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>বড় ও ছোট হাতের ইংরেজি অক্ষর (A-Z ও a-z)</span>
+            </div>
+            <div class="rule-item" id="modalRuleNumber">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>কমপক্ষে একটি সংখ্যা (0-9)</span>
+            </div>
+            <div class="rule-item" id="modalRuleSpecial">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>কমপক্ষে একটি বিশেষ চিহ্ন (@, #, $, %, !, ইত্যাদি)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirm New Password Field -->
+        <div class="input-group-wrapper" style="position: relative; margin-bottom: 16px;">
+          <div class="input-group">
+            <i class="fa-solid fa-shield-check input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="password" id="modalConfirmNewPassword" placeholder="নতুন পাসওয়ার্ড নিশ্চিত করুন" required autocomplete="new-password">
+            <i class="fa-solid fa-eye toggle-password" id="toggleModalConfirmPassword" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-sub);"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btnSubmitModalPassword" style="width: 100%; margin-bottom: 12px;">
+          পাসওয়ার্ড আপডেট করুন <i class="fa-solid fa-circle-check" style="margin-left: 6px;"></i>
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- =======================================================
+       ৫. অ্যাকাউন্ট ডিলিট ও ইমেইল ভেরিফিকেশন মোডাল (Account Deletion Modal)
+       ======================================================= -->
+  <div class="security-modal-overlay" id="deleteAccountModalOverlay">
+    <div class="security-modal-card" style="width: 490px; border-color: rgba(255, 77, 77, 0.45); box-shadow: 0 15px 40px rgba(255, 77, 77, 0.15);">
+      <button class="modal-close-btn" id="btnCloseDeleteAccountModal" title="বন্ধ করুন">✕</button>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 77, 77, 0.12); border: 1px solid rgba(255, 77, 77, 0.3); margin-bottom: 8px;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #ff4d4d;"></i>
+        </div>
+        <h3 style="font-size: 1.3rem; font-weight: 700; color: #ffffff;">স্থায়ীভাবে অ্যাকাউন্ট মুছুন</h3>
+        <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">অ্যাকাউন্ট ডিলিটের জন্য ইমেইল ভেরিফিকেশন ও চূড়ান্ত সম্মতি প্রয়োজন</p>
+      </div>
+
+      <!-- ধাপ ১: সতর্কবার্তা ও ওটিপি রিকোয়েস্ট -->
+      <div id="deleteStep1Container">
+        <div style="background: rgba(255, 77, 77, 0.08); border: 1px solid rgba(255, 77, 77, 0.35); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; text-align: left;">
+          <div style="color: #ff4d4d; font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-radiation"></i> অপরিবর্তনীয় নিরাপত্তা সতর্কতা!
+          </div>
+          <p style="font-size: 0.8rem; color: #e0e0e0; margin: 0; line-height: 1.5;">
+            অ্যাকাউন্ট ডিলিট করলে <strong>User_Information</strong> ডাটাবেস থেকে আপনার নাম, ফোন নম্বর, ইমেইল এবং প্রোফাইলের সম্পূর্ণ তথ্য চিরতরে মুছে যাবে। এটি আর কখনো পুনরুদ্ধার করা সম্ভব হবে না।
+          </p>
+        </div>
+
+        <div class="input-group-wrapper" style="margin-bottom: 16px;">
+          <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">
+            নিবন্ধিত ইমেইল (যেখানে ভেরিফিকেশন কোড যাবে):
+          </label>
+          <div class="input-group">
+            <i class="fa-solid fa-envelope input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-sub);"></i>
+            <input type="text" id="modalDeleteTargetEmailDisplay" readonly disabled style="opacity: 0.75; cursor: not-allowed;">
+          </div>
+        </div>
+
+        <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: #cfd3dc; margin-bottom: 20px; text-align: left; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="checkConfirmDeleteConsent" style="margin-top: 3px; accent-color: #ff4d4d; width: 16px; height: 16px;">
+          <span>আমি নিশ্চিত করছি যে আমি আমার অ্যাকাউন্ট এবং সমস্ত ব্যক্তিগত তথ্য স্থায়ীভাবে মুছে ফেলতে চাই।</span>
+        </label>
+
+        <button type="button" class="btn-submit" id="btnRequestDeleteOtp" style="width: 100%; background: linear-gradient(135deg, #ff4d4d 0%, #b71c1c 100%); border-color: #ff4d4d;">
+          <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> ইমেইলে ভেরিফিকেশন ওটিপি পাঠান
+        </button>
+      </div>
+
+      <!-- ধাপ ২: ওটিপি কোড ইনপুট ও কনফার্মেশন ডায়ালগ -->
+      <div id="deleteStep2Container" style="display: none;">
+        <div style="background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-size: 0.82rem; color: #00e676; text-align: left;">
+          <i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i>
+          আপনার ইমেইলে (<strong id="dispDeleteEmailTarget"></strong>) ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে।
+        </div>
+
+        <form id="deleteAccountVerificationForm">
+          <div class="input-group-wrapper" style="margin-bottom: 14px;">
+            <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">
+              ৬ ডিজিটের ওটিপি কোড:
+            </label>
+            <input type="text" id="modalDeleteOtpInput" maxlength="6" class="otp-digit-input" placeholder="••••••" required pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; height: 48px; font-size: 1.4rem; letter-spacing: 8px; text-align: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 77, 77, 0.4); border-radius: 10px; color: #ffffff; font-family: monospace;">
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.8rem;">
+            <span style="color: var(--text-sub);">
+              <i class="fa-solid fa-clock"></i> মেয়াদ: <span id="deleteOtpExpiryTimer" style="color: #ff4d4d; font-weight: 600;">10:00</span>
+            </span>
+            <button type="button" id="btnResendDeleteOtp" style="background: none; border: none; color: var(--primary-pink); cursor: pointer; text-decoration: underline; font-size: 0.8rem;">
+              পুনরায় পাঠান
+            </button>
+          </div>
+
+          <div class="input-group-wrapper" style="margin-bottom: 20px;">
+            <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">
+              নিশ্চিত করতে নিচে <strong>DELETE</strong> লিখুন:
+            </label>
+            <div class="input-group">
+              <i class="fa-solid fa-triangle-exclamation input-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #ff4d4d;"></i>
+              <input type="text" id="inputDeleteConfirmText" placeholder="DELETE" required style="border-color: rgba(255, 77, 77, 0.4); text-transform: uppercase;">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-submit" id="btnCancelDeleteModal" style="flex: 1; margin-top: 0; padding: 10px; background: rgba(255, 255, 255, 0.08); border-color: var(--border-color); color: var(--text-main);">
+              বাতিল
+            </button>
+            <button type="submit" class="btn-submit" id="btnSubmitDeleteAccount" style="flex: 2; margin-top: 0; padding: 10px; background: linear-gradient(135deg, #ff4d4d 0%, #b71c1c 100%); border-color: #ff4d4d;">
+              <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> স্থায়ীভাবে মুছে ফেলুন
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="auth-footer">
+    <a href="../help/index.html" class="footer-link"><i class="fa-solid fa-circle-question"></i> সাহায্য</a>
+    <span class="footer-divider">•</span>
+    <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
+  </footer>
+
+  <!-- Supabase & Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Supabase Credentials
+    const SUPABASE_URL = "https://xotiwgyalsnqpzbvodmd.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdGl3Z3lhbHNucXB6YnZvZG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTY2NDMsImV4cCI6MjEwMzkzMjY0M30.RoSQVbj0ZSPKlLEnD8MP5ECjDUUg0yNkJF2B6QHc-x8";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Google Apps Script Web App URL (Gmail দিয়ে সরাসরি ওটিপি পাঠানোর জন্য)
+    const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";
+
+    // সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Supabase fallback)
+    async function sendOtpEmailDirect(email, otp) {
+      // ১. সার্ভার-সাইড জিমেইল এসএমটিপি ও অ্যাপ পাসওয়ার্ড দিয়ে সরাসরি ইমেইল পাঠানো (/api/send-otp)
+      try {
+        const res = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, otp: otp })
+        });
+        const result = await res.json();
+        if (result && result.success) {
+          console.log('OTP dispatched via Love Web OTP (Gmail SMTP) to:', email);
+          return { success: true };
+        }
+      } catch (apiErr) {
+        console.warn('Server /api/send-otp failed, fallback to script:', apiErr);
+      }
+
+      const scriptUrl = localStorage.getItem('google_script_webapp_url') || GOOGLE_SCRIPT_WEBAPP_URL;
+
+      // ২. Google Apps Script Web App-এ POST রিকোয়েস্ট
+      if (scriptUrl && scriptUrl.trim().startsWith('http')) {
+        try {
+          await fetch(scriptUrl.trim(), {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify({ email: email, otp: otp })
+          });
+          console.log('OTP dispatched via Google Apps Script POST to:', email);
+          return { success: true };
+        } catch (fetchErr) {
+          console.warn('Google Apps Script fetch failed, fallback to Supabase:', fetchErr);
+        }
+      }
+
+      // ৩. ফলব্যাক হিসেবে Supabase Edge Function
+      try {
+        await _supabase.functions.invoke('send-otp-email', {
+          body: { email: email, otp: otp }
+        });
+      } catch (sbErr) {
+        console.warn('Supabase edge function error:', sbErr);
+      }
+      return { success: true };
+    }
+
+    // Common weak passwords
+    const COMMON_WEAK_PASSWORDS = [
+      '12345678', '123456789', '1234567890', 'password', 'password123',
+      'admin123', 'qwerty123', 'loveweb123', 'iloveyou', 'bangladesh',
+      'bangladesh1', 'secret123', 'welcome123', 'pass1234'
+    ];
+
+    // Notification toast helper
+    let notifTimeout;
+    function showNotification(msg, type = 'error') {
+      const toast = document.getElementById('notification');
+      const msgEl = document.getElementById('notifMessage');
+      if (!toast || !msgEl) return;
+      msgEl.innerText = msg;
+      toast.className = `notification-toast show ${type}`;
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3400);
+    }
+
+    // Current logged-in user state
+    let currentUser = null;
+
+    function loadUserSession() {
+      const rawSession = localStorage.getItem('loveweb_session');
+      if (!rawSession) {
+        showNotification('অ্যাকাউন্টে প্রবেশ করতে প্রথমে লগইন করুন।', 'error');
+        setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1000);
+        return false;
+      }
+      try {
+        currentUser = JSON.parse(rawSession);
+        updateUserUI();
+        return true;
+      } catch (err) {
+        window.location.href = '../sign-in/index.html';
+        return false;
+      }
+    }
+
+    function updateUserUI() {
+      if (!currentUser) return;
+      
+      const badgeName = document.getElementById('badgeCurrentName');
+      const badgeEmail = document.getElementById('badgeCurrentEmail');
+      const badgePhone = document.getElementById('badgeCurrentPhone');
+
+      if (badgeName) badgeName.innerText = currentUser.full_name || 'নাম যুক্ত নেই';
+      if (badgeEmail) badgeEmail.innerText = currentUser.email || 'ইমেইল নেই';
+      if (badgePhone) badgePhone.innerText = currentUser.phone || 'ফোন যুক্ত নেই';
+
+      // Update in modal inputs
+      const curNameDisp = document.getElementById('modalCurrentNameDisplay');
+      if (curNameDisp) curNameDisp.value = currentUser.full_name || '';
+
+      const curPhoneDisp = document.getElementById('modalCurrentPhoneDisplay');
+      if (curPhoneDisp) curPhoneDisp.value = currentUser.phone || 'যুক্ত নেই';
+
+      const curEmailStep1 = document.getElementById('modalEmailStep1Current');
+      if (curEmailStep1) curEmailStep1.value = currentUser.email || '';
+
+      const modalDeleteEmailDisp = document.getElementById('modalDeleteTargetEmailDisplay');
+      if (modalDeleteEmailDisp) modalDeleteEmailDisp.value = currentUser.email || '';
+
+      const modalOtpResetLink = document.getElementById('modalOtpResetLink');
+      if (modalOtpResetLink && currentUser.email) {
+        modalOtpResetLink.href = `../reset-password/index.html?email=${encodeURIComponent(currentUser.email)}`;
+      }
+    }
+
+    // Modal toggles helper
+    function setupModal(overlayId, openBtnId, closeBtnId, onOpen) {
+      const overlay = document.getElementById(overlayId);
+      const openBtn = document.getElementById(openBtnId);
+      const closeBtn = document.getElementById(closeBtnId);
+
+      if (openBtn && overlay) {
+        openBtn.addEventListener('click', () => {
+          overlay.classList.add('open');
+          if (onOpen) onOpen();
+        });
+      }
+
+      if (closeBtn && overlay) {
+        closeBtn.addEventListener('click', () => {
+          overlay.classList.remove('open');
+        });
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            overlay.classList.remove('open');
+          }
+        });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ১. নাম পরিবর্তন লজিক
+    // -------------------------------------------------------------
+    setupModal('nameModalOverlay', 'btnOpenNameModal', 'btnCloseNameModal', () => {
+      const input = document.getElementById('modalNewNameInput');
+      if (input) {
+        input.value = currentUser ? currentUser.full_name || '' : '';
+        input.focus();
+      }
+    });
+
+    const formChangeName = document.getElementById('changeNameForm');
+    if (formChangeName) {
+      formChangeName.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newName = document.getElementById('modalNewNameInput').value.trim();
+        if (newName.length < 2) {
+          return showNotification('নাম অন্তত ২ অক্ষরের হতে হবে।', 'error');
+        }
+
+        showNotification('নাম আপডেট করা হচ্ছে...', 'success');
+
+        const { error } = await _supabase
+          .from('User_Information')
+          .update({ full_name: newName })
+          .eq('email', currentUser.email);
+
+        if (error) {
+          showNotification('নাম আপডেট করতে ব্যর্থ: ' + error.message, 'error');
+        } else {
+          currentUser.full_name = newName;
+          localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
+          updateUserUI();
+          document.getElementById('nameModalOverlay').classList.remove('open');
+          showNotification('আপনার নাম সফলভাবে পরিবর্তন করা হয়েছে!', 'success');
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ২. ফোন নম্বর পরিবর্তন লজিক
+    // -------------------------------------------------------------
+    setupModal('phoneModalOverlay', 'btnOpenPhoneModal', 'btnClosePhoneModal', () => {
+      const input = document.getElementById('modalNewPhoneInput');
+      if (input) {
+        input.value = currentUser ? currentUser.phone || '' : '';
+        input.focus();
+      }
+    });
+
+    const formChangePhone = document.getElementById('changePhoneForm');
+    if (formChangePhone) {
+      formChangePhone.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPhone = document.getElementById('modalNewPhoneInput').value.trim();
+        
+        if (!newPhone.startsWith('01') || newPhone.length !== 11) {
+          return showNotification('১১ ডিজিটের সঠিক ফোন নম্বর প্রদান করুন (01XXXXXXXXX)।', 'error');
+        }
+
+        showNotification('ফোন নম্বর আপডেট করা হচ্ছে...', 'success');
+
+        const { error } = await _supabase
+          .from('User_Information')
+          .update({ phone: newPhone })
+          .eq('email', currentUser.email);
+
+        if (error) {
+          showNotification('ফোন নম্বর আপডেট ব্যর্থ: ' + error.message, 'error');
+        } else {
+          currentUser.phone = newPhone;
+          localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
+          updateUserUI();
+          document.getElementById('phoneModalOverlay').classList.remove('open');
+          showNotification('ফোন নম্বর সফলভাবে পরিবর্তন করা হয়েছে!', 'success');
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ৩. ইমেইল পরিবর্তন (২ ধাপে যৌথ ভেরিফিকেশন) লজিক
+    // -------------------------------------------------------------
+    let pendingNewEmail = '';
+    let dualOtpExpiryTimestamp = 0;
+    let dualOtpExpiryTimerInterval = null;
+
+    setupModal('emailModalOverlay', 'btnOpenEmailModal', 'btnCloseEmailModal', () => {
+      resetEmailModalState();
+      updateUserUI();
+    });
+
+    function resetEmailModalState() {
+      document.getElementById('emailStep1Container').style.display = 'block';
+      document.getElementById('emailStep2Container').style.display = 'none';
+      const newEmailInput = document.getElementById('modalEmailStep1New');
+      if (newEmailInput) newEmailInput.value = '';
+      const otpCur = document.getElementById('modalOtpCurrentInput');
+      if (otpCur) otpCur.value = '';
+      const otpNew = document.getElementById('modalOtpNewInput');
+      if (otpNew) otpNew.value = '';
+      clearInterval(dualOtpExpiryTimerInterval);
+    }
+
+    const btnBackToEmailStep1 = document.getElementById('btnBackToEmailStep1');
+    if (btnBackToEmailStep1) {
+      btnBackToEmailStep1.addEventListener('click', () => {
+        document.getElementById('emailStep1Container').style.display = 'block';
+        document.getElementById('emailStep2Container').style.display = 'none';
+        clearInterval(dualOtpExpiryTimerInterval);
+      });
+    }
+
+    // ধাপ ১: উভয় ইমেইলে ওটিপি প্রেরণ
+    const emailStep1Form = document.getElementById('emailStep1Form');
+    if (emailStep1Form) {
+      emailStep1Form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const currentEmail = currentUser.email.toLowerCase().trim();
+        const newEmail = document.getElementById('modalEmailStep1New').value.toLowerCase().trim();
+
+        if (newEmail === currentEmail) {
+          return showNotification('নতুন ইমেইলটি আপনার বর্তমান ইমেইল থেকে আলাদা হতে হবে।', 'error');
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newEmail)) {
+          return showNotification('একটি সঠিক ও সক্রিয় নতুন ইমেইল ঠিকানা দিন।', 'error');
+        }
+
+        showNotification('ইমেইলের সক্রিয়তা ও নিরাপত্তা যাচাই করা হচ্ছে...', 'success');
+
+        // নতুন ইমেইলটি অন্য কারও অ্যাকাউন্টে ব্যবহৃত হয়েছে কি না পরীক্ষা
+        const { data: existingUsers, error: checkErr } = await _supabase
+          .from('User_Information')
+          .select('id')
+          .eq('email', newEmail);
+
+        if (checkErr) {
+          return showNotification('সার্ভার যাচাই ত্রুটি: ' + checkErr.message, 'error');
+        }
+
+        if (existingUsers && existingUsers.length > 0) {
+          return showNotification('এই নতুন ইমেইলটি ইতিমধ্যে অন্য একটি অ্যাকাউন্টে ব্যবহৃত হচ্ছে। ভিন্ন ইমেইল দিন।', 'error');
+        }
+
+        pendingNewEmail = newEmail;
+        await sendDualVerificationCodes(currentEmail, newEmail);
+      });
+    }
+
+    async function sendDualVerificationCodes(currentEmail, newEmail) {
+      showNotification('উভয় ইমেইলে আলাদা ভেরিফিকেশন কোড পাঠানো হচ্ছে...', 'success');
+
+      const now = Date.now();
+      const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
+      dualOtpExpiryTimestamp = now + 10 * 60 * 1000;
+
+      // ১. বর্তমান ইমেইলের জন্য আলাদা ৬ ডিজিট OTP
+      const otpForCurrent = Math.floor(100000 + Math.random() * 900000).toString();
+      // ২. নতুন ইমেইলের জন্য আলাদা ৬ ডিজিট OTP
+      let otpForNew = Math.floor(100000 + Math.random() * 900000).toString();
+      if (otpForNew === otpForCurrent) {
+        otpForNew = (parseInt(otpForCurrent) + 1).toString();
+      }
+
+      // Supabase Password_Resets টেবিলে সেভ
+      const { error: dbError } = await _supabase
+        .from('Password_Resets')
+        .insert([
+          { email: currentEmail, otp_code: otpForCurrent, expires_at: expiresAt },
+          { email: newEmail, otp_code: otpForNew, expires_at: expiresAt }
+        ]);
+
+      if (dbError) {
+        return showNotification('কোড তৈরি করতে সমস্যা হয়েছে: ' + dbError.message, 'error');
+      }
+
+      // Google Apps Script / Supabase-এ POST মেথডে ইমেইল নোটিফিকেশন পাঠানো
+      showNotification('উভয় ইমেইলে ওটিপি পাঠানো হচ্ছে...', 'success');
+      await Promise.allSettled([
+        sendOtpEmailDirect(currentEmail, otpForCurrent),
+        sendOtpEmailDirect(newEmail, otpForNew)
+      ]);
+
+      // UI আপডেট: ধাপ ২ প্রদর্শন
+      document.getElementById('emailStep1Container').style.display = 'none';
+      document.getElementById('emailStep2Container').style.display = 'block';
+
+      const dispCur = document.getElementById('dispStep2CurrentEmailText');
+      if (dispCur) dispCur.innerText = `বর্তমান ইমেইল: ${currentEmail}`;
+      const dispNew = document.getElementById('dispStep2NewEmailText');
+      if (dispNew) dispNew.innerText = `নতুন ইমেইল: ${newEmail}`;
+
+      startDualOtpTimer();
+      showNotification('বর্তমান ও নতুন উভয় ইমেইলেই ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে!', 'success');
+    }
+
+    function startDualOtpTimer() {
+      clearInterval(dualOtpExpiryTimerInterval);
+      const timerEl = document.getElementById('dualOtpExpiryTimer');
+      dualOtpExpiryTimerInterval = setInterval(() => {
+        const remaining = dualOtpExpiryTimestamp - Date.now();
+        if (remaining <= 0) {
+          clearInterval(dualOtpExpiryTimerInterval);
+          if (timerEl) timerEl.innerText = 'মেয়াদ শেষ!';
+          showNotification('ভেরিফিকেশন কোডের ১০ মিনিটের মেয়াদ শেষ হয়ে গেছে। পুনরায় কোড পাঠান।', 'error');
+        } else {
+          const totalSec = Math.floor(remaining / 1000);
+          const mins = Math.floor(totalSec / 60);
+          const secs = totalSec % 60;
+          if (timerEl) {
+            timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+          }
+        }
+      }, 1000);
+    }
+
+    // পুনরায় কোড পাঠানোর বাটন
+    const btnResendDualOtp = document.getElementById('btnResendDualOtp');
+    if (btnResendDualOtp) {
+      btnResendDualOtp.addEventListener('click', async () => {
+        if (!pendingNewEmail || !currentUser) return;
+        await sendDualVerificationCodes(currentUser.email.toLowerCase().trim(), pendingNewEmail);
+      });
+    }
+
+    // ধাপ ২: উভয় কোড যাচাই ও ইমেইল পরিবর্তন নিশ্চিতকরণ
+    const emailStep2Form = document.getElementById('emailStep2Form');
+    if (emailStep2Form) {
+      emailStep2Form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const codeCurrent = document.getElementById('modalOtpCurrentInput').value.trim();
+        const codeNew = document.getElementById('modalOtpNewInput').value.trim();
+
+        if (codeCurrent.length !== 6) {
+          return showNotification('বর্তমান ইমেইলের ৬ ডিজিটের সম্পূর্ণ কোড দিন।', 'error');
+        }
+        if (codeNew.length !== 6) {
+          return showNotification('নতুন ইমেইলের ৬ ডিজিটের সম্পূর্ণ কোড দিন।', 'error');
+        }
+
+        showNotification('উভয় ভেরিফিকেশন কোড যাচাই করা হচ্ছে...', 'success');
+
+        const currentEmail = currentUser.email.toLowerCase().trim();
+        const newEmail = pendingNewEmail;
+
+        // ১. বর্তমান ইমেইলের কোড যাচাই
+        const { data: curCheck, error: curErr } = await _supabase
+          .from('Password_Resets')
+          .select('*')
+          .eq('email', currentEmail)
+          .eq('otp_code', codeCurrent)
+          .order('expires_at', { ascending: false })
+          .limit(1);
+
+        if (curErr || !curCheck || curCheck.length === 0) {
+          return showNotification('বর্তমান ইমেইলে প্রেরিত ভেরিফিকেশন কোডটি সঠিক নয়।', 'error');
+        }
+
+        if (new Date() > new Date(curCheck[0].expires_at)) {
+          return showNotification('বর্তমান ইমেইলের কোডের মেয়াদ শেষ হয়ে গেছে।', 'error');
+        }
+
+        // ২. নতুন ইমেইলের কোড যাচাই
+        const { data: newCheck, error: newErr } = await _supabase
+          .from('Password_Resets')
+          .select('*')
+          .eq('email', newEmail)
+          .eq('otp_code', codeNew)
+          .order('expires_at', { ascending: false })
+          .limit(1);
+
+        if (newErr || !newCheck || newCheck.length === 0) {
+          return showNotification('নতুন ইমেইলে প্রেরিত ভেরিফিকেশন কোডটি সঠিক নয়।', 'error');
+        }
+
+        if (new Date() > new Date(newCheck[0].expires_at)) {
+          return showNotification('নতুন ইমেইলের কোডের মেয়াদ শেষ হয়ে গেছে।', 'error');
+        }
+
+        // ৩. উভয় কোড সঠিক হলে ডাটাবেজে ইমেইল পরিবর্তন
+        const { error: updateEmailErr } = await _supabase
+          .from('User_Information')
+          .update({ email: newEmail })
+          .eq('email', currentEmail);
+
+        if (updateEmailErr) {
+          return showNotification('ইমেইল আপডেট করতে ব্যর্থ: ' + updateEmailErr.message, 'error');
+        }
+
+        // ব্যবহৃত ওটিপি কোড ডিলিট করা
+        await _supabase.from('Password_Resets').delete().in('email', [currentEmail, newEmail]);
+
+        // সেশন আপডেট
+        currentUser.email = newEmail;
+        localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
+        updateUserUI();
+
+        clearInterval(dualOtpExpiryTimerInterval);
+        document.getElementById('emailModalOverlay').classList.remove('open');
+        showNotification('আপনার ইমেইল সফলভাবে পরিবর্তন করা হয়েছে!', 'success');
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ৪. পাস সিস্টেম (পাসওয়ার্ড পরিবর্তন) লজিক
+    // -------------------------------------------------------------
+    function setupToggle(inputId, toggleId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(toggleId);
+      if (input && icon) {
+        icon.addEventListener('click', () => {
+          const isPass = input.type === 'password';
+          input.type = isPass ? 'text' : 'password';
+          icon.classList.toggle('fa-eye', !isPass);
+          icon.classList.toggle('fa-eye-slash', isPass);
+        });
+      }
+    }
+
+    setupToggle('modalCurrentPassword', 'toggleModalCurrentPassword');
+    setupToggle('modalNewPassword', 'toggleModalNewPassword');
+    setupToggle('modalConfirmNewPassword', 'toggleModalConfirmPassword');
+
+    function validatePasswordRules(pwd) {
+      return {
+        hasLength: pwd.length >= 8,
+        hasCase: /[A-Z]/.test(pwd) && /[a-z]/.test(pwd),
+        hasNumber: /[0-9]/.test(pwd),
+        hasSpecial: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`§±]/.test(pwd),
+        isNotCommon: !COMMON_WEAK_PASSWORDS.includes(pwd.toLowerCase())
+      };
+    }
+
+    function updateChecklistUI(pwd, lengthEl, caseEl, numEl, specialEl, barEl, textEl) {
+      const rules = validatePasswordRules(pwd);
+
+      function updateItem(el, isValid) {
+        if (!el) return;
+        el.className = `rule-item ${isValid ? 'valid' : 'invalid'}`;
+        const icon = el.querySelector('i');
+        if (icon) {
+          icon.className = isValid ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark';
+        }
+      }
+
+      updateItem(lengthEl, rules.hasLength);
+      updateItem(caseEl, rules.hasCase);
+      updateItem(numEl, rules.hasNumber);
+      updateItem(specialEl, rules.hasSpecial);
+
+      let score = 0;
+      if (rules.hasLength) score++;
+      if (pwd.length >= 11) score++;
+      if (rules.hasCase) score++;
+      if (rules.hasNumber) score++;
+      if (rules.hasSpecial) score++;
+
+      let percent = Math.min(100, score * 20);
+      let color = '#ff4d4d';
+      let label = 'অত্যন্ত দুর্বল';
+
+      if (score >= 4 && rules.isNotCommon) {
+        color = '#00e676';
+        label = 'অত্যন্ত শক্তিশালী';
+      } else if (score >= 3) {
+        color = '#00bcd4';
+        label = 'উত্তম';
+      } else if (score >= 2) {
+        color = '#ffaa00';
+        label = 'মাঝারি';
+      }
+
+      if (barEl) {
+        barEl.style.width = pwd.length === 0 ? '0%' : `${percent}%`;
+        barEl.style.backgroundColor = color;
+      }
+      if (textEl) {
+        textEl.innerText = pwd.length === 0 ? '' : `পাসওয়ার্ডের মান: ${label}`;
+        textEl.style.color = color;
+      }
+    }
+
+    const modalNewPwdInput = document.getElementById('modalNewPassword');
+    if (modalNewPwdInput) {
+      modalNewPwdInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        updateChecklistUI(
+          val,
+          document.getElementById('modalRuleLength'),
+          document.getElementById('modalRuleCase'),
+          document.getElementById('modalRuleNumber'),
+          document.getElementById('modalRuleSpecial'),
+          document.getElementById('modalStrengthBar'),
+          document.getElementById('modalStrengthText')
+        );
+      });
+    }
+
+    setupModal('passwordModalOverlay', 'btnOpenChangePassword', 'btnClosePasswordModal', () => {
+      const form = document.getElementById('settingsChangePasswordForm');
+      if (form) form.reset();
+      const bar = document.getElementById('modalStrengthBar');
+      if (bar) bar.style.width = '0%';
+      const txt = document.getElementById('modalStrengthText');
+      if (txt) txt.innerText = '';
+      ['modalRuleLength', 'modalRuleCase', 'modalRuleNumber', 'modalRuleSpecial'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.className = 'rule-item';
+          const icon = el.querySelector('i');
+          if (icon) icon.className = 'fa-solid fa-circle-xmark';
+        }
+      });
+    });
+
+    const changePwdForm = document.getElementById('settingsChangePasswordForm');
+    if (changePwdForm) {
+      changePwdForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!currentUser) return;
+
+        const currentPassword = document.getElementById('modalCurrentPassword').value.trim();
+        const newPassword = document.getElementById('modalNewPassword').value.trim();
+        const confirmPassword = document.getElementById('modalConfirmNewPassword').value.trim();
+
+        if (newPassword !== confirmPassword) {
+          return showNotification('নতুন পাসওয়ার্ড এবং নিশ্চিতকরণ পাসওয়ার্ড মিলছে না।', 'error');
+        }
+
+        if (currentPassword === newPassword) {
+          return showNotification('নতুন পাসওয়ার্ডটি বর্তমান পাসওয়ার্ড থেকে আলাদা হতে হবে।', 'error');
+        }
+
+        const rules = validatePasswordRules(newPassword);
+        if (!rules.hasLength) return showNotification('পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।', 'error');
+        if (!rules.hasCase) return showNotification('পাসওয়ার্ডে বড় ও ছোট উভয় ইংরেজি অক্ষর থাকতে হবে।', 'error');
+        if (!rules.hasNumber) return showNotification('পাসওয়ার্ডে অন্তত একটি সংখ্যা থাকতে হবে।', 'error');
+        if (!rules.hasSpecial) return showNotification('পাসওয়ার্ডে অন্তত একটি বিশেষ চিহ্ন (@, #, $, %, ইত্যাদি) থাকতে হবে।', 'error');
+        if (!rules.isNotCommon) return showNotification('অতি সাধারণ ও দুর্বল পাসওয়ার্ড গ্রহণযোগ্য নয়।', 'error');
+
+        showNotification('নিরাপত্তা তথ্য যাচাই করা হচ্ছে...', 'success');
+
+        const { data: dbUser, error: fetchErr } = await _supabase
+          .from('User_Information')
+          .select('*')
+          .eq('email', currentUser.email)
+          .single();
+
+        if (fetchErr || !dbUser) {
+          return showNotification('ব্যবহারকারী অ্যাকাউন্ট তথ্য যাচাই করতে ব্যর্থ হয়েছে।', 'error');
+        }
+
+        if (dbUser.password !== currentPassword) {
+          return showNotification('আপনার বর্তমান পাসওয়ার্ডটি সঠিক নয়। অনুগ্রহ করে সঠিক পাসওয়ার্ড দিন।', 'error');
+        }
+
+        const { error: updateErr } = await _supabase
+          .from('User_Information')
+          .update({ password: newPassword })
+          .eq('email', currentUser.email);
+
+        if (updateErr) {
+          showNotification('পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে: ' + updateErr.message, 'error');
+        } else {
+          currentUser.password = newPassword;
+          localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
+          document.getElementById('passwordModalOverlay').classList.remove('open');
+          showNotification('পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!', 'success');
+        }
+      });
+    }
+
+    // =======================================================
+    // ৫. অ্যাকাউন্ট ডিলিট ও ইমেইল ভেরিফিকেশন লজিক (Account Deletion)
+    // =======================================================
+    let deleteOtpExpiryTimestamp = 0;
+    let deleteOtpTimerInterval = null;
+
+    function resetDeleteModalState() {
+      const step1 = document.getElementById('deleteStep1Container');
+      const step2 = document.getElementById('deleteStep2Container');
+      if (step1) step1.style.display = 'block';
+      if (step2) step2.style.display = 'none';
+
+      const consentCheck = document.getElementById('checkConfirmDeleteConsent');
+      if (consentCheck) consentCheck.checked = false;
+
+      const otpInput = document.getElementById('modalDeleteOtpInput');
+      if (otpInput) otpInput.value = '';
+
+      const confirmInput = document.getElementById('inputDeleteConfirmText');
+      if (confirmInput) confirmInput.value = '';
+
+      clearInterval(deleteOtpTimerInterval);
+    }
+
+    setupModal('deleteAccountModalOverlay', 'btnOpenDeleteAccountModal', 'btnCloseDeleteAccountModal', () => {
+      resetDeleteModalState();
+      if (currentUser && currentUser.email) {
+        const emailDisp = document.getElementById('modalDeleteTargetEmailDisplay');
+        if (emailDisp) emailDisp.value = currentUser.email;
+      }
+    });
+
+    const btnCancelDeleteModal = document.getElementById('btnCancelDeleteModal');
+    if (btnCancelDeleteModal) {
+      btnCancelDeleteModal.addEventListener('click', () => {
+        document.getElementById('deleteAccountModalOverlay').classList.remove('open');
+        resetDeleteModalState();
+      });
+    }
+
+    // ধাপ ১: ওটিপি কোড পাঠানো
+    async function sendDeleteAccountOtp() {
+      if (!currentUser || !currentUser.email) {
+        return showNotification('ব্যবহারকারীর সেশন পাওয়া যায়নি। অনুগ্রহ করে পুনরায় লগইন করুন।', 'error');
+      }
+
+      const consentCheck = document.getElementById('checkConfirmDeleteConsent');
+      if (!consentCheck || !consentCheck.checked) {
+        return showNotification('অ্যাকাউন্ট ডিলিট করতে সম্মতির চেকবক্সে টিক চিহ্ন দিন।', 'error');
+      }
+
+      const targetEmail = currentUser.email.toLowerCase().trim();
+      showNotification('নিরাপত্তা কোড তৈরি ও ইমেইল করা হচ্ছে...', 'success');
+
+      const now = Date.now();
+      const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
+      deleteOtpExpiryTimestamp = now + 10 * 60 * 1000;
+
+      const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Password_Resets টেবিলে ডিলিট ওটিপি সেভ করা
+      const { error: dbError } = await _supabase
+        .from('Password_Resets')
+        .insert([{ email: targetEmail, otp_code: generatedOtp, expires_at: expiresAt }]);
+
+      if (dbError) {
+        return showNotification('ওটিপি সংরক্ষণ ত্রুটি: ' + dbError.message, 'error');
+      }
+
+      // জিমেইল / সার্ভার মাধ্যমে ওটিপি পাঠানো
+      await sendOtpEmailDirect(targetEmail, generatedOtp);
+
+      // ধাপ ২ প্রদর্শন
+      document.getElementById('deleteStep1Container').style.display = 'none';
+      document.getElementById('deleteStep2Container').style.display = 'block';
+
+      const emailDisp = document.getElementById('dispDeleteEmailTarget');
+      if (emailDisp) emailDisp.innerText = targetEmail;
+
+      startDeleteOtpTimer();
+      showNotification('আপনার ইমেইলে ৬-ডিজিটের ভেরিফিকেশন কোড পাঠানো হয়েছে!', 'success');
+    }
+
+    const btnRequestDeleteOtp = document.getElementById('btnRequestDeleteOtp');
+    if (btnRequestDeleteOtp) {
+      btnRequestDeleteOtp.addEventListener('click', sendDeleteAccountOtp);
+    }
+
+    const btnResendDeleteOtp = document.getElementById('btnResendDeleteOtp');
+    if (btnResendDeleteOtp) {
+      btnResendDeleteOtp.addEventListener('click', async () => {
+        if (!currentUser || !currentUser.email) return;
+        await sendDeleteAccountOtp();
+      });
+    }
+
+    function startDeleteOtpTimer() {
+      clearInterval(deleteOtpTimerInterval);
+      const timerEl = document.getElementById('deleteOtpExpiryTimer');
+      deleteOtpTimerInterval = setInterval(() => {
+        const remaining = deleteOtpExpiryTimestamp - Date.now();
+        if (remaining <= 0) {
+          clearInterval(deleteOtpTimerInterval);
+          if (timerEl) timerEl.innerText = 'মেয়াদ শেষ!';
+          showNotification('ওটিপির মেয়াদ শেষ হয়ে গেছে। পুনরায় কোড পাঠান।', 'error');
+        } else {
+          const totalSec = Math.floor(remaining / 1000);
+          const mins = Math.floor(totalSec / 60);
+          const secs = totalSec % 60;
+          if (timerEl) {
+            timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+          }
+        }
+      }, 1000);
+    }
+
+    // ধাপ ২: ওটিপি ও DELETE কনফার্মেশন যাচাই করে 'User_Information' থেকে স্থায়ীভাবে ডিলিট
+    const deleteAccountVerificationForm = document.getElementById('deleteAccountVerificationForm');
+    if (deleteAccountVerificationForm) {
+      deleteAccountVerificationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!currentUser || !currentUser.email) {
+          return showNotification('ব্যবহারকারীর সেশন পাওয়া যায়নি।', 'error');
+        }
+
+        const enteredOtp = document.getElementById('modalDeleteOtpInput').value.trim();
+        const confirmText = document.getElementById('inputDeleteConfirmText').value.trim();
+
+        if (enteredOtp.length !== 6) {
+          return showNotification('৬-ডিজিটের পূর্ণাঙ্গ ভেরিফিকেশন কোডটি লিখুন।', 'error');
+        }
+
+        if (confirmText.toUpperCase() !== 'DELETE') {
+          return showNotification('নিশ্চিত করতে বক্সে সঠিকভাবে DELETE লিখুন।', 'error');
+        }
+
+        showNotification('কোড যাচাই ও অ্যাকাউন্ট মুছে ফেলার প্রক্রিয়া চলছে...', 'success');
+
+        const targetEmail = currentUser.email.toLowerCase().trim();
+
+        // ১. ওটিপি যাচাই
+        const { data: otpRecords, error: otpError } = await _supabase
+          .from('Password_Resets')
+          .select('*')
+          .eq('email', targetEmail)
+          .eq('otp_code', enteredOtp)
+          .order('expires_at', { ascending: false })
+          .limit(1);
+
+        if (otpError) {
+          return showNotification('ভেরিফিকেশন যাচাই ত্রুটি: ' + otpError.message, 'error');
+        }
+
+        if (!otpRecords || otpRecords.length === 0) {
+          return showNotification('ভুল ভেরিফিকেশন কোড দেওয়া হয়েছে। সঠিক কোডটি লিখুন।', 'error');
+        }
+
+        const record = otpRecords[0];
+        if (new Date(record.expires_at).getTime() < Date.now()) {
+          return showNotification('ভেরিফিকেশন কোডের মেয়াদ শেষ হয়ে গেছে। পুনরায় কোড পাঠান।', 'error');
+        }
+
+        // ২. User_Information ডাটাবেস থেকে স্থায়ীভাবে ব্যবহারকারীর রেকর্ড ডিলিট
+        const { error: deleteError } = await _supabase
+          .from('User_Information')
+          .delete()
+          .eq('email', targetEmail);
+
+        if (deleteError) {
+          return showNotification('অ্যাকাউন্ট মুছতে ব্যর্থ হয়েছে: ' + deleteError.message, 'error');
+        }
+
+        // ৩. Password_Resets থেকে সমস্ত সংশ্লিষ্ট ওটিপি রেকর্ড মুছে ফেলা
+        try {
+          await _supabase
+            .from('Password_Resets')
+            .delete()
+            .eq('email', targetEmail);
+        } catch (cleanErr) {
+          console.warn('Cleanup error:', cleanErr);
+        }
+
+        // ৪. লোকাল স্টোরেজ ও সেশন ডেটা সম্পূর্ণ মুছে ফেলা
+        clearInterval(deleteOtpTimerInterval);
+        localStorage.removeItem('loveweb_session');
+        localStorage.removeItem(`otp_sent_time_${targetEmail}`);
+        localStorage.removeItem(`otp_expiry_time_${targetEmail}`);
+
+        document.getElementById('deleteAccountModalOverlay').classList.remove('open');
+        showNotification('আপনার অ্যাকাউন্ট ও সমস্ত তথ্য সফলভাবে মুছে ফেলা হয়েছে। বিদায়!', 'success');
+
+        // ৫. সাইন ইন পেজে রিডাইরেক্ট
+        setTimeout(() => {
+          window.location.href = '../sign-in/index.html';
+        }, 1500);
+      });
+    }
+
+    // সেশন ইনিশিয়ালাইজেশন
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserSession();
+    });
+  </script>
+
+  <!-- Live Messenger Floating Widget -->
+  <script src="../js/messenger.js"></script>
 </body>
 
 </html>

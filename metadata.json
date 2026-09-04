@@ -1,0 +1,8 @@
+{
+  "name": "LoveWeb",
+  "description": "Custom wishing website platform for loved ones (LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট)",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সাহায্য ও প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী (FAQ) - LoveWeb</title>
+  <meta name="description" content="LoveWeb সহায়তা কেন্দ্র - সাধারণ প্রশ্নাবলি ও সাহায্য">
+  <meta property="og:title" content="সাহায্য ও FAQ - LoveWeb">
+  <meta property="og:description" content="LoveWeb সহায়তা কেন্দ্র - সাধারণ প্রশ্নাবলি ও সাহায্য">
+
+  <!-- Favicon Links -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon.png">
+  <link rel="apple-touch-icon" href="../img/favicon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+    .help-card {
+      width: 720px;
+      max-width: 92%;
+      height: auto;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 35px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .help-card::-webkit-scrollbar {
+      width: 5px;
+    }
+    .help-card::-webkit-scrollbar-thumb {
+      background: rgba(255, 42, 109, 0.4);
+      border-radius: 4px;
+    }
+
+    /* FAQ Container */
+    .faq-accordion-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 20px 0 24px 0;
+    }
+
+    .faq-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(255, 42, 109, 0.4);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .faq-item.active {
+      border-color: var(--primary-pink);
+      box-shadow: 0 4px 18px rgba(255, 42, 109, 0.15);
+      background: rgba(26, 11, 46, 0.85);
+    }
+
+    .faq-header {
+      width: 100%;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .faq-question-title {
+      font-size: 1.02rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .faq-question-title i {
+      color: var(--primary-pink);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .faq-icon-arrow {
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .faq-item.active .faq-icon-arrow {
+      transform: rotate(180deg);
+      color: var(--primary-pink);
+    }
+
+    /* Collapsible Body with Smooth Animation */
+    .faq-body-collapse {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+      opacity: 0;
+    }
+
+    .faq-item.active .faq-body-collapse {
+      opacity: 1;
+    }
+
+    .faq-content {
+      padding: 0 20px 18px 44px;
+      font-size: 0.92rem;
+      color: #dfd8e8;
+      line-height: 1.65;
+      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      padding-top: 12px;
+      margin-top: 2px;
+    }
+
+    .faq-content a {
+      color: var(--primary-pink);
+      text-decoration: underline;
+    }
+
+    /* Contact Box */
+    .contact-card-box {
+      width: 100%;
+      background: rgba(255, 42, 109, 0.08);
+      border: 1px solid rgba(255, 42, 109, 0.3);
+      border-radius: 16px;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .contact-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .contact-card-title i {
+      color: var(--primary-pink);
+    }
+
+    .contact-links-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .contact-pill-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 14px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.25s;
+    }
+
+    .contact-pill-link:hover {
+      background: var(--primary-pink);
+      border-color: var(--primary-pink);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--glow-pink);
+    }
+
+    @media (max-width: 600px) {
+      .help-card {
+        padding: 25px 18px;
+      }
+      .faq-content {
+        padding-left: 20px;
+      }
+      .faq-question-title {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="auth-card help-card">
+    <!-- Brand Logo -->
+    <div class="brand-logo" style="margin-bottom: 10px;">
+      <a href="/sign-in"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 48px; width: auto;"></a>
+    </div>
+
+    <h2 class="title" style="margin-bottom: 6px;">সহায়তা ও সাধারণ প্রশ্নোত্তর (FAQ)</h2>
+    <p class="desc" style="margin-bottom: 10px;">প্রশ্নে ক্লিক করলে নিচে স্ক্রল হয়ে বিস্তারিত উত্তর দেখতে পাবেন</p>
+
+    <!-- Accordion FAQ Group -->
+    <div class="faq-accordion-group" id="faqGroup">
+
+      <!-- Question 1 -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <i class="fa-solid fa-circle-question"></i>
+            LoveWeb কী এবং এটি কীভাবে কাজ করে?
+          </span>
+          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            LoveWeb হলো একটি স্পেশাল উইশিং ওয়েবসাইট প্ল্যাটফর্ম। এর মাধ্যমে আপনি আপনার ভালোবাসার মানুষ, বন্ধু কিংবা পরিবারের জন্য জন্মদিন, বিবাহবার্ষিকী বা বিশেষ দিনের জন্য অ্যানিমেটেড, রোমান্টিক এবং মিউজিক সংবলিত ওয়েবসাইট তৈরি করতে পারবেন।
+          </div>
+        </div>
+      </div>
+
+      <!-- Question 2 -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <i class="fa-solid fa-key"></i>
+            পাসওয়ার্ড ভুলে গেলে কীভাবে উদ্ধার করব?
+          </span>
+          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            পাসওয়ার্ড রিসেট করতে <a href="../reset-password/index.html">পাসওয়ার্ড রিসেট পাতায়</a> যান। সেখানে আপনার নিবন্ধিত ইমেইল প্রদান করলে আপনার ইমেইলে একটি ৬-সংখ্যার ওটিপি (OTP) কোড পাঠানো হবে। কোডটি ভেরিফাই করে মুহূর্তেই নতুন পাসওয়ার্ড সেট করতে পারবেন।
+          </div>
+        </div>
+      </div>
+
+      <!-- Question 3 -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            উইশিং ওয়েবসাইট কীভাবে তৈরি করা যায়?
+          </span>
+          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            প্রথমে LoveWeb অ্যাকাউন্টে সাইন-ইন করুন। এরপর আপনার পছন্দের ডিজাইন নির্বাচন করুন, যার জন্য উইশ করবেন তার ছবি, নাম ও সুন্দর বার্তা যুক্ত করুন। ওয়েবসাইট প্রস্তুত হলে আপনি একটি ইউনিক লিংক পাবেন যা সরাসরি প্রিয়জনকে পাঠিয়ে চমকে দিতে পারবেন।
+          </div>
+        </div>
+      </div>
+
+      <!-- Question 4 -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            তৈরিকৃত লিংক কতদিন পর্যন্ত সক্রিয় থাকে?
+          </span>
+          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            LoveWeb-এ তৈরি প্রতিটি উইশিং ওয়েবসাইট আজীবন অনলাইনে সক্রিয় থাকে। আপনি যেকোনো সময় লিংকটি ওপেন করে স্মৃতিগুলো পুনরায় উপভোগ করতে পারবেন।
+          </div>
+        </div>
+      </div>
+
+      <!-- Question 5 -->
+      <div class="faq-item">
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <i class="fa-solid fa-headset"></i>
+            সরাসরি যোগাযোগ ও সহায়তা পাওয়ার উপায় কী?
+          </span>
+          <i class="fa-solid fa-chevron-down faq-icon-arrow"></i>
+        </button>
+        <div class="faq-body-collapse">
+          <div class="faq-content">
+            যেকোনো কাস্টম অর্ডার বা সহযোগিতার জন্য আপনি সরাসরি আমাদের ইমেইল করতে পারেন: <strong><a href="mailto:lovewebbd@gmail.com">lovewebbd@gmail.com</a></strong> অথবা স্ক্রিনের নিচের ডান কোণায় থাকা মেসেঞ্জার আইকনে ক্লিক করে সরাসরি আমাদের মেসেঞ্জার পেজে <strong>@lovewebbd</strong> চ্যাট করতে পারেন।
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Official Contact Box -->
+    <div class="contact-card-box">
+      <div class="contact-card-title">
+        <i class="fa-solid fa-envelope-open-text"></i> সরাসরি আমাদের সাথে যোগাযোগ
+      </div>
+      <div class="contact-links-grid">
+        <a href="mailto:lovewebbd@gmail.com" class="contact-pill-link">
+          <i class="fa-solid fa-envelope"></i> lovewebbd@gmail.com
+        </a>
+        <a href="https://m.me/lovewebbd" target="_blank" rel="noopener noreferrer" class="contact-pill-link" style="background: rgba(0, 106, 255, 0.2); border-color: rgba(0, 106, 255, 0.5);">
+          <i class="fa-brands fa-facebook-messenger" style="color: #00B2FF;"></i> মেসেঞ্জারে চ্যাট (@lovewebbd)
+        </a>
+      </div>
+    </div>
+
+    <div style="width: 100%; text-align: center;">
+      <a href="/sign-in" class="btn-submit" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; max-width: 260px;">
+        <i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে যান
+      </a>
+    </div>
+  </div>
+
+  <footer class="auth-footer">
+    <a href="/sign-in" class="footer-link"><i class="fa-solid fa-right-to-bracket"></i> সাইন ইন</a>
+    <span class="footer-divider">•</span>
+    <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
+  </footer>
+
+  <!-- FAQ Accordion & Smooth Scroll Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const faqItems = document.querySelectorAll('.faq-item');
+
+      faqItems.forEach((item) => {
+        const header = item.querySelector('.faq-header');
+        const collapse = item.querySelector('.faq-body-collapse');
+
+        header.addEventListener('click', () => {
+          const isActive = item.classList.contains('active');
+
+          // Close other open FAQs
+          faqItems.forEach((other) => {
+            if (other !== item && other.classList.contains('active')) {
+              other.classList.remove('active');
+              other.querySelector('.faq-header').setAttribute('aria-expanded', 'false');
+              other.querySelector('.faq-body-collapse').style.maxHeight = null;
+            }
+          });
+
+          // Toggle current
+          if (isActive) {
+            item.classList.remove('active');
+            header.setAttribute('aria-expanded', 'false');
+            collapse.style.maxHeight = null;
+          } else {
+            item.classList.add('active');
+            header.setAttribute('aria-expanded', 'true');
+            // Set exact height for smooth CSS transition
+            collapse.style.maxHeight = collapse.scrollHeight + 'px';
+
+            // Smooth scroll down to the answered content as requested
+            setTimeout(() => {
+              item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 180);
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- Live Messenger Floating Widget -->
+  <script src="../js/messenger.js"></script>
+
+</body>
+
+</html>

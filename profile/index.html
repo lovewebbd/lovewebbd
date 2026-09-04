@@ -1,14 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>প্রোফাইল - LoveWeb</title>
+  <meta name="description" content="LoveWeb প্রোফাইল ব্যবস্থাপনা">
+
+  <!-- Favicon Links -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon.png">
+  <link rel="apple-touch-icon" href="../img/favicon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+    .profile-card {
+      width: 540px;
+      max-width: 92%;
+      height: auto;
+      padding: 35px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-pink), #80002a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      color: #fff;
+      margin-bottom: 15px;
+      box-shadow: 0 0 20px var(--glow-pink);
+    }
+
+    .profile-details {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 18px 0;
+      text-align: left;
+    }
+
+    .profile-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .profile-field:last-child {
+      border-bottom: none;
+    }
+
+    .field-label {
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-label i {
+      color: var(--primary-pink);
+    }
+
+    .field-value {
+      color: var(--text-main);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+  </style>
 </head>
 
 <body>
-  
+
+  <div class="auth-card profile-card">
+    <div class="profile-avatar">
+      <i class="fa-solid fa-user"></i>
+    </div>
+
+    <h2 class="title" id="profileName">ইউজার প্রোফাইল</h2>
+    <p class="desc">আপনার ব্যক্তিগত অ্যাকাউন্টের বিবরণ</p>
+
+    <div class="profile-details" id="profileDetails">
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-id-card"></i> পুরো নাম</span>
+        <span class="field-value" id="valFullName">-</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-at"></i> ইউজারনেম</span>
+        <span class="field-value" id="valUsername">-</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-envelope"></i> ইমেল</span>
+        <span class="field-value" id="valEmail">-</span>
+      </div>
+      <div class="profile-field">
+        <span class="field-label"><i class="fa-solid fa-phone"></i> ফোন নম্বর</span>
+        <span class="field-value" id="valPhone">-</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+      <a href="/order-details" class="btn-ghost" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; min-width: 140px;">
+        <i class="fa-solid fa-gift"></i> অর্ডার বিস্তারিত
+      </a>
+      <a href="/settings" class="btn-ghost" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; min-width: 140px;">
+        <i class="fa-solid fa-gear"></i> সেটিংস
+      </a>
+      <a href="/dashboard" class="btn-submit" style="flex: 1; text-align: center; text-decoration: none; margin-top: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 140px;">
+        <i class="fa-solid fa-house"></i> ড্যাশবোর্ড
+      </a>
+    </div>
+  </div>
+
+  <footer class="auth-footer">
+    <a href="../help/index.html" class="footer-link"><i class="fa-solid fa-circle-question"></i> সাহায্য</a>
+    <span class="footer-divider">•</span>
+    <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const raw = localStorage.getItem('loveweb_session');
+      if (raw) {
+        try {
+          const user = JSON.parse(raw);
+          if (user.full_name) document.getElementById('profileName').innerText = user.full_name;
+          if (user.full_name) document.getElementById('valFullName').innerText = user.full_name;
+          if (user.username) document.getElementById('valUsername').innerText = '@' + user.username;
+          if (user.email) document.getElementById('valEmail').innerText = user.email;
+          if (user.phone) document.getElementById('valPhone').innerText = user.phone;
+        } catch (e) {}
+      } else {
+        window.location.href = '../sign-in/index.html';
+      }
+    });
+  </script>
+
+  <!-- Live Messenger Floating Widget -->
+  <script src="../js/messenger.js"></script>
 </body>
 
 </html>

@@ -1,39 +1,251 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Favicon Links -->
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
-    <link rel="apple-touch-icon" href="img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট</title>
+  <meta name="description" content="LoveWeb - Custom wishing website platform for loved ones (প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট)">
+  <meta property="og:title" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট">
+  <meta property="og:description" content="LoveWeb - Custom wishing website platform for loved ones (প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট)">
 
-  <title></title>
+  <!-- Favicon Links -->
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
+  <link rel="apple-touch-icon" href="img/favicon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .home-card {
+      width: 520px;
+      max-width: 92%;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      height: auto;
+      min-height: 480px;
+    }
+    .user-profile-box {
+      margin: 20px 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: left;
+    }
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--text-sub);
+      font-size: 0.95rem;
+    }
+    .user-row i {
+      color: var(--primary-pink);
+      width: 20px;
+    }
+    .user-row strong {
+      color: var(--text-main);
+    }
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: var(--transition-smooth);
+      cursor: pointer;
+    }
+    .btn-primary-action {
+      background: var(--primary-pink);
+      color: #fff;
+      border: none;
+    }
+    .btn-primary-action:hover {
+      background: var(--hover-pink);
+      box-shadow: 0 4px 15px var(--glow-pink);
+    }
+    .btn-secondary-action {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary-action:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  </style>
 </head>
 
 <body>
-  <a href="/sign-in">go to login</a>
-  <button id="logoutBtn" class="logout-btn">লগআউট (Logout)</button>
+  <!-- Dynamic Notification Toast -->
+  <div id="notification" class="notification-toast">
+    <span id="notif-message"></span>
+  </div>
+
+  <!-- Main Card -->
+  <div class="auth-card home-card" id="homeCard">
+    <!-- Watermark Background -->
+    <img src="img/logo.png" alt="LoveWeb Logo" class="watermark-bg" onerror="this.style.display='none'">
+
+    <!-- Logo -->
+    <div class="brand-logo" style="margin-bottom: 12px;">
+      <img src="img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 52px; width: auto;" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=LoveWeb'">
+    </div>
+
+    <h1 class="title" style="font-size: 1.8rem; margin-bottom: 6px;">LoveWeb</h1>
+    <p class="desc" style="font-size: 1rem;">প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট প্ল্যাটফর্ম</p>
+
+    <!-- Content based on auth state -->
+    <div id="authContent" style="width: 100%;">
+      <!-- Populated by JavaScript -->
+    </div>
+
+    <div class="action-buttons" id="actionsContainer">
+      <a href="/sign-in" id="loginLink" class="btn-action btn-primary-action">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> লগইন / সাইন আপ করুন
+      </a>
+      <button id="logoutBtn" class="btn-action btn-secondary-action" style="display: none;">
+        <i class="fa-solid fa-right-from-bracket"></i> লগআউট (Logout)
+      </button>
+    </div>
+  </div>
 
   <script type="text/javascript" charset="utf-8">
-    // লগআউট লজিক (Root index.html)
-      const logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) {
-          logoutBtn.addEventListener('click', () => {
-              // সেশন ও স্টোরেজ ক্লিয়ার করা
-              localStorage.removeItem('loveweb_session');
-              sessionStorage.clear();
-              
-              showNotification('সফলভাবে লগআউট করা হয়েছে।', 'success');
-              
-              // সঠিক সাইন-ইন পেজ পাথ
-              setTimeout(() => {
-                  window.location.href = 'sign-in/index.html'; 
-              }, 1000);
-          });
-      }
+    // নোটিফিকেশন প্রদর্শন ব্যবস্থা
+    const notification = document.getElementById('notification');
+    const notifMessage = document.getElementById('notif-message');
+    let notifTimeout;
+    function showNotification(msg, type = 'error') {
+      if (!notification) return;
+      if (notifMessage) notifMessage.innerText = msg;
+      notification.className = `notification-toast show ${type}`;
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3200);
+    }
 
+    // সেশন চেক ও রেন্ডারিং
+    const authContent = document.getElementById('authContent');
+    const loginLink = document.getElementById('loginLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function renderAuthState() {
+      const sessionRaw = localStorage.getItem('loveweb_session');
+      if (sessionRaw) {
+        try {
+          const user = JSON.parse(sessionRaw);
+          authContent.innerHTML = `
+            <div class="user-profile-box">
+              <div class="user-row">
+                <i class="fa-solid fa-circle-user"></i>
+                <div>নাম: <strong>${user.full_name || 'ইউজার'}</strong></div>
+              </div>
+              <div class="user-row">
+                <i class="fa-solid fa-at"></i>
+                <div>ইউজারনেম: <strong>${user.username || '-'}</strong></div>
+              </div>
+              <div class="user-row">
+                <i class="fa-solid fa-envelope"></i>
+                <div>ইমেল: <strong>${user.email || '-'}</strong></div>
+              </div>
+              ${user.phone ? `
+              <div class="user-row">
+                <i class="fa-solid fa-phone"></i>
+                <div>ফোন: <strong>${user.phone}</strong></div>
+              </div>` : ''}
+            </div>
+
+            <!-- ড্যাশবোর্ড কুইক অ্যাকশন মেন্যু -->
+            <div class="dashboard-grid">
+              <a href="/order-details" class="dashboard-card-btn" id="btnDashOrders">
+                <i class="fa-solid fa-gift"></i>
+                <span class="card-title">অর্ডার বিস্তারিত</span>
+                <span class="card-desc">উইশিং অর্ডারের হিস্ট্রি</span>
+              </a>
+              <a href="/profile" class="dashboard-card-btn" id="btnDashProfile">
+                <i class="fa-solid fa-user"></i>
+                <span class="card-title">প্রোফাইল</span>
+                <span class="card-desc">অ্যাকাউন্ট তথ্য দেখুন</span>
+              </a>
+              <a href="/settings" class="dashboard-card-btn" id="btnDashSettings">
+                <i class="fa-solid fa-gear"></i>
+                <span class="card-title">সেটিংস</span>
+                <span class="card-desc">নিরাপত্তা ও পরিবর্তন</span>
+              </a>
+              <a href="/help" class="dashboard-card-btn" id="btnDashHelp">
+                <i class="fa-solid fa-circle-question"></i>
+                <span class="card-title">সাহায্য কেন্দ্র</span>
+                <span class="card-desc">সাপোর্ট ও নিয়মাবলী</span>
+              </a>
+            </div>
+
+            <p style="color: var(--success-green); font-size: 0.85rem; margin-top: 10px; margin-bottom: 12px;">
+              <i class="fa-solid fa-circle-check"></i> আপনি লগইন অবস্থায় আছেন
+            </p>
+          `;
+          if (loginLink) loginLink.style.display = 'none';
+          if (logoutBtn) logoutBtn.style.display = 'flex';
+        } catch (e) {
+          showLoggedOutState();
+        }
+      } else {
+        showLoggedOutState();
+      }
+    }
+
+    function showLoggedOutState() {
+      authContent.innerHTML = `
+        <div style="margin: 24px 0; color: var(--text-sub); font-size: 0.95rem;">
+          <p>আপনার প্রিয়জনের জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ মুহূর্তকে স্মরণীয় করে রাখতে নিজস্ব উইশিং পেজ তৈরি করুন।</p>
+        </div>
+      `;
+      if (loginLink) loginLink.style.display = 'flex';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+
+    renderAuthState();
+
+    // লগআউট লজিক
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('loveweb_session');
+        sessionStorage.clear();
+        showNotification('সফলভাবে লগআউট করা হয়েছে।', 'success');
+        renderAuthState();
+        setTimeout(() => {
+          window.location.href = '/sign-in'; 
+        }, 1000);
+      });
+    }
   </script>
+  <!-- Live Messenger Floating Widget -->
+  <script src="js/messenger.js"></script>
 </body>
 
 </html>
