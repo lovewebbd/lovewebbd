@@ -1,4 +1,6 @@
-{
+import fs from 'fs';
+
+const config = {
   "projectId": "gen-lang-client-0417290366",
   "appId": "1:493419045383:web:99a5bac1b0bab4c12880a2",
   "apiKey": "AIzaSyAGQJewSfVQs_QsGNR4_BEeclm2lnEMIIo",
@@ -9,4 +11,7 @@
   "measurementId": "",
   "oAuthClientId": "493419045383-klt8bp2s006j7g0gm2rtmis0n1djuuiu.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
-}
+};
+
+fs.writeFileSync('firebase-applet-config.json', JSON.stringify(config, null, 2));
+console.log('Firebase config updated with provided values');

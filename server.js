@@ -42,7 +42,7 @@ if (fs.existsSync(configPath)) {
     authDomain: config.authDomain,
     storageBucket: config.storageBucket,
     messagingSenderId: config.messagingSenderId
-  };
+  }
   const app = initializeApp(firebaseConfig);
   db = config.firestoreDatabaseId ? getFirestore(app, config.firestoreDatabaseId) : getFirestore(app);
   console.log('Firebase Client SDK initialized.');
@@ -152,7 +152,7 @@ function generateLoveWebEmailHtml({ title, badge, message, otp, note }) {
 
 // POST endpoint to send OTP email via Gmail App Password
 app.post('/api/send-otp', async (req, res) => {
-  const { email, otp, subject, title, message, badge, note } = req.body || {};
+  const { email, otp, subject, title, message, badge, note } = req.body || {}
 
   if (!email || !otp) {
     return res.status(400).json({ success: false, message: 'Email and OTP are required' });
@@ -171,7 +171,7 @@ app.post('/api/send-otp', async (req, res) => {
         otp: otp,
         note: note
       })
-    };
+    }
 
     const info = await transporter.sendMail(mailOptions);
     console.log(`[MAIL SUCCESS] OTP sent to ${email} (${mailSubject}): ${info.messageId}`);
@@ -184,7 +184,7 @@ app.post('/api/send-otp', async (req, res) => {
 
 // POST endpoint to send Dual OTP emails for email change flow
 app.post('/api/send-dual-otp', async (req, res) => {
-  const { currentEmail, newEmail, otpCurrent, otpNew } = req.body || {};
+  const { currentEmail, newEmail, otpCurrent, otpNew } = req.body || {}
 
   const cleanCurrentEmail = (currentEmail || '').toString().toLowerCase().trim();
   const cleanNewEmail = (newEmail || '').toString().toLowerCase().trim();
@@ -206,7 +206,7 @@ app.post('/api/send-dual-otp', async (req, res) => {
   const results = {
     currentEmail: { email: cleanCurrentEmail, sent: false, messageId: null, error: null },
     newEmail: { email: cleanNewEmail, sent: false, messageId: null, error: null }
-  };
+  }
 
   try {
     // ১. বর্তমান ইমেইলে ১ম কোড প্রেরণ
@@ -222,7 +222,7 @@ app.post('/api/send-dual-otp', async (req, res) => {
         otp: cleanOtpCurrent,
         note: `⚠️ এই কোডটি শুধুমাত্র আপনার বর্তমান ইমেইল (${cleanCurrentEmail}) এর জন্য। নতুন ইমেইলের জন্য আলাদা কোড নতুন ঠিকানায় পাঠানো হয়েছে।`
       })
-    };
+    }
 
     const currentInfo = await transporter.sendMail(currentMailOptions);
     results.currentEmail.sent = true;
@@ -250,7 +250,7 @@ app.post('/api/send-dual-otp', async (req, res) => {
         otp: cleanOtpNew,
         note: `⚠️ এই কোডটি শুধুমাত্র আপনার নতুন ইমেইল (${cleanNewEmail}) এর জন্য।`
       })
-    };
+    }
 
     const newInfo = await transporter.sendMail(newMailOptions);
     results.newEmail.sent = true;
@@ -291,7 +291,7 @@ app.post('/api/send-dual-otp', async (req, res) => {
 
 // POST endpoint to send transactional / notification email (e.g. email change confirmation)
 app.post('/api/send-email', async (req, res) => {
-  const { to, email, subject, title, message, badge, note } = req.body || {};
+  const { to, email, subject, title, message, badge, note } = req.body || {}
   const recipient = to || email;
 
   if (!recipient || !subject || !message) {
@@ -309,7 +309,7 @@ app.post('/api/send-email', async (req, res) => {
         message: message,
         note: note || '🔒 আপনি যদি এই কার্যক্রম নিজে না করে থাকেন, তবে অবিলম্বে আমাদের সাপোর্ট সেন্টারে যোগাযোগ করুন।'
       })
-    };
+    }
 
     const info = await transporter.sendMail(mailOptions);
     console.log(`[MAIL SUCCESS] Notification email sent to ${recipient}: ${info.messageId}`);
@@ -337,16 +337,20 @@ app.post('/api/generate-page-descriptions', async (req, res) => {
     const numOptionalToGenerate = Math.floor(Math.random() * (optionalPages + 1));
     const totalToGenerate = requiredPages + numOptionalToGenerate;
 
-    const prompt = `The user wants to build a website.
+    const prompt = `The user wants to build a relationship/anniversary wishing website. 
 Idea: "${idea}"
 Package: ${packageType}.
-You MUST generate detailed descriptions for exactly ${totalToGenerate} pages (e.g., Home, About, Services, Contact, etc.).
-Make the descriptions detailed and tailored to the idea. Write in Bengali (বাংলা).
 
-Return a JSON array of strings, where each string is the detailed description of a specific page. The length of the array must be exactly ${totalToGenerate}.`;
+IMPORTANT INSTRUCTIONS:
+- You MUST generate detailed descriptions for exactly ${totalToGenerate} sections/pages.
+- Default to styles like "Auto Queue Theme", "Normal", or "Wishing Website".
+- DO NOT suggest or create descriptions for "Home Page", "About Us", "Contact Us", professional portfolios, or corporate websites. LoveWeb ONLY builds wishing websites.
+- Make the descriptions detailed, romantic, and tailored to the idea. Write in Bengali (বাংলা).
+
+Return a JSON array of strings, where each string is the detailed description of a specific section/page. The length of the array must be exactly ${totalToGenerate}.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.0-flash-exp",
       contents: prompt,
       config: {
         
@@ -372,7 +376,26 @@ Return a JSON array of strings, where each string is the detailed description of
 app.post('/api/place-order', async (req, res) => {
   if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const { username, phone, websiteType, packageType, description, pages, contactPhone, advancePaymentPhone } = req.body;
+    const { username, phone, websiteType, packageType, description, pages, contactPhone, advancePaymentPhone, couponCode } = req.body;
+    let couponDiscountPercent = 0;
+    
+    // Validate coupon
+    if (couponCode) {
+      const docRef = doc(db, 'coupons', couponCode.toUpperCase());
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (!(data.expiryDate && new Date(data.expiryDate) < new Date())) {
+          const usedBy = data.usedBy || {}
+          const userUses = usedBy[username] || 0;
+          if (!(data.maxUsesPerUser && userUses >= data.maxUsesPerUser)) {
+             couponDiscountPercent = data.discountPercent || 0;
+             usedBy[username] = userUses + 1;
+             await updateDoc(docRef, { usedBy });
+          }
+        }
+      }
+    }
     
     // Calculate User's Total Spent for Discount Policy
     let totalSpent = 0;
@@ -433,7 +456,7 @@ app.post('/api/place-order', async (req, res) => {
       advancePaymentStatus: 'পেন্ডিং',
       customizeCharge: packageType === 'Premium' ? 'ফ্রি (১ বার)' : '৳ ১৫০',
       createdAt: new Date().toISOString()
-    };
+    }
     
     await addDoc(collection(db, 'orders'), newOrder);
     res.json({ success: true, orderId, message: 'Order placed successfully!' });
@@ -509,6 +532,112 @@ app.get(['/home', '/dashboard'], (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+
+// ====================
+// SETTINGS & COUPON APIs
+// ====================
+
+app.get('/api/settings', async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const docRef = doc(db, 'settings', 'general');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      res.json({ success: true, settings: docSnap.data() });
+    } else {
+      res.json({ success: true, settings: { bkashNumber: '', nagadNumber: '' } });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/settings', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { bkashNumber, nagadNumber } = req.body;
+    const docRef = doc(db, 'settings', 'general');
+    await setDoc(docRef, { bkashNumber, nagadNumber }, { merge: true });
+    res.json({ success: true, message: 'Settings updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.get('/api/admin/coupons', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const snapshot = await getDocs(collection(db, 'coupons'));
+    const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json({ success: true, coupons });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/coupons', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { code, discountPercent, expiryDate, maxUsesPerUser } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: 'Coupon code is required' });
+    const docRef = doc(db, 'coupons', code.toUpperCase());
+    await setDoc(docRef, { 
+      code: code.toUpperCase(), 
+      discountPercent: Number(discountPercent), 
+      expiryDate, 
+      maxUsesPerUser: Number(maxUsesPerUser),
+      createdAt: new Date().toISOString()
+    }, { merge: true });
+    res.json({ success: true, message: 'Coupon saved successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/coupons/delete', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: 'Code required' });
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'coupons', code));
+    res.json({ success: true, message: 'Coupon deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/validate-coupon', async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { code, username } = req.body;
+    if (!code || !username) return res.status(400).json({ success: false, message: 'Code and username required' });
+    
+    const docRef = doc(db, 'coupons', code.toUpperCase());
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return res.json({ success: false, message: 'Invalid coupon code.' });
+    
+    const data = docSnap.data();
+    
+    // Check expiry
+    if (data.expiryDate && new Date(data.expiryDate) < new Date()) {
+      return res.json({ success: false, message: 'Coupon has expired.' });
+    }
+    
+    // Check usage
+    const usedBy = data.usedBy || {}
+    const userUses = usedBy[username] || 0;
+    if (data.maxUsesPerUser && userUses >= data.maxUsesPerUser) {
+      return res.json({ success: false, message: 'You have reached the max usage for this coupon.' });
+    }
+    
+    res.json({ success: true, discountPercent: data.discountPercent });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
 // ====================
 // ADMIN API ROUTES
 // ====================
@@ -528,10 +657,10 @@ async function getAdminCredentials() {
       }
     } catch(e) { console.error('Error loading admin settings', e); }
   }
-  return { user: ADMIN_USERNAME, pass: ADMIN_PASSWORD };
+  return { user: ADMIN_USERNAME, pass: ADMIN_PASSWORD }
 }
 
-const verifyAdmin = (req, res, next) => {
+function verifyAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -541,7 +670,7 @@ const verifyAdmin = (req, res, next) => {
     return res.status(403).json({ success: false, message: 'Forbidden' });
   }
   next();
-};
+}
 
 app.post('/api/admin/login', async (req, res) => {
   const { username, password } = req.body;
@@ -593,7 +722,7 @@ app.post('/api/admin/orders/payment', verifyAdmin, async (req, res) => {
   try {
     const { id, value } = req.body;
     const orderRef = doc(db, 'orders', id);
-    const updates = { advancePaymentStatus: value };
+    const updates = { advancePaymentStatus: value }
     
     if (value === 'সম্পূর্ণ পরিশোধিত') {
       const snap = await getDoc(orderRef);
@@ -634,7 +763,7 @@ app.post('/api/admin/orders/status', verifyAdmin, async (req, res) => {
 async function checkOrderStatus(args) {
   try {
     const { identifier } = args;
-    if (!identifier) return { status: 'error', message: 'No identifier provided.' };
+    if (!identifier) return { status: 'error', message: 'No identifier provided.' }
     
     // Check by phone
     let snapshot = await db.collection('orders').where('phone', '==', identifier).get();
@@ -644,7 +773,7 @@ async function checkOrderStatus(args) {
     }
     
     if (snapshot.empty) {
-      return { status: 'not_found', message: 'আপনার এই নাম্বার বা ইউজারনেম দিয়ে কোনো অর্ডার পাওয়া যায়নি।' };
+      return { status: 'not_found', message: 'আপনার এই নাম্বার বা ইউজারনেম দিয়ে কোনো অর্ডার পাওয়া যায়নি।' }
     }
     
     const orders = [];
@@ -657,10 +786,10 @@ async function checkOrderStatus(args) {
         advancePaymentStatus: data.advancePaymentStatus || 'অপেক্ষমান'
       });
     });
-    return { status: 'success', message: 'অর্ডার পাওয়া গেছে।', orders };
+    return { status: 'success', message: 'অর্ডার পাওয়া গেছে।', orders }
   } catch (error) {
     console.error('Error checking order status:', error);
-    return { status: 'error', message: 'অর্ডার চেক করতে সমস্যা হয়েছে।' };
+    return { status: 'error', message: 'অর্ডার চেক করতে সমস্যা হয়েছে।' }
   }
 }
 
@@ -679,12 +808,12 @@ async function placeNewOrder(args) {
        advancePaymentStatus: 'অপেক্ষমান',
        totalPrice: args.packageType === 'Premium' ? '1000' : (args.packageType === 'Exclusive' ? '700' : '400'),
        createdAt: admin.firestore.FieldValue.serverTimestamp()
-    };
+    }
     await db.collection('orders').add(newOrder);
-    return { status: 'success', orderId: newOrder.orderId, message: 'আপনার অর্ডারটি সফলভাবে প্লেস করা হয়েছে। অ্যাডমিন প্যানেল থেকে খুব শীঘ্রই যোগাযোগ করা হবে।' };
+    return { status: 'success', orderId: newOrder.orderId, message: 'আপনার অর্ডারটি সফলভাবে প্লেস করা হয়েছে। অ্যাডমিন প্যানেল থেকে খুব শীঘ্রই যোগাযোগ করা হবে।' }
   } catch (error) {
     console.error('Error placing new order:', error);
-    return { status: 'error', message: 'অর্ডার প্লেস করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।' };
+    return { status: 'error', message: 'অর্ডার প্লেস করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।' }
   }
 }
 
@@ -730,6 +859,7 @@ IMPORTANT KNOWLEDGE BASE:
 - Packages & Delivery Time: Regular Package (1 to 3 days delivery), Exclusive Package (3 to 5 days delivery), Premium Package (5 to 7 days delivery). NEVER say delivery is done in 24 hours.
 - How to order: Users can place an order by going to the 'Place Order' page, selecting a package, choosing add-ons (Custom Domain, Background Music, Fast Delivery), and submitting their info.
 - Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).
+- Website Types (IMPORTANT): Automatically suggest "Auto Queue Theme", "Normal", and "Wishing Website" as default categories when taking an order. LoveWeb builds ONLY wishing/relationship single-page sites. These do NOT have standard pages like "Home Page", "About Us", or "Contact Us". NEVER suggest or generate descriptions for professional portfolios, corporate sites, or standard personal websites.
 You have tools to check order status or place a new order. Always provide helpful, complete, and polite answers.`;
 
     let formattedHistory = [];
@@ -741,7 +871,7 @@ You have tools to check order status or place a new order. Always provide helpfu
     }
 
     const chatSession = ai.chats.create({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.0-flash-exp",
       config: {
         systemInstruction: systemInstruction + " You have tools to place orders and check order status. Always use them if the user asks. Before placing an order, ask for all required details nicely.",
         temperature: 0.7,
@@ -755,19 +885,19 @@ You have tools to check order status or place a new order. Always provide helpfu
     // Handle tool calls in text chat
     if (response.functionCalls && response.functionCalls.length > 0) {
        const call = response.functionCalls[0];
-       let result = {};
+       let result = {}
        if (call.name === 'check_order_status') result = await checkOrderStatus(call.args);
                 else if (call.name === 'place_new_order') result = await placeNewOrder(call.args);
                 else if (call.name === 'navigate_to_page') {
                     if (clientWs.readyState === 1) clientWs.send(JSON.stringify({ client_command: { action: 'navigate', url: call.args.url } }));
-                    result = { success: true, message: "Navigating user." };
+                    result = { success: true, message: "Navigating user." }
                 }
                 else if (call.name === 'select_order_package') {
                     if (clientWs.readyState === 1) clientWs.send(JSON.stringify({ client_command: { action: 'select_package', value: call.args.package } }));
-                    result = { success: true, message: "Package selected on screen." };
+                    result = { success: true, message: "Package selected on screen." }
                 }
        else if (call.name === 'navigate_to_page' || call.name === 'select_order_package') {
-           result = { success: true, message: "Tell the user to click the link or select manually in text chat." };
+           result = { success: true, message: "Tell the user to click the link or select manually in text chat." }
        }
        
        response = await chatSession.sendMessage([{
@@ -808,6 +938,7 @@ IMPORTANT KNOWLEDGE BASE:
 - Packages & Delivery Time: Regular Package (1 to 3 days delivery), Exclusive Package (3 to 5 days delivery), Premium Package (5 to 7 days delivery). NEVER say delivery is done in 24 hours.
 - How to order: Users can place an order by going to the 'Place Order' page, selecting a package, choosing add-ons (Custom Domain, Background Music, Fast Delivery), and submitting their info.
 - Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).
+- Website Types (IMPORTANT): Automatically suggest "Auto Queue Theme", "Normal", and "Wishing Website" as default categories when taking an order. LoveWeb builds ONLY wishing/relationship single-page sites. These do NOT have standard pages like "Home Page", "About Us", or "Contact Us". NEVER suggest or generate descriptions for professional portfolios, corporate sites, or standard personal websites.
 You have tools to check order status or place a new order. Always provide helpful, complete, and polite answers.`,
       },
       callbacks: {
@@ -823,7 +954,7 @@ You have tools to check order status or place a new order. Always provide helpfu
              const responses = [];
              for (const part of toolCalls) {
                 const call = part.functionCall;
-                let result = {};
+                let result = {}
                 if (call.name === 'check_order_status') result = await checkOrderStatus(call.args);
                 else if (call.name === 'place_new_order') result = await placeNewOrder(call.args);
                 responses.push({ id: call.id, name: call.name, response: result });

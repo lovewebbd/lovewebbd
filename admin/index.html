@@ -263,7 +263,97 @@
       .main-content { margin-left: 60px; max-width: calc(100vw - 60px); padding: 15px; }
     }
   </style>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js">
+    // --- Coupons Logic ---
+    async function loadCoupons() {
+      try {
+        const res = await fetch('/api/admin/coupons', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const data = await res.json();
+        if(data.success) {
+          const tbody = document.getElementById('coupons-table-body');
+          if(data.coupons.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No coupons found</td></tr>';
+            return;
+          }
+          let html = '';
+          data.coupons.forEach(c => {
+            html += `<tr>
+              <td><strong>${c.code}</strong></td>
+              <td>${c.discountPercent}%</td>
+              <td>${c.maxUsesPerUser || 'Unlimited'}</td>
+              <td>${c.expiryDate ? new Date(c.expiryDate).toLocaleDateString() : 'No expiry'}</td>
+              <td><button class="btn-action" style="background:#ef4444; border-color:#dc2626;" onclick="deleteCoupon('${c.code}')"><i class="fa-solid fa-trash"></i></button></td>
+            </tr>`;
+          });
+          tbody.innerHTML = html;
+        }
+      } catch(e) { console.error(e); }
+    }
+    
+    async function saveCoupon() {
+      const code = document.getElementById('newCouponCode').value.trim();
+      const discountPercent = document.getElementById('newCouponDiscount').value;
+      const maxUsesPerUser = document.getElementById('newCouponUses').value;
+      const expiryDate = document.getElementById('newCouponExpiry').value;
+      if(!code || !discountPercent) return alert('Code and discount are required');
+      
+      try {
+        const res = await fetch('/api/admin/coupons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          body: JSON.stringify({ code, discountPercent, maxUsesPerUser, expiryDate })
+        });
+        const data = await res.json();
+        if(data.success) {
+          document.getElementById('newCouponCode').value = '';
+          document.getElementById('newCouponDiscount').value = '';
+          loadCoupons();
+        } else {
+          alert(data.message);
+        }
+      } catch(e) { alert('Error'); }
+    }
+    
+    async function deleteCoupon(code) {
+      if(!confirm('Delete coupon ' + code + '?')) return;
+      try {
+        const res = await fetch('/api/admin/coupons/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          body: JSON.stringify({ code })
+        });
+        if(res.ok) loadCoupons();
+      } catch(e) { alert('Error'); }
+    }
+    
+    // --- Settings Logic ---
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if(data.success && data.settings) {
+          document.getElementById('settingBkash').value = data.settings.bkashNumber || '';
+          document.getElementById('settingNagad').value = data.settings.nagadNumber || '';
+        }
+      } catch(e) { console.error(e); }
+    }
+    
+    async function saveSettings() {
+      const bkashNumber = document.getElementById('settingBkash').value.trim();
+      const nagadNumber = document.getElementById('settingNagad').value.trim();
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          body: JSON.stringify({ bkashNumber, nagadNumber })
+        });
+        const data = await res.json();
+        if(data.success) alert('Settings saved');
+        else alert(data.message);
+      } catch(e) { alert('Error saving settings'); }
+    }
+</script>
+
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -752,6 +842,7 @@
           <td>
             <div style="font-weight: 600;">${o.username || ''}</div>
             <div style="font-size: 0.75rem; color: var(--admin-text-sub); margin-bottom: 4px;">${o.userPhone || ''}</div>
+            ${o.couponCode ? `<div style="font-size:0.75rem; color:#10b981; font-weight:600; margin-bottom: 4px;">Coupon: ${o.couponCode} (-${o.couponDiscountPercent || 0}%)</div>` : ''}
             <button class="btn-action" style="background:var(--admin-primary); padding:2px 6px; font-size:0.7rem;" onclick="viewCustomerProfile('${o.userPhone || ''}', '${o.username || ''}')">View Profile</button>
           </td>
           <td>
@@ -828,6 +919,9 @@
       if(!order) return;
       
       let content = '';
+      if(order.couponCode) {
+         content += `<div style="margin-bottom:15px; padding:10px; background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px;"><strong>Coupon Applied:</strong> <span style="color:#10b981;">${order.couponCode} (-${order.couponDiscountPercent}%)</span></div>`;
+      }
       
       if(order.description) {
         content += `<div style="margin-bottom:15px;"><strong>General Description:</strong><br><div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; margin-top:5px; white-space:pre-wrap;">${order.description}</div></div>`;

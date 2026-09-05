@@ -325,7 +325,7 @@
 </head>
 <body>
   
-  <div class="dashboard-menu-header" onclick="window.location.href='/dashboard'">
+  <div class="dashboard-menu-header" onclick="window.location.href='/'">
     <div style="display: flex; align-items: center; gap: 12px;">
       <img src="../img/logo.png" alt="LoveWeb" style="height: 32px;">
       <span style="font-weight: 700; color: var(--primary-pink); font-size: 1.1rem;">অর্ডার করুন</span>
@@ -775,6 +775,49 @@
 
     
     let userDiscountPercent = 0;
+    let appliedCouponCode = null;
+    let couponDiscountPercent = 0;
+
+    async function applyCoupon() {
+      const code = document.getElementById('couponCode').value.trim();
+      const msgDiv = document.getElementById('couponMessage');
+      if(!code) {
+        msgDiv.innerHTML = '<span style="color:#ef4444;">Please enter a code</span>';
+        return;
+      }
+      
+      const username = localStorage.getItem('username');
+      if(!username) {
+        msgDiv.innerHTML = '<span style="color:#ef4444;">Please login first</span>';
+        return;
+      }
+      
+      msgDiv.innerHTML = '<span style="color:#eab308;"><i class="fa-solid fa-spinner fa-spin"></i> Checking...</span>';
+      
+      try {
+        const response = await fetch('/api/validate-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, username })
+        });
+        const data = await response.json();
+        
+        if(data.success) {
+          appliedCouponCode = code;
+          couponDiscountPercent = data.discountPercent;
+          msgDiv.innerHTML = `<span style="color:#10b981;"><i class="fa-solid fa-check-circle"></i> Coupon applied! ${couponDiscountPercent}% extra discount.</span>`;
+          updateDisplayedPrices();
+        } else {
+          appliedCouponCode = null;
+          couponDiscountPercent = 0;
+          msgDiv.innerHTML = `<span style="color:#ef4444;"><i class="fa-solid fa-circle-xmark"></i> ${data.message}</span>`;
+          updateDisplayedPrices();
+        }
+      } catch(err) {
+        msgDiv.innerHTML = '<span style="color:#ef4444;">Error checking coupon</span>';
+      }
+    }
+
     
     // Fetch user order history to calculate discount
     async function loadUserDiscount() {
@@ -839,15 +882,41 @@
         if (index === 2) pkgName = 'Premium';
         
         if (packages[pkgName]) {
-          const discountAmt = Math.floor(packages[pkgName].base * (userDiscountPercent / 100));
+          const totalDiscountPercent = userDiscountPercent + couponDiscountPercent;
+          const discountAmt = Math.floor(packages[pkgName].base * (totalDiscountPercent / 100));
           const finalPrice = packages[pkgName].base - discountAmt;
           const priceDiv = card.querySelector('.pkg-price');
-          priceDiv.innerHTML = `<span class="pkg-cross">৳${packages[pkgName].base}</span> <span style="color:#10b981;">৳${finalPrice}</span> <div style="font-size:0.75rem; color:#c084fc; margin-top:2px;">(-${userDiscountPercent}% মেম্বারশিপ ছাড়)</div>`;
+          
+          let desc = '';
+          if(userDiscountPercent > 0) desc += `-${userDiscountPercent}% Member `;
+          if(couponDiscountPercent > 0) desc += `-${couponDiscountPercent}% Coupon`;
+          
+          priceDiv.innerHTML = `<span class="pkg-cross">৳${packages[pkgName].base}</span> <span style="color:#10b981;">৳${finalPrice}</span> ${desc ? `<div style="font-size:0.75rem; color:#c084fc; margin-top:2px;">(${desc})</div>` : ''}`;
+
         }
       });
     }
 
-    document.addEventListener('DOMContentLoaded', loadUserDiscount);
+    
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if(data.success && data.settings) {
+          document.getElementById('bkashNumberDisplay').innerText = data.settings.bkashNumber || 'Not set';
+          document.getElementById('nagadNumberDisplay').innerText = data.settings.nagadNumber || 'Not set';
+        }
+      } catch(e) {
+        document.getElementById('bkashNumberDisplay').innerText = 'Error';
+        document.getElementById('nagadNumberDisplay').innerText = 'Error';
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserDiscount();
+      loadSettings();
+    });
+
 
     // Handle Package Selection
     function selectPackage(element, packageValue) {
