@@ -39,6 +39,8 @@
     let membershipBadgeText = 'অতিথি ভিজিটর';
     let membershipBadgeIcon = 'fa-circle-info';
     let membershipBadgeColorClass = '';
+    let avatarFrameClass = '';
+    let crownBadge = '';
 
     if (isUserLoggedIn) {
       let orders = [];
@@ -52,11 +54,16 @@
         totalSpent = orders.reduce((sum, item) => sum + (Number(item.price || item.amount) || 0), 0);
       }
 
+      
       if (totalSpent >= 2000) {
+        avatarFrameClass = 'premium-frame';
+        crownBadge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
         membershipBadgeText = 'প্রিমিয়াম মেম্বার (৮% ছাড়)';
         membershipBadgeIcon = 'fa-crown';
         membershipBadgeColorClass = 'style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15);"';
       } else if (totalSpent >= 1000) {
+        avatarFrameClass = 'elite-frame';
+        crownBadge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
         membershipBadgeText = 'এলিট মেম্বার (৪% ছাড়)';
         membershipBadgeIcon = 'fa-gem';
         membershipBadgeColorClass = 'style="color: #c084fc; border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.15);"';
@@ -64,6 +71,7 @@
         membershipBadgeText = 'সাধারণ সদস্য';
         membershipBadgeIcon = 'fa-circle-check';
       }
+
     }
 
     const currentTheme = (typeof window.getLoveWebTheme === 'function') 
@@ -102,8 +110,11 @@
 
           <!-- ব্যবহারকারী প্রোফাইল পিল -->
           <a href="${isUserLoggedIn ? rootPrefix + 'profile/index.html' : rootPrefix + 'sign-in/index.html'}" class="top-bar-user-pill" id="topBarUserPill" title="${isUserLoggedIn ? 'প্রোফাইল দেখুন' : 'সাইন-ইন করুন'}">
-            <div class="top-bar-avatar">
-              ${isUserLoggedIn ? userInitial : '<i class="fa-solid fa-user"></i>'}
+            <div class="top-bar-avatar-wrap ${avatarFrameClass}">
+              ${crownBadge}
+              <div class="top-bar-avatar">
+                ${isUserLoggedIn ? userInitial : '<i class="fa-solid fa-user"></i>'}
+              </div>
             </div>
             <span class="top-bar-user-name">${userName}</span>
           </a>
@@ -135,7 +146,7 @@
 
         <!-- ইউজার ইনফো কার্ড -->
         <div class="drawer-user-card">
-          <div class="drawer-avatar-wrap">
+          <div class="drawer-avatar-wrap ${avatarFrameClass}">${crownBadge}
             <div class="drawer-avatar">${isUserLoggedIn ? userInitial : '<i class="fa-solid fa-user"></i>'}</div>
             <span class="drawer-status-dot ${isUserLoggedIn ? 'online' : 'guest'}"></span>
           </div>
@@ -182,8 +193,16 @@
             </div>
             <i class="fa-solid fa-chevron-right nav-arrow"></i>
           </a>
+          <a href="${rootPrefix}place-order/" class="drawer-nav-link ${currentPath.includes('place-order') ? 'active' : ''}">
+            <div class="nav-icon-box"><i class="fa-solid fa-cart-shopping"></i></div>
+            <div class="nav-text-box">
+              <span class="nav-label">নতুন অর্ডার করুন</span>
+              <span class="nav-sub">নতুন উইশিং ওয়েবসাইট তৈরি করুন</span>
+            </div>
+            <i class="fa-solid fa-chevron-right nav-arrow"></i>
+          </a>
 
-          <a href="${rootPrefix}order-details/index.html" class="drawer-nav-link ${currentPath.includes('order-details') ? 'active' : ''}">
+          <a href="${rootPrefix}order-details" class="drawer-nav-link ${currentPath.includes('order-details') ? 'active' : ''}">
             <div class="nav-icon-box"><i class="fa-solid fa-gift"></i></div>
             <div class="nav-text-box">
               <span class="nav-label">অর্ডার বিস্তারিত</span>
@@ -281,6 +300,56 @@
     const container = document.createElement('div');
     container.innerHTML = topBarHtml + sideDrawerHtml;
     document.body.prepend(container);
+
+    
+    // Async update total spent from DB
+    if (isUserLoggedIn) {
+      fetch('/api/orders/' + (user.username || user.phone))
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.orders)) {
+            let dbSpent = 0;
+            data.orders.filter(o => o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত')
+                       .forEach(o => dbSpent += (Number(o.totalPrice) || 0));
+            
+            if (dbSpent >= 1000) {
+              let badge = '';
+              let frameClass = '';
+              let mBadgeHtml = '';
+              
+              if (dbSpent >= 2000) {
+                frameClass = 'premium-frame';
+                badge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
+                mBadgeHtml = '<div class="drawer-user-badge" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15);"><i class="fa-solid fa-crown"></i><span>প্রিমিয়াম মেম্বার (৮% ছাড়)</span></div>';
+              } else {
+                frameClass = 'elite-frame';
+                badge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
+                mBadgeHtml = '<div class="drawer-user-badge" style="color: #c084fc; border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.15);"><i class="fa-solid fa-gem"></i><span>এলিট মেম্বার (৪% ছাড়)</span></div>';
+              }
+              
+              // Update Top Bar DOM safely
+              const topBarAvatarWrap = document.querySelector('.top-bar-avatar-wrap');
+              if (topBarAvatarWrap) {
+                topBarAvatarWrap.className = 'top-bar-avatar-wrap ' + frameClass;
+                topBarAvatarWrap.innerHTML = badge + '<div class="top-bar-avatar">' + (userInitial || '<i class="fa-solid fa-user"></i>') + '</div>';
+              }
+              
+              // Update Drawer DOM safely
+              const drawerAvatarWrap = document.querySelector('.drawer-avatar-wrap');
+              if (drawerAvatarWrap) {
+                drawerAvatarWrap.className = 'drawer-avatar-wrap ' + frameClass;
+                drawerAvatarWrap.innerHTML = badge + '<div class="drawer-avatar">' + (userInitial || '<i class="fa-solid fa-user"></i>') + '</div><span class="drawer-status-dot online"></span>';
+              }
+              
+              const drawerUserBadge = document.querySelector('.drawer-user-badge');
+              if (drawerUserBadge) {
+                 drawerUserBadge.outerHTML = mBadgeHtml;
+              }
+            }
+          }
+        }).catch(e => console.log('Error fetching nav orders', e));
+    }
+
 
     // বডিতে স্পেসিং ক্লাস যোগ করা যাতে ফ্লোটিং বারের নিচে কার্ড না ঢেকে যায়
     document.body.classList.add('has-official-top-bar');

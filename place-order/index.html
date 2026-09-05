@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>নতুন অর্ডার করুন | LoveWeb</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .order-card {
+      width: 900px;
+      max-width: 96%;
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px;
+      margin: 40px auto;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+    .order-form-group {
+      margin-bottom: 24px;
+    }
+    .order-form-group > label {
+      display: block;
+      font-size: 1rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255, 42, 109, 0.15);
+      padding-bottom: 8px;
+    }
+    .order-form-group textarea,
+    .order-form-group input {
+      width: 100%;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    .order-form-group textarea:focus,
+    .order-form-group input:focus {
+      border-color: var(--primary-pink);
+      box-shadow: 0 0 10px rgba(255, 42, 109, 0.2);
+    }
+    .order-form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #ff2a6d 0%, #ff6b6b 100%);
+      color: #fff;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 42, 109, 0.3);
+    }
+
+    /* Type Selection Grid */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+    .type-card {
+      position: relative;
+      height: 140px;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: flex-end;
+      padding: 15px;
+      background-size: cover;
+      background-position: center;
+      background-color: #1a1e29;
+    }
+    .type-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.3) 100%);
+      z-index: 1;
+      transition: all 0.3s ease;
+    }
+    .type-card:hover::before {
+      background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%);
+    }
+    .type-card-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+    }
+    .type-card.selected {
+      border-color: var(--primary-pink);
+      box-shadow: 0 0 15px rgba(255, 42, 109, 0.4);
+      transform: translateY(-3px);
+    }
+    .type-card.selected::after {
+      content: '\f058';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: var(--primary-pink);
+      font-size: 1.5rem;
+      z-index: 3;
+      background: #fff;
+      border-radius: 50%;
+      line-height: 1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .type-title {
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .type-subtitle {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.8rem;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    /* Package Selection Grid */
+    .package-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .package-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 25px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .package-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-2px);
+    }
+    .package-card.selected {
+      border-color: var(--primary-pink);
+      background: rgba(255, 42, 109, 0.05);
+      box-shadow: 0 10px 20px rgba(255, 42, 109, 0.15);
+      transform: translateY(-4px);
+    }
+    .package-card.selected::after {
+      content: '\f058';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      color: var(--primary-pink);
+      font-size: 1.3rem;
+    }
+    .pkg-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .pkg-price {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary-pink);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .pkg-cross {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      text-decoration: line-through;
+      font-weight: 500;
+    }
+    .pkg-features {
+      list-style: none;
+      padding: 0;
+      margin: 20px 0 0 0;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      text-align: left;
+    }
+    .pkg-features li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+    .pkg-features li i {
+      color: #00d46a;
+      margin-top: 3px;
+    }
+    
+    /* Info Button Tooltip */
+    .tooltip-container {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+    }
+    .pkg-info-btn {
+      color: var(--text-sub);
+      font-size: 1.2rem;
+      cursor: help;
+      transition: color 0.3s;
+    }
+    .pkg-info-btn:hover {
+      color: var(--primary-pink);
+    }
+    .tooltip-content {
+      visibility: hidden;
+      width: 220px;
+      background-color: rgba(20, 24, 34, 0.98);
+      color: #fff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 12px;
+      position: absolute;
+      z-index: 10;
+      bottom: 130%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 42, 109, 0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      line-height: 1.5;
+    }
+    .tooltip-content::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(255, 42, 109, 0.3) transparent transparent transparent;
+    }
+    .tooltip-container:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    [data-theme="light"] .order-form-group textarea,
+    [data-theme="light"] .order-form-group input {
+      background: #ffffff;
+      border: 1px solid rgba(215, 222, 235, 0.9);
+      color: #191e2b;
+    }
+    [data-theme="light"] .order-form-group > label {
+      color: #191e2b;
+    }
+    [data-theme="light"] .package-card {
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    [data-theme="light"] .package-card.selected {
+      background: rgba(255, 42, 109, 0.03);
+      border-color: var(--primary-pink);
+    }
+    [data-theme="light"] .pkg-name {
+      color: #191e2b;
+    }
+    [data-theme="light"] .pkg-features {
+      color: #444;
+    }
+    [data-theme="light"] .tooltip-content {
+      background-color: #fff;
+      color: #191e2b;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    [data-theme="light"] .type-card::before {
+      background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%);
+    }
+
+    @media (max-width: 768px) {
+    @media (max-width: 768px) {
+      .tooltip-content {
+        left: -10px;
+        transform: translateX(0);
+        width: 250px;
+      }
+      .tooltip-content::after {
+        left: 18px;
+      }
+    }
+      .package-grid {
+        grid-template-columns: 1fr;
+      }
+      .order-card {
+        padding: 25px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="dashboard-menu-header" onclick="window.location.href='/dashboard'">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <img src="../img/logo.png" alt="LoveWeb" style="height: 32px;">
+      <span style="font-weight: 700; color: var(--primary-pink); font-size: 1.1rem;">অর্ডার করুন</span>
+    </div>
+    <i class="fa-solid fa-arrow-left" style="color: var(--text-main);"></i>
+  </div>
+
+  <div class="order-card">
+    <div style="text-align: center; margin-bottom: 35px;">
+      <h2 class="title" style="font-size: 1.8rem; margin-bottom: 8px;">নতুন ওয়েবসাইটের অর্ডার</h2>
+      <p style="color: var(--text-sub); font-size: 0.95rem;">আপনার প্রিয়জনের জন্য সুন্দর একটি ওয়েবসাইট তৈরি করতে ফর্মটি পূরণ করুন</p>
+    </div>
+
+    <form id="placeOrderForm">
+      
+      <div id="step1">
+      <!-- Website Type Selection (Grid) -->
+      <div class="order-form-group">
+        <label><i class="fa-solid fa-gift"></i> ওয়েবসাইটের ধরন নির্বাচন করুন</label>
+        <div class="type-grid">
+          
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Birthday')">
+            <div class="type-card-content">
+              <div class="type-title">জন্মদিনের শুভেচ্ছা</div>
+              <div class="type-subtitle">Birthday Wish</div>
+            </div>
+          </div>
+          
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Relationship Anniversary')">
+            <div class="type-card-content">
+              <div class="type-title">সম্পর্কের বর্ষপূর্তি</div>
+              <div class="type-subtitle">Relationship Anniversary</div>
+            </div>
+          </div>
+          
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Marriage Anniversary')">
+            <div class="type-card-content">
+              <div class="type-title">বিবাহবার্ষিকী</div>
+              <div class="type-subtitle">Marriage Anniversary</div>
+            </div>
+          </div>
+          
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Friendship Wish')">
+            <div class="type-card-content">
+              <div class="type-title">বন্ধুত্বের উদযাপন</div>
+              <div class="type-subtitle">Friendship Wish</div>
+            </div>
+          </div>
+          
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Other Wish')">
+            <div class="type-card-content">
+              <div class="type-title">অন্যান্য স্পেশাল দিন</div>
+              <div class="type-subtitle">Other Events / Wishes</div>
+            </div>
+          </div>
+          
+        </div>
+        <input type="hidden" id="selectedWebsiteType" required>
+      </div>
+
+      <!-- Package Selection (Grid) -->
+      <div class="order-form-group">
+        <label><i class="fa-solid fa-layer-group"></i> ওয়েবসাইট প্যাকেজ নির্বাচন করুন</label>
+        <div class="package-grid">
+          
+          <!-- Regular -->
+          <div class="package-card" onclick="selectPackage(this, 'Regular')">
+            <div class="tooltip-container">
+              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
+              <div class="tooltip-content">
+                <strong>শর্তাবলী (Regular):</strong><br>
+                ১. ওয়েবসাইটের লিংক ১ বছর অ্যাক্টিভ থাকবে।<br>
+                ২. থিম পরিবর্তন করা যাবে না।<br>
+                ৩. সাধারণ কাস্টমাইজেশন চার্জ প্রযোজ্য হতে পারে।
+              </div>
+            </div>
+            <div class="pkg-name">রেগুলার (Regular)</div>
+            <div class="pkg-price"><span class="pkg-cross">৳৪০০</span> ৳৩৪৯</div>
+            <ul class="pkg-features">
+              <li><i class="fa-solid fa-check"></i> <div>৩-৪টি পেজ</div></li>
+              <li><i class="fa-solid fa-check"></i> <div>বেসিক ডিজাইন ও মিউজিক</div></li>
+              <li><i class="fa-solid fa-check"></i> <div>মোবাইল রেসপন্সিভ</div></li>
+              <li><i class="fa-solid fa-clock" style="color:#FF2A6D;"></i> <div>১-৩ দিনে ডেলিভারি</div></li>
+            </ul>
+          </div>
+          
+          <!-- Exclusive -->
+          <div class="package-card" onclick="selectPackage(this, 'Exclusive')">
+            <div class="tooltip-container">
+              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
+              <div class="tooltip-content">
+                <strong>শর্তাবলী (Exclusive):</strong><br>
+                ১. প্রিমিয়াম থিম সিলেক্ট করার সুযোগ।<br>
+                ২. বেশি ছবি ও মেসেজ যুক্ত করা যাবে।<br>
+                ৩. কাস্টম ব্যাকগ্রাউন্ড মিউজিক।
+              </div>
+            </div>
+            <div class="pkg-name">এক্সক্লুসিভ (Exclusive)</div>
+            <div class="pkg-price"><span class="pkg-cross">৳৭০০</span> ৳৬৪৯</div>
+            <ul class="pkg-features">
+              <li><i class="fa-solid fa-check"></i> <div>৫-৭টি পেজ</div></li>
+              <li><i class="fa-solid fa-check"></i> <div>অ্যাডভান্সড ডিজাইন অ্যানিমেশন</div></li>
+              <li><i class="fa-solid fa-check"></i> <div>ফটো গ্যালারি সাপোর্ট</div></li>
+              <li><i class="fa-solid fa-clock" style="color:#FF2A6D;"></i> <div>৩-৫ দিনে ডেলিভারি</div></li>
+            </ul>
+          </div>
+          
+          <!-- Premium -->
+          <div class="package-card" onclick="selectPackage(this, 'Premium')">
+            <div class="tooltip-container">
+              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
+              <div class="tooltip-content">
+                <strong>শর্তাবলী (Premium):</strong><br>
+                ১. সম্পূর্ণ কাস্টম ডিজাইন সাপোর্ট।<br>
+                ২. সর্বোচ্চ সিকিউরিটি ও প্রাইভেট লিঙ্ক।<br>
+                ৩. যেকোনো সময় কন্টেন্ট আপডেটের সুবিধা।
+              </div>
+            </div>
+            <div class="pkg-name" style="color: var(--primary-pink);">প্রিমিয়াম (Premium) <i class="fa-solid fa-crown" style="font-size:1rem; margin-left:4px;"></i></div>
+            <div class="pkg-price"><span class="pkg-cross">৳১০০০</span> ৳৯৪৯</div>
+            <ul class="pkg-features">
+              <li><i class="fa-solid fa-check"></i> <div>৭-১১টি পেজ</div></li>
+              <li><i class="fa-solid fa-check"></i> <div style="color: var(--primary-pink); font-weight:600;">কাস্টমাইজ চার্জ ফ্রি (১ বার)</div></li>
+              <li><i class="fa-solid fa-check"></i> <div>কাস্টম ডোমেইন সাপোর্ট (Optional)</div></li>
+            </ul>
+          </div>
+          
+        </div>
+        <input type="hidden" id="selectedPackage" required>
+      </div>
+
+      
+      <div style="display:flex; justify-content:flex-end;">
+         <button type="button" class="submit-btn" style="width: auto; padding: 10px 20px;" onclick="nextStep(2)">পরবর্তী ধাপ (Continue) <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i></button>
+      </div>
+      </div> <!-- End Step 1 -->
+
+      
+      <div id="step2" style="display:none;">
+        <h3 style="margin-bottom:15px; color:var(--primary-pink);"><i class="fa-solid fa-file-lines"></i> ওয়েবসাইটের বিস্তারিত বিবরণ</h3>
+        
+        
+        <style>
+          .ai-gen-container {
+            background: rgba(139, 92, 246, 0.08);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+          }
+          .ai-gen-title {
+            color: #a78bfa;
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .ai-gen-desc {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin: 0;
+            line-height: 1.5;
+          }
+          .ai-gen-textarea {
+            width: 100%;
+            min-height: 100px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 14px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            transition: 0.3s;
+          }
+          .ai-gen-textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+          }
+          .ai-gen-btn-wrapper {
+            display: flex;
+            justify-content: flex-end;
+          }
+          .ai-gen-btn {
+            background: #8b5cf6;
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .ai-gen-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+          }
+          .ai-gen-btn:disabled {
+            background: #a78bfa;
+            cursor: not-allowed;
+            transform: none;
+          }
+          @media (max-width: 600px) {
+            .ai-gen-container {
+              padding: 16px;
+            }
+            .ai-gen-btn-wrapper {
+              justify-content: stretch;
+            }
+            .ai-gen-btn {
+              width: 100%;
+              justify-content: center;
+            }
+          }
+        </style>
+        <div class="ai-gen-container">
+          <h4 class="ai-gen-title"><i class="fa-solid fa-wand-magic-sparkles"></i> AI দিয়ে বিবরণ জেনারেট করুন</h4>
+          <p class="ai-gen-desc">আপনার ওয়েবসাইটের আইডিয়া সংক্ষেপে লিখুন। আমাদের AI স্বয়ংক্রিয়ভাবে আপনার প্যাকেজ অনুযায়ী পেজগুলোর সুন্দর বিবরণ তৈরি করে দিবে। (অপশনাল পেজগুলো AI প্রয়োজন অনুযায়ী রেন্ডমলি যুক্ত করবে)</p>
+          <textarea id="aiIdeaInput" class="ai-gen-textarea" placeholder="আপনার আইডিয়াটি বর্ণনা করুন (যেমন: একটি রেস্টুরেন্টের ওয়েবসাইট, যেখানে মেনু, বুকিং আর কন্টাক্ট পেজ থাকবে)..."></textarea>
+          <div class="ai-gen-btn-wrapper">
+            <button type="button" id="aiGenerateBtn" class="ai-gen-btn" onclick="generateAIPages()"><i class="fa-solid fa-robot"></i> জেনারেট করুন</button>
+          </div>
+        </div>
+
+
+        <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom:20px;">আপনার ওয়েবসাইটের প্রতিটি পেজে কী কী কন্টেন্ট, লেখা বা ছবি থাকবে তা বিস্তারিত লিখুন।</p>
+        
+        <div id="dynamicPageContainer">
+          <!-- Dynamic inputs injected here via JS -->
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; gap:10px;">
+           <button type="button" class="submit-btn" style="background:#334155; width:auto; padding:10px 20px;" onclick="prevStep(1)"><i class="fa-solid fa-arrow-left" style="margin-right:8px;"></i> পূর্ববর্তী ধাপ</button>
+           <button type="button" class="submit-btn" style="width:auto; padding:10px 20px;" onclick="nextStep(3)">পরবর্তী ধাপ (Continue) <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i></button>
+        </div>
+      </div> <!-- End Step 2 -->
+
+
+      <div id="step3" style="display:none;">
+        <div class="order-form-group">
+          <label><i class="fa-solid fa-align-left"></i> সাধারণ বিবরণ (General Description - Optional)</label>
+          <textarea id="generalDesc" placeholder="আপনার ওয়েবসাইটের ডিজাইন কেমন হবে বা অন্যান্য নির্দেশনা থাকলে লিখুন..."></textarea>
+        </div>
+  
+
+      <div class="order-form-group">
+        <label><i class="fa-solid fa-mobile-screen"></i> আপনার কন্টাক্ট নম্বর</label>
+        <input type="tel" placeholder="01XXXXXXXXX" id="orderContactPhone" required>
+      </div>
+
+      <div class="order-form-group">
+        <div style="background: rgba(255,42,109,0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--primary-pink); margin-bottom: 15px;">
+          <h4 style="color: var(--primary-pink); margin-bottom: 10px; font-size: 1rem;"><i class="fa-solid fa-wallet"></i> অগ্রিম পেমেন্ট নিয়মাবলী:</h4>
+          <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.6;">
+            <li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> রেগুলার প্যাকেজ: <strong>৳১৫০ অগ্রিম</strong></li>
+            <li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> এক্সক্লুসিভ প্যাকেজ: <strong>৳২০০ অগ্রিম</strong></li>
+            <li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> প্রিমিয়াম প্যাকেজ: <strong>৳৩০০ অগ্রিম</strong></li>
+          </ul>
+          <div style="margin-top: 10px; font-weight: 600; color: #00d46a;">
+            <i class="fa-solid fa-money-bill-transfer"></i> বিকাশ / নগদ নম্বর: 01XXXXXXX (Send Money)
+          </div>
+        </div>
+        
+        <label><i class="fa-solid fa-hand-holding-dollar"></i> যে নম্বর থেকে পেমেন্ট করেছেন</label>
+        <input type="tel" id="orderAdvancePhone" placeholder="01XXXXXXXXX" required>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+           <button type="button" class="submit-btn" style="background:#334155; width:auto; padding:10px 20px;" onclick="prevStep(2)"><i class="fa-solid fa-arrow-left" style="margin-right:8px;"></i> পূর্ববর্তী ধাপ</button>
+           <button type="button" class="submit-btn" style="width:auto; padding:10px 20px;" onclick="submitOrderForm()"><i class="fa-solid fa-paper-plane"></i> অর্ডার প্লেস করুন</button>
+        </div>
+      </div> <!-- End Step 3 -->
+    </form>
+  </div>
+
+  <script src="../js/theme.js"></script>
+  <script>
+    
+    let requiredPages = 3;
+    let optionalPages = 1;
+    let totalPages = 4;
+    let lastRenderedPackage = '';
+
+    function buildDynamicPages() {
+      const pkg = document.getElementById('selectedPackage').value;
+      if (pkg === lastRenderedPackage) return;
+      lastRenderedPackage = pkg;
+
+      if (pkg === 'Regular') {
+         requiredPages = 3;
+         optionalPages = 1;
+      } else if (pkg === 'Exclusive') {
+         requiredPages = 5;
+         optionalPages = 2;
+      } else if (pkg === 'Premium') {
+         requiredPages = 7;
+         optionalPages = 4;
+      }
+      totalPages = requiredPages + optionalPages;
+
+      let html = '';
+      for (let i = 1; i <= totalPages; i++) {
+        const isRequired = i <= requiredPages;
+        const reqStr = isRequired ? '(Required)' : '(Optional)';
+        const reqAttr = isRequired ? 'required' : '';
+        html += `
+        <div class="order-form-group">
+          <label><i class="fa-solid fa-align-left"></i> পেজ ${i} এর বিবরণ ${reqStr}</label>
+          <textarea id="pageDesc${i}" class="page-desc-input" placeholder="পেজ ${i} এ কি কি লেখা বা ছবি থাকবে তা বিস্তারিত লিখুন..." ${reqAttr}></textarea>
+        </div>
+        `;
+      }
+      document.getElementById('dynamicPageContainer').innerHTML = html;
+    }
+
+    async function generateAIPages() {
+      const idea = document.getElementById('aiIdeaInput').value.trim();
+      if (!idea) {
+        showToast('অনুগ্রহ করে আপনার আইডিয়াটি বর্ণনা করুন।', 'error');
+        return;
+      }
+      const pkg = document.getElementById('selectedPackage').value;
+      const btn = document.getElementById('aiGenerateBtn');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> জেনারেট হচ্ছে...';
+
+      try {
+        const res = await fetch('/api/generate-page-descriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idea, packageType: pkg, requiredPages, optionalPages })
+        });
+        const data = await res.json();
+        if (data.success && data.pages && data.pages.length > 0) {
+          for (let i = 0; i < totalPages; i++) {
+             const el = document.getElementById(`pageDesc${i+1}`);
+             if (el) {
+                el.value = data.pages[i] || '';
+             }
+          }
+        } else {
+          showToast('দুঃখিত, কোনো একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Error generating pages.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-robot"></i> জেনারেট করুন';
+      }
+    }
+
+    function nextStep(step) {
+      if (step === 2) {
+         if (!document.getElementById('selectedWebsiteType').value) {
+            showToast('অনুগ্রহ করে ওয়েবসাইটের ধরন নির্বাচন করুন।', 'error');
+            return;
+         }
+         if (!document.getElementById('selectedPackage').value) {
+            showToast('অনুগ্রহ করে ওয়েবসাইট প্যাকেজ নির্বাচন করুন।', 'error');
+            return;
+         }
+         buildDynamicPages();
+      }
+      if (step === 3) {
+         for (let i = 1; i <= requiredPages; i++) {
+            const val = document.getElementById(`pageDesc${i}`).value.trim();
+            if (!val) {
+               showToast(`অনুগ্রহ করে পেজ ${i} এর বিবরণ (Required) পূরণ করুন।`, 'error');
+               return;
+            }
+         }
+      }
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('step3').style.display = 'none';
+      document.getElementById('step' + step).style.display = 'block';
+      window.scrollTo(0,0);
+    }
+
+    
+    function prevStep(step) {
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('step3').style.display = 'none';
+      document.getElementById('step' + step).style.display = 'block';
+      window.scrollTo(0,0);
+    }
+
+    // Tooltip mobile fix
+    document.querySelectorAll(".pkg-info-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const content = btn.nextElementSibling;
+        const isVisible = content.style.visibility === "visible";
+        document.querySelectorAll(".tooltip-content").forEach(c => {
+          c.style.visibility = "";
+          c.style.opacity = "";
+        });
+        if (!isVisible) {
+          content.style.visibility = "visible";
+          content.style.opacity = "1";
+        }
+      });
+    });
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".tooltip-content").forEach(c => {
+        c.style.visibility = "";
+        c.style.opacity = "";
+      });
+    });
+    
+    // Toast Notification Logic
+    let notifTimeout;
+    function showToast(msg, type = 'error') {
+      const notification = document.getElementById('notification');
+      const notifMessage = document.getElementById('notifMessage');
+      if (!notification) return;
+      if (notifMessage) notifMessage.innerText = msg;
+      
+      notification.className = `notification-toast show ${type}`;
+      
+      clearTimeout(notifTimeout);
+      notifTimeout = setTimeout(() => {
+          notification.classList.remove('show');
+      }, 3200);
+    }
+
+    // Handle Type Selection
+    function selectType(element, typeValue) {
+      document.querySelectorAll('.type-card').forEach(card => card.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('selectedWebsiteType').value = typeValue;
+    }
+
+    
+    let userDiscountPercent = 0;
+    
+    // Fetch user order history to calculate discount
+    async function loadUserDiscount() {
+      const sessionRaw = localStorage.getItem('loveweb_session');
+      if (!sessionRaw) return;
+      try {
+        const user = JSON.parse(sessionRaw);
+        if (!user.phone) return;
+        
+        const usernameForQuery = user.username || user.phone;
+        const res = await fetch('/api/orders/' + encodeURIComponent(usernameForQuery));
+        const data = await res.json();
+        if (data.success && data.orders) {
+          let totalSpent = 0;
+          data.orders.forEach(o => {
+            if (o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
+              totalSpent += (Number(o.totalPrice) || 0);
+            }
+          });
+          
+          if (totalSpent >= 2000) userDiscountPercent = 8;
+          else if (totalSpent >= 1000) userDiscountPercent = 4;
+          
+          if (userDiscountPercent > 0) {
+            const banner = document.createElement('div');
+            banner.style.padding = '12px 20px';
+            banner.style.background = 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(245, 158, 11, 0.15))';
+            banner.style.border = '1px solid rgba(168, 85, 247, 0.3)';
+            banner.style.borderRadius = '8px';
+            banner.style.marginBottom = '20px';
+            banner.style.color = 'var(--text-main)';
+            banner.style.fontSize = '0.95rem';
+            
+            let tierName = userDiscountPercent === 8 ? '<span style="color:#fbbf24;font-weight:600;"><i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার</span>' : '<span style="color:#c084fc;font-weight:600;"><i class="fa-solid fa-gem"></i> এলিট মেম্বার</span>';
+            
+            banner.innerHTML = `অভিনন্দন! আপনি আমাদের ${tierName}, তাই আপনার জন্য প্রতিটি অর্ডারে <strong>${userDiscountPercent}% বিশেষ ছাড়</strong> প্রযোজ্য।`;
+            
+            const form = document.getElementById('placeOrderForm');
+            form.parentNode.insertBefore(banner, form);
+            
+            // Update displayed prices
+            updateDisplayedPrices();
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user stats:', err);
+      }
+    }
+    
+    function updateDisplayedPrices() {
+      const packages = {
+        'Regular': { base: 349, original: 400 },
+        'Exclusive': { base: 649, original: 700 },
+        'Premium': { base: 949, original: 1000 }
+      };
+      
+      const cards = document.querySelectorAll('.package-card');
+      cards.forEach((card, index) => {
+        let pkgName = '';
+        if (index === 0) pkgName = 'Regular';
+        if (index === 1) pkgName = 'Exclusive';
+        if (index === 2) pkgName = 'Premium';
+        
+        if (packages[pkgName]) {
+          const discountAmt = Math.floor(packages[pkgName].base * (userDiscountPercent / 100));
+          const finalPrice = packages[pkgName].base - discountAmt;
+          const priceDiv = card.querySelector('.pkg-price');
+          priceDiv.innerHTML = `<span class="pkg-cross">৳${packages[pkgName].base}</span> <span style="color:#10b981;">৳${finalPrice}</span> <div style="font-size:0.75rem; color:#c084fc; margin-top:2px;">(-${userDiscountPercent}% মেম্বারশিপ ছাড়)</div>`;
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUserDiscount);
+
+    // Handle Package Selection
+    function selectPackage(element, packageValue) {
+      document.querySelectorAll('.package-card').forEach(card => card.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('selectedPackage').value = packageValue;
+    }
+
+    // Validation and API call before navigating to details
+    async function submitOrderForm() {
+      const type = document.getElementById('selectedWebsiteType').value;
+      const pkg = document.getElementById('selectedPackage').value;
+      
+      const pages = [];
+      for(let i = 1; i <= totalPages; i++) {
+         const el = document.getElementById(`pageDesc${i}`);
+         if(el) {
+            pages.push(el.value.trim());
+         }
+      }
+      const generalDesc = document.getElementById('generalDesc').value;
+      const description = generalDesc; 
+      const contactPhone = document.getElementById('orderContactPhone').value;
+      const advancePaymentPhone = document.getElementById('orderAdvancePhone').value;
+      
+      if(!type) {
+        showToast('অনুগ্রহ করে ওয়েবসাইটের ধরন নির্বাচন করুন।', 'error');
+        return;
+      }
+      if(!pkg) {
+        showToast('অনুগ্রহ করে ওয়েবসাইট প্যাকেজ নির্বাচন করুন।', 'error');
+        return;
+      }
+      if(!contactPhone || !advancePaymentPhone) {
+        showToast('অনুগ্রহ করে ফর্মের সকল তথ্য সঠিকভাবে পূরণ করুন।', 'error');
+        return;
+      }
+
+
+      
+      const sessionRaw = localStorage.getItem('loveweb_session');
+      let sessionPhone = contactPhone;
+      let sessionUsername = '';
+      if (sessionRaw) {
+        try {
+          const user = JSON.parse(sessionRaw);
+          if (user.phone) sessionPhone = user.phone;
+          if (user.username) sessionUsername = user.username;
+        } catch(e) {}
+      }
+      
+      try {
+        const response = await fetch('/api/place-order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: sessionUsername,
+            phone: sessionPhone,
+            websiteType: type,
+            packageType: pkg,
+            description,
+            pages,
+            contactPhone,
+            advancePaymentPhone
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          window.location.href = '/order-details';
+        } else {
+          showToast('Error: ' + data.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error. Please try again.', 'error');
+      }
+    }
+  </script>
+
+  <div id="notification" class="notification-toast">
+        <span id="notifMessage"></span>
+    </div>
+
+
+  <!-- Live Messenger Floating Widget -->
+  <script src="../js/messenger.js"></script>
+</body>
+</html>

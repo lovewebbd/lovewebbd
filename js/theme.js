@@ -84,3 +84,69 @@
     applyTheme(getPreferredTheme(), false);
   });
 })();
+
+// --- 1. Global Auth Guard (Redirects unauthenticated users to login) ---
+(function() {
+    const publicPaths = ['/sign-in', '/reset-password', '/privacy-and-rules', '/help', '/404'];
+    let currentPath = window.location.pathname.toLowerCase();
+    
+    // Normalize root path and index.html
+    if (currentPath === '/' || currentPath === '/index.html') {
+        // We know server.js redirects '/' to 'sign-in' internally using express res.sendFile
+        // But if someone hits /index.html directly (which is home in our static config)
+        // Wait, server.js says: app.get(['/home', '/dashboard'], ... index.html);
+        // and app.get('/', ... sign-in/index.html)
+        // If currentPath is '/', they are on sign-in page essentially.
+        // If they are on '/index.html', they are on home page!
+    }
+
+    let isPublic = false;
+    for (const path of publicPaths) {
+        if (currentPath.includes(path)) {
+            isPublic = true;
+            break;
+        }
+    }
+
+    if (currentPath === '/' || currentPath === '/sign-in') {
+        isPublic = true;
+    }
+
+    if (!isPublic) {
+        const session = localStorage.getItem('loveweb_session');
+        if (!session) {
+            window.location.replace('/sign-in/index.html');
+        }
+    }
+})();
+
+// --- 2. Global Encryption & Decryption System ---
+window.LoveWebCrypto = {
+    secretKey: "loveweb_secure_secret_key_2026",
+    
+    encrypt: function(text) {
+        if (!text) return text;
+        let result = "";
+        for (let i = 0; i < text.length; i++) {
+            // XOR encryption with secret key
+            result += String.fromCharCode(text.charCodeAt(i) ^ this.secretKey.charCodeAt(i % this.secretKey.length));
+        }
+        // Base64 encode for safe database storage
+        return btoa(unescape(encodeURIComponent(result)));
+    },
+    
+    decrypt: function(encryptedBase64) {
+        if (!encryptedBase64) return encryptedBase64;
+        try {
+            let text = decodeURIComponent(escape(atob(encryptedBase64)));
+            let result = "";
+            for (let i = 0; i < text.length; i++) {
+                result += String.fromCharCode(text.charCodeAt(i) ^ this.secretKey.charCodeAt(i % this.secretKey.length));
+            }
+            return result;
+        } catch(e) {
+            // Fallback for plain text passwords if decryption fails
+            return encryptedBase64;
+        }
+    }
+};

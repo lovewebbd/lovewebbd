@@ -1375,10 +1375,10 @@ body.has-official-top-bar {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 12px 4px 5px;
-    border-radius: 20px;
-    background: rgba(255, 42, 109, 0.1);
-    border: 1px solid rgba(255, 42, 109, 0.28);
+    padding: 2px 10px 2px 2px;
+    border-radius: 24px;
+    background: transparent;
+    border: none;
     color: var(--text-main);
     text-decoration: none;
     font-size: 0.86rem;
@@ -1387,9 +1387,7 @@ body.has-official-top-bar {
 }
 
 .top-bar-user-pill:hover {
-    background: rgba(255, 42, 109, 0.2);
-    border-color: var(--primary-pink);
-    box-shadow: 0 0 12px var(--glow-pink);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .top-bar-avatar {
@@ -3121,3 +3119,654 @@ img,
 }
 
 
+
+
+
+
+
+
+/* =========================================
+   Elite & Premium Professional Avatar Frames (Upgraded)
+   ========================================= */
+
+/* Dark Theme Variables */
+:root {
+  --prem-border-1: #FFE066;
+  --prem-border-2: #F59E0B;
+  --prem-crown: #FDE047;
+  --prem-shadow: rgba(245, 158, 11, 0.5);
+  --prem-tag-bg: rgba(245, 158, 11, 0.2);
+  
+  --elite-border-1: #67E8F9;
+  --elite-border-2: #0284C7;
+  --elite-crown: #67E8F9;
+  --elite-shadow: rgba(2, 132, 199, 0.5);
+  --elite-tag-bg: rgba(2, 132, 199, 0.2);
+}
+
+/* Light Theme Variables */
+[data-theme="light"] {
+  --prem-border-1: #F59E0B;
+  --prem-border-2: #D97706;
+  --prem-crown: #D97706;
+  --prem-shadow: rgba(217, 119, 6, 0.4);
+  --prem-tag-bg: rgba(217, 119, 6, 0.15);
+  
+  --elite-border-1: #0EA5E9;
+  --elite-border-2: #0284C7;
+  --elite-crown: #0284C7;
+  --elite-shadow: rgba(2, 132, 199, 0.4);
+  --elite-tag-bg: rgba(2, 132, 199, 0.15);
+}
+
+/* Force inner avatars to be perfect circles and hide their own borders/shadows if framed */
+.premium-frame .profile-avatar,
+.elite-frame .profile-avatar,
+.premium-frame .drawer-avatar,
+.elite-frame .drawer-avatar,
+.premium-frame .top-bar-avatar,
+.elite-frame .top-bar-avatar,
+.premium-frame .dash-avatar-circle,
+.elite-frame .dash-avatar-circle {
+  margin: 0 !important;
+  border: 2px solid transparent !important;
+  box-shadow: none !important;
+  border-radius: 50% !important; 
+}
+.dash-avatar-circle, .top-bar-avatar, .drawer-avatar, .profile-avatar {
+  border-radius: 50% !important;
+}
+
+/* Base Wrapper */
+.profile-avatar-wrap.premium-frame,
+.drawer-avatar-wrap.premium-frame,
+.top-bar-avatar-wrap.premium-frame,
+.profile-avatar-wrap.elite-frame,
+.drawer-avatar-wrap.elite-frame,
+.top-bar-avatar-wrap.elite-frame {
+  position: relative;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg-dark);
+  padding: 3px; 
+  z-index: 10;
+}
+
+[data-theme="light"] .profile-avatar-wrap.premium-frame,
+[data-theme="light"] .drawer-avatar-wrap.premium-frame,
+[data-theme="light"] .top-bar-avatar-wrap.premium-frame,
+[data-theme="light"] .profile-avatar-wrap.elite-frame,
+[data-theme="light"] .drawer-avatar-wrap.elite-frame,
+[data-theme="light"] .top-bar-avatar-wrap.elite-frame {
+  background: #ffffff;
+}
+
+
+
+/* PERFECT EDGE FIX FOR INNER AVATAR */
+.premium-frame, .elite-frame {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1/1 !important;
+  box-sizing: border-box !important;
+  padding: 4px !important; /* Space for the animated border */
+  z-index: 1; /* Establish stacking context */
+  background: transparent !important; /* The background should be transparent so the inner circle shows */
+}
+
+/* Ensure the inner element holding the initial/image is a perfect circle */
+.premium-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot),
+.elite-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot) {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1/1 !important;
+  margin: 0 !important;
+  position: relative !important; /* DO NOT USE ABSOLUTE */
+  top: auto !important;
+  left: auto !important;
+  background-size: cover !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  z-index: 2; /* Ensure it stays above the border background */
+}
+
+/* Fix animation rotation for frames */
+@keyframes spinGradient {
+  0% { --bg-angle: 0deg; }
+  100% { --bg-angle: 360deg; }
+}
+
+@property --bg-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.profile-avatar-wrap.premium-frame::before,
+.drawer-avatar-wrap.premium-frame::before,
+.top-bar-avatar-wrap.premium-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 3px; /* Border thickness */
+  background: conic-gradient(from var(--bg-angle), var(--prem-border-1), var(--prem-border-2), #ffffff, var(--prem-border-1));
+  animation: spinGradient 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.profile-avatar-wrap.elite-frame::before,
+.drawer-avatar-wrap.elite-frame::before,
+.top-bar-avatar-wrap.elite-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  padding: 3px; /* Border thickness */
+  background: conic-gradient(from var(--bg-angle), var(--elite-border-1), var(--elite-border-2), #ffffff, var(--elite-border-1));
+  animation: spinGradient 3s linear infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ANIMATED CROWNS AND GEMS */
+@keyframes floatCrown {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6)); }
+  50% { transform: translateY(-4px) rotate(8deg) scale(1.15); filter: drop-shadow(0 0 8px rgba(251, 191, 36, 1)); }
+}
+
+@keyframes floatGem {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 3px rgba(192, 132, 252, 0.6)); }
+  50% { transform: translateY(-4px) scale(1.15); filter: drop-shadow(0 0 8px rgba(192, 132, 252, 1)); }
+}
+
+.premium-crown i {
+  animation: floatCrown 2.5s ease-in-out infinite;
+  display: inline-block;
+  color: #fbbf24;
+}
+
+.elite-crown i {
+  animation: floatGem 2s ease-in-out infinite;
+  display: inline-block;
+  color: #c084fc;
+}
+
+/* Ensure the crown/gem containers are positioned nicely above everything */
+.premium-crown, .elite-crown {
+  position: absolute;
+  z-index: 25 !important;
+  pointer-events: none;
+}
+
+/* Specific alignments so the animated icons sit beautifully on the rim */
+.profile-avatar-wrap .premium-crown,
+.profile-avatar-wrap .elite-crown {
+  top: -8px !important;
+  right: -2px !important;
+  font-size: 1.4rem !important;
+}
+
+.drawer-avatar-wrap .premium-crown,
+.drawer-avatar-wrap .elite-crown {
+  top: -6px !important;
+  right: -4px !important;
+  font-size: 1.1rem !important;
+}
+
+.top-bar-avatar-wrap .premium-crown,
+.top-bar-avatar-wrap .elite-crown {
+  top: -4px !important;
+  right: -6px !important;
+  font-size: 0.85rem !important;
+}
+
+
+/* Tags - Glassmorphism/* Tags - Glassmorphism & Reduced Padding */
+.premium-tag, .elite-tag {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 6px; /* slightly sharper for a better look */
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 20;
+  text-align: center;
+  letter-spacing: 0.5px;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  padding: 1px 4px !important; /* Minimized padding */
+  font-size: 0.55rem; /* Base size */
+}
+.premium-tag { background: var(--prem-tag-bg); }
+.elite-tag { background: var(--elite-tag-bg); }
+
+/* Shine sweep animation over tags */
+.premium-tag::after, .elite-tag::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-20deg);
+  animation: shineSweep 3s infinite;
+}
+
+@keyframes shineSweep {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+
+
+/* Hide premium/elite text tags everywhere except the main profile display */
+.top-bar-avatar-wrap .premium-tag,
+.top-bar-avatar-wrap .elite-tag,
+.drawer-avatar-wrap .premium-tag,
+.drawer-avatar-wrap .elite-tag {
+  display: none !important;
+}
+
+
+/* Responsive adjustments */
+/* 1. TOP BAR */
+.top-bar-avatar-wrap {
+  margin: 2px;
+  padding: 2px;
+}
+.top-bar-avatar-wrap .premium-crown,
+.top-bar-avatar-wrap .elite-crown {
+  font-size: 0.8rem;
+  top: -4px;
+  right: -4px;
+}
+
+/* 2. SIDE DRAWER */
+.drawer-avatar-wrap.premium-frame,
+.drawer-avatar-wrap.elite-frame {
+  margin: 4px 0 6px 0;
+  padding: 3px;
+}
+.drawer-avatar-wrap .premium-crown,
+.drawer-avatar-wrap .elite-crown {
+  font-size: 1.1rem;
+  top: -8px;
+  right: -6px;
+}
+.drawer-status-dot {
+  z-index: 25;
+  right: 0px;
+  bottom: 0px;
+}
+
+/* 3. PROFILE DASHBOARD & HOME DASHBOARD */
+.profile-avatar-wrap.premium-frame,
+.profile-avatar-wrap.elite-frame {
+  margin: 12px 0 14px 0 !important;
+  padding: 4px !important;
+}
+.profile-avatar-wrap .premium-crown,
+.profile-avatar-wrap .elite-crown {
+  font-size: 1.4rem;
+  top: -10px;
+  right: -8px;
+}
+.profile-avatar-wrap .premium-tag,
+.profile-avatar-wrap .elite-tag {
+  font-size: 0.6rem !important;
+  padding: 1px 6px !important; 
+  bottom: -4px !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 4px !important;
+}
+
+/* Make sure container overflow is visible */
+.top-bar-user-pill, .official-top-bar, .top-bar-right, .dash-user-meta {
+  overflow: visible !important;
+}
+
+
+/* Ensure perfect circle for avatar images/initials */
+.profile-avatar, .drawer-avatar, .top-bar-avatar, .dash-avatar-circle {
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  aspect-ratio: 1/1 !important;
+}
+
+/* Specific fix for inner avatar when framed */
+.premium-frame > div:not(.premium-tag):not(.premium-crown),
+.elite-frame > div:not(.elite-tag):not(.elite-crown) {
+  border-radius: 50% !important;
+  aspect-ratio: 1/1 !important;
+  overflow: hidden !important;
+}
+
+/* Absolute strictness for inner circle */
+.premium-frame .profile-avatar,
+.elite-frame .profile-avatar,
+.premium-frame .drawer-avatar,
+.elite-frame .drawer-avatar,
+.premium-frame .top-bar-avatar,
+.elite-frame .top-bar-avatar,
+.premium-frame .dash-avatar-circle,
+.elite-frame .dash-avatar-circle {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: unset !important;
+  min-height: unset !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.profile-avatar-wrap.premium-frame,
+.profile-avatar-wrap.elite-frame,
+.drawer-avatar-wrap.premium-frame,
+.drawer-avatar-wrap.elite-frame,
+.top-bar-avatar-wrap.premium-frame,
+.top-bar-avatar-wrap.elite-frame {
+  aspect-ratio: 1/1 !important; /* Force the wrapper itself to be perfectly square */
+}
+
+/* Base explicit sizes for the wrappers so they don't deform */
+.top-bar-avatar-wrap {
+  width: 32px;
+  height: 32px;
+}
+.drawer-avatar-wrap {
+  width: 46px;
+  height: 46px;
+}
+.profile-avatar-wrap,
+.dash-user-meta .profile-avatar-wrap {
+  width: 60px;
+  height: 60px;
+}
+@media (max-width: 480px) {
+  .dash-user-meta .profile-avatar-wrap {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+
+/* MATCHING THEME COLORS FOR ELITE AND PREMIUM */
+:root {
+  /* Elite (Purple) */
+  --elite-color-primary: #a855f7;
+  --elite-color-light: #d8b4fe;
+  --elite-color-dark: #7e22ce;
+  
+  /* Premium (Golden) */
+  --prem-color-primary: #f59e0b;
+  --prem-color-light: #fcd34d;
+  --prem-color-dark: #b45309;
+}
+
+/* OVERRIDE CROWNS */
+.elite-crown i {
+  color: var(--elite-color-light) !important;
+  filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.4));
+}
+.premium-crown i {
+  color: var(--prem-color-light) !important;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+}
+
+/* OVERRIDE TAGS */
+.elite-tag {
+  background: var(--elite-color-primary) !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 4px 6px rgba(168, 85, 247, 0.3) !important;
+}
+
+.premium-tag {
+  background: var(--prem-color-primary) !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* OVERRIDE ROTATING BORDERS TO MATCH THEME SOLIDLY */
+.profile-avatar-wrap.elite-frame::before,
+.drawer-avatar-wrap.elite-frame::before,
+.top-bar-avatar-wrap.elite-frame::before {
+  background: conic-gradient(from var(--bg-angle), var(--elite-color-dark), var(--elite-color-primary), var(--elite-color-light), var(--elite-color-primary), var(--elite-color-dark)) !important;
+  padding: 4px !important;
+}
+
+.profile-avatar-wrap.premium-frame::before,
+.drawer-avatar-wrap.premium-frame::before,
+.top-bar-avatar-wrap.premium-frame::before {
+  background: conic-gradient(from var(--bg-angle), var(--prem-color-dark), var(--prem-color-primary), var(--prem-color-light), var(--prem-color-primary), var(--prem-color-dark)) !important;
+  padding: 4px !important;
+}
+
+/* MATCHING THE SHAPE IN THE IMAGE - THICK SOLID BORDERS */
+/* Let's give them a solid background matching the theme, with a slight gradient for the 3D look */
+.profile-avatar-wrap.elite-frame,
+.drawer-avatar-wrap.elite-frame,
+.top-bar-avatar-wrap.elite-frame {
+  padding: 4px !important;
+}
+
+.profile-avatar-wrap.premium-frame,
+.drawer-avatar-wrap.premium-frame,
+.top-bar-avatar-wrap.premium-frame {
+  padding: 4px !important;
+}
+
+/* TAG POSITIONING TO MATCH THE SHUTTERSTOCK IMAGE */
+.profile-avatar-wrap .premium-tag,
+.profile-avatar-wrap .elite-tag {
+  bottom: -8px !important;
+  border-radius: 12px !important; /* Pill shape like the image */
+  padding: 2px 10px !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 1px !important;
+  z-index: 30 !important;
+}
+
+/* CROWN POSITIONING TO MATCH THE IMAGE (Top Right, Angled) */
+.profile-avatar-wrap .premium-crown,
+.profile-avatar-wrap .elite-crown {
+  top: -12px !important;
+  right: -8px !important;
+  font-size: 1.6rem !important;
+  transform: rotate(15deg);
+}
+
+.drawer-avatar-wrap .premium-crown,
+.drawer-avatar-wrap .elite-crown {
+  top: -8px !important;
+  right: -6px !important;
+  font-size: 1.2rem !important;
+  transform: rotate(15deg);
+}
+
+.top-bar-avatar-wrap .premium-crown,
+.top-bar-avatar-wrap .elite-crown {
+  top: -6px !important;
+  right: -6px !important;
+  font-size: 0.9rem !important;
+  transform: rotate(15deg);
+}
+
+/* Disable the floating animation if we want it to look exactly like the static badge image, 
+   but we can keep a subtle glow instead of heavy floating */
+@keyframes glowCrownGem {
+  0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
+  50% { filter: drop-shadow(0 0 8px currentColor); }
+}
+
+.premium-crown i, .elite-crown i {
+  animation: glowCrownGem 2s ease-in-out infinite !important;
+}
+
+
+/* ========================================================
+   FINAL REFINEMENT: GLASSMORPHISM, THIN BORDERS, PERFECT ROUND PFP 
+   ======================================================== */
+
+/* Force exact dimensions so they NEVER warp or become oval */
+.top-bar-avatar-wrap {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+.drawer-avatar-wrap {
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+}
+.profile-avatar-wrap {
+  width: 74px !important;
+  height: 74px !important;
+  min-width: 74px !important;
+  min-height: 74px !important;
+}
+
+/* Base Frame - Glassmorphism and Thin Padding */
+.premium-frame, .elite-frame {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1/1 !important;
+  box-sizing: border-box !important;
+  padding: 2px !important; /* Extremely thin padding to make the gap tiny */
+  z-index: 1 !important; 
+  /* Glassmorphism Effect */
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Make sure the before element has the thin border mask */
+.profile-avatar-wrap.premium-frame::before,
+.drawer-avatar-wrap.premium-frame::before,
+.top-bar-avatar-wrap.premium-frame::before,
+.profile-avatar-wrap.elite-frame::before,
+.drawer-avatar-wrap.elite-frame::before,
+.top-bar-avatar-wrap.elite-frame::before {
+  padding: 1.5px !important; /* The actual animated ring thickness is now super thin */
+}
+
+/* The Avatar Inside - MUST BE 100% ROUND */
+.premium-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot),
+.elite-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot) {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1/1 !important;
+  object-fit: cover !important; /* ensures images fit nicely */
+  margin: 0 !important;
+  position: relative !important; 
+  top: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important; /* Clips anything outside the circle */
+  box-sizing: border-box !important;
+  z-index: 2 !important; 
+  background-clip: padding-box !important;
+  border: none !important;
+}
+
+/* Ensure text inside initials remains centered and images stay round */
+.dash-avatar-circle, .drawer-avatar, .top-bar-avatar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+}
+
+/* Override padding for tag to keep it small and pill-shaped */
+.profile-avatar-wrap .premium-tag,
+.profile-avatar-wrap .elite-tag {
+  bottom: -10px !important;
+  padding: 1px 8px !important; /* Kept very thin padding */
+  font-size: 0.65rem !important;
+  border-radius: 12px !important; /* Pill shape */
+}
+
+/* Adjust the crown position to fit the slightly larger frame sizes */
+.profile-avatar-wrap .premium-crown,
+.profile-avatar-wrap .elite-crown {
+  top: -12px !important;
+  right: -6px !important;
+}
+.drawer-avatar-wrap .premium-crown,
+.drawer-avatar-wrap .elite-crown {
+  top: -8px !important;
+  right: -4px !important;
+}
+.top-bar-avatar-wrap .premium-crown,
+.top-bar-avatar-wrap .elite-crown {
+  top: -6px !important;
+  right: -4px !important;
+}
+
+
+/* ========================================================
+   FINAL TAG FIX: REMOVE WHITE BORDER & PERFECT CENTERING
+   ======================================================== */
+
+.profile-avatar-wrap .premium-tag,
+.profile-avatar-wrap .elite-tag {
+  bottom: -10px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important; /* Perfect Center Alignment */
+  padding: 1.5px 7px !important; 
+  font-size: 0.55rem !important; /* Made the text slightly smaller */
+  border-radius: 12px !important;
+  border: none !important; /* Removed the white border */
+  z-index: 30 !important;
+  display: inline-block !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+}
+
+/* Ensure global tag rules don't override the border removal */
+.elite-tag {
+  border: none !important;
+}
+.premium-tag {
+  border: none !important;
+}

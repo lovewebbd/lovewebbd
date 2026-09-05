@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - পৃষ্ঠাটি পাওয়া যায়নি | LoveWeb</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+    .error-code {
+      font-size: 8rem;
+      font-weight: 700;
+      color: var(--primary-pink);
+      text-shadow: 0 0 20px rgba(255, 42, 109, 0.4);
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+    .error-title {
+      font-size: 2rem;
+      color: var(--text-main);
+      margin-bottom: 15px;
+    }
+    .error-desc {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      max-width: 400px;
+      margin-bottom: 30px;
+    }
+    .btn-home {
+      background: linear-gradient(135deg, #ff2a6d 0%, #ff6b6b 100%);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+    .btn-home:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 42, 109, 0.4);
+    }
+  #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
+  </style>
+</head>
+<body>
+  <div id="particles-js"></div>
+  <div class="error-container" style="position: relative; z-index: 10;">
+    <div class="error-code">404</div>
+    <div class="error-title">পৃষ্ঠাটি পাওয়া যায়নি</div>
+    <div class="error-desc">আপনি যে পৃষ্ঠাটি খুঁজছেন তা সরানো হয়েছে, নাম পরিবর্তন করা হয়েছে বা সাময়িকভাবে অনুপলব্ধ।</div>
+    <a href="/dashboard" class="btn-home"><i class="fa-solid fa-house"></i> হোম পেজে ফিরে যান</a>
+  </div>
+  <script src="../js/theme.js"></script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script>
+    particlesJS('particles-js', {
+      particles: { number: { value: 40, density: { enable: true, value_area: 800 } }, color: { value: '#ff2a6d' }, shape: { type: 'circle' }, opacity: { value: 0.3, random: true }, size: { value: 3, random: true }, line_linked: { enable: true, distance: 150, color: '#ff2a6d', opacity: 0.2, width: 1 }, move: { enable: true, speed: 1.5, direction: 'none', random: true, straight: false, out_mode: 'out', bounce: false } },
+      interactivity: { detect_on: 'canvas', events: { onhover: { enable: true, mode: 'bubble' }, onclick: { enable: true, mode: 'push' }, resize: true }, modes: { bubble: { distance: 200, size: 4, duration: 2, opacity: 0.8, speed: 3 }, push: { particles_nb: 4 } } },
+      retina_detect: true
+    });
+  </script>
+
+  <!-- Live Messenger Floating Widget -->
+  <script src="../js/messenger.js"></script>
+</body>
+</html>

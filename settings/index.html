@@ -27,7 +27,7 @@
 
   <style>
     .settings-card {
-      width: 600px;
+      width: 850px;
       max-width: 94%;
       height: auto;
       min-height: 540px;
@@ -40,10 +40,31 @@
 
     .settings-list {
       width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       margin: 14px 0 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      .settings-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .settings-section-label {
+      grid-column: 1 / -1;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-pink);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 10px;
+      border-bottom: 1px solid rgba(255, 42, 109, 0.2);
+      padding-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .settings-item {
@@ -286,7 +307,7 @@
       
       <div style="text-align: center; margin-bottom: 18px;">
         <i class="fa-solid fa-id-card" style="font-size: 2.2rem; color: var(--primary-pink); margin-bottom: 8px; display: inline-block;"></i>
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">নাম পরিবর্তন</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">নাম পরিবর্তন</h3>
         <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">আপনার অ্যাকাউন্টের নতুন পুরো নাম লিখুন</p>
       </div>
 
@@ -323,7 +344,7 @@
       
       <div style="text-align: center; margin-bottom: 18px;">
         <i class="fa-solid fa-phone-volume" style="font-size: 2.2rem; color: var(--primary-pink); margin-bottom: 8px; display: inline-block;"></i>
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">ফোন নম্বর পরিবর্তন</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">ফোন নম্বর পরিবর্তন</h3>
         <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">আপনার অ্যাকাউন্টের সাথে যুক্ত ফোন নম্বর আপডেট করুন</p>
       </div>
 
@@ -361,7 +382,7 @@
       
       <div style="text-align: center; margin-bottom: 16px;">
         <i class="fa-solid fa-envelope-circle-check" style="font-size: 2.2rem; color: #00bcd4; margin-bottom: 8px; display: inline-block;"></i>
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">নিরাপদ ইমেইল পরিবর্তন</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">নিরাপদ ইমেইল পরিবর্তন</h3>
         <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">
           নিরাপত্তার স্বার্থে আপনার <strong>বর্তমান ইমেইল</strong> ও <strong>নতুন ইমেইল</strong>—উভয় ঠিকানাতেই ভেরিফিকেশন কোড পাঠানো হবে
         </p>
@@ -456,7 +477,7 @@
       
       <div style="text-align: center; margin-bottom: 16px;">
         <i class="fa-solid fa-shield-halved" style="font-size: 2.2rem; color: var(--primary-pink); margin-bottom: 8px; display: inline-block;"></i>
-        <h3 style="font-size: 1.25rem; font-weight: 700; color: #ffffff;">নিরাপদ পাসওয়ার্ড পরিবর্তন</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">নিরাপদ পাসওয়ার্ড পরিবর্তন</h3>
         <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">অ্যাকাউন্ট সুরক্ষিত রাখতে একটি শক্তিশালী নতুন পাসওয়ার্ড তৈরি করুন</p>
       </div>
 
@@ -531,7 +552,7 @@
         <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 77, 77, 0.12); border: 1px solid rgba(255, 77, 77, 0.3); margin-bottom: 8px;">
           <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #ff4d4d;"></i>
         </div>
-        <h3 style="font-size: 1.3rem; font-weight: 700; color: #ffffff;">স্থায়ীভাবে অ্যাকাউন্ট মুছুন</h3>
+        <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-main);">স্থায়ীভাবে অ্যাকাউন্ট মুছুন</h3>
         <p style="font-size: 0.82rem; color: var(--text-sub); margin-top: 4px;">অ্যাকাউন্ট ডিলিটের জন্য ইমেইল ভেরিফিকেশন ও চূড়ান্ত সম্মতি প্রয়োজন</p>
       </div>
 
@@ -578,7 +599,7 @@
             <label style="font-size: 0.8rem; color: var(--text-sub); display: block; margin-bottom: 5px; text-align: left;">
               ৬ ডিজিটের ওটিপি কোড:
             </label>
-            <input type="text" id="modalDeleteOtpInput" maxlength="6" class="otp-digit-input" placeholder="••••••" required pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; height: 48px; font-size: 1.4rem; letter-spacing: 8px; text-align: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 77, 77, 0.4); border-radius: 10px; color: #ffffff; font-family: monospace;">
+            <input type="text" id="modalDeleteOtpInput" maxlength="6" class="otp-digit-input" placeholder="••••••" required pattern="[0-9]{6}" autocomplete="one-time-code" style="width: 100%; height: 48px; font-size: 1.4rem; letter-spacing: 8px; text-align: center; background: var(--bg-level-1); border: 1px solid rgba(255, 77, 77, 0.4); border-radius: 10px; color: var(--text-main); font-family: monospace;">
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.8rem;">
@@ -1374,19 +1395,19 @@
           return showNotification('ব্যবহারকারী অ্যাকাউন্ট তথ্য যাচাই করতে ব্যর্থ হয়েছে।', 'error');
         }
 
-        if (dbUser.password !== currentPassword) {
+        if (window.LoveWebCrypto.decrypt(dbUser.password) !== currentPassword && dbUser.password !== currentPassword) {
           return showNotification('আপনার বর্তমান পাসওয়ার্ডটি সঠিক নয়। অনুগ্রহ করে সঠিক পাসওয়ার্ড দিন।', 'error');
         }
 
         const { error: updateErr } = await _supabase
           .from('User_Information')
-          .update({ password: newPassword })
+          .update({ password: window.LoveWebCrypto.encrypt(newPassword) })
           .eq('email', currentUser.email);
 
         if (updateErr) {
           showNotification('পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে: ' + updateErr.message, 'error');
         } else {
-          currentUser.password = newPassword;
+          currentUser.password = window.LoveWebCrypto.encrypt(newPassword);
           localStorage.setItem('loveweb_session', JSON.stringify(currentUser));
           document.getElementById('passwordModalOverlay').classList.remove('open');
           showNotification('পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!', 'success');
@@ -1606,6 +1627,9 @@
 
   <!-- Official Navigation & Theme Controller -->
   <script src="../js/official-nav.js"></script>
+
+  
+  
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>

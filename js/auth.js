@@ -586,7 +586,7 @@ if (signUpForm) {
         const { data, error } = await _supabase
             .from('User_Information')
             .insert([
-                { full_name: fullName, username: username, email: email, phone: phone, password: password, created_at: createdAt }
+                { full_name: fullName, username: username, email: email, phone: phone, password: window.LoveWebCrypto.encrypt(password), created_at: createdAt }
             ])
             .select();
 
@@ -595,7 +595,7 @@ if (signUpForm) {
             const fallbackInsert = await _supabase
                 .from('User_Information')
                 .insert([
-                    { full_name: fullName, username: username, email: email, phone: phone, password: password }
+                    { full_name: fullName, username: username, email: email, phone: phone, password: window.LoveWebCrypto.encrypt(password) }
                 ])
                 .select();
 
@@ -648,7 +648,7 @@ if (signInForm) {
             return;
         }
 
-        const matchedUser = userCheck.find(user => user.password === password);
+        const matchedUser = userCheck.find(user => window.LoveWebCrypto.decrypt(user.password) === password || user.password === password);
 
         if (!matchedUser) {
             // ভুল পাসওয়ার্ডের ক্ষেত্রে অ্যাটেম্পট কাউন্টার বৃদ্ধি ও ওয়ার্নিং প্রদান
@@ -1103,7 +1103,7 @@ if (window.location.pathname.includes('new-password.html')) {
             // Supabase Database-এ নতুন পাসওয়ার্ড আপডেট
             const { error } = await _supabase
                 .from('User_Information')
-                .update({ password: newPassword })
+                .update({ password: window.LoveWebCrypto.encrypt(newPassword) })
                 .eq('email', emailParam);
 
             if (error) {

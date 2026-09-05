@@ -347,100 +347,110 @@
           }
           document.getElementById('valCreatedAt').innerText = formatBanglaDate(user.created_at);
 
-          // অর্ডার হিস্ট্রি ও মোট ব্যয় ক্যালকুলেশন
-          let userOrders = [];
-          try {
-            const rawOrders = localStorage.getItem('loveweb_orders_' + user.username) || localStorage.getItem('loveweb_orders');
-            if (rawOrders) userOrders = JSON.parse(rawOrders);
-          } catch (e) {}
+          // অর্ডার হিস্ট্রি ও মোট ব্যয় ক্যালকুলেশন (Database থেকে)
+          const usernameForQuery = user.username || user.phone;
+          fetch('/api/orders/' + usernameForQuery)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && Array.isArray(data.orders)) {
+                // Filter only completed / delivered orders for total spent and count
+                const deliveredOrders = data.orders.filter(o => 
+                  o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত'
+                );
+                
+                const orderCount = data.orders.length; // Count all orders for profile order number
+                let totalSpent = 0;
+                deliveredOrders.forEach(o => {
+                  totalSpent += (Number(o.totalPrice) || 0);
+                });
 
-          const orderCount = Array.isArray(userOrders) ? userOrders.length : 0;
-          let totalSpent = 0;
-          if (Array.isArray(userOrders)) {
-            totalSpent = userOrders.reduce((sum, item) => sum + (Number(item.price || item.amount) || 0), 0);
-          }
+                const orderCountBn = toBanglaNum(orderCount);
+                const totalSpentBn = toBanglaNum(totalSpent.toFixed(2));
 
-          const orderCountBn = toBanglaNum(orderCount);
-          const totalSpentBn = toBanglaNum(totalSpent.toFixed(2));
+                document.getElementById('valTotalOrders').innerText = `${orderCountBn}টি অর্ডার`;
+                document.getElementById('valTotalSpent').innerText = `৳ ${totalSpentBn}`;
+                document.getElementById('statOrderCount').innerText = `${orderCountBn} টি`;
+                document.getElementById('statTotalSpent').innerText = `৳ ${totalSpentBn}`;
 
-          document.getElementById('valTotalOrders').innerText = `${orderCountBn}টি অর্ডার`;
-          document.getElementById('valTotalSpent').innerText = `৳ ${totalSpentBn}`;
-          document.getElementById('statOrderCount').innerText = `${orderCountBn} টি`;
-          document.getElementById('statTotalSpent').innerText = `৳ ${totalSpentBn}`;
+                const badgeEl = document.getElementById('profileBadge');
+                const tierValEl = document.getElementById('valMembershipTier');
+                const discountValEl = document.getElementById('valMembershipDiscount');
+                const tierTipEl = document.getElementById('tierTipBox');
 
-          // ==========================================
-          // মেম্বারশিপ লেভেল ও ডিসকাউন্ট পলিসি নির্ধারণ:
-          // ১) ১০০০ টাকার কম: সাধারণ সদস্য (০% ছাড়)
-          // ২) ১০০০ টাকার বেশি: এলিট মেম্বার (৪% ডিসকাউন্ট)
-          // ৩) ২০০০ টাকার বেশি: প্রিমিয়াম মেম্বার (৮% ডিসকাউন্ট)
-          // ==========================================
-          const badgeEl = document.getElementById('profileBadge');
-          const tierValEl = document.getElementById('valMembershipTier');
-          const discountValEl = document.getElementById('valMembershipDiscount');
-          const tierTipEl = document.getElementById('tierTipBox');
-
-          if (totalSpent >= 2000) {
-            // প্রিমিয়াম মেম্বার (২০০০ টাকার বেশি খরচকারী)
-            if (badgeEl) {
-              badgeEl.className = 'profile-badge-pill premium';
-              badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার (৮% ছাড়)';
-            }
-            if (tierValEl) {
-              tierValEl.innerText = 'প্রিমিয়াম মেম্বার (Premium)';
-              tierValEl.style.color = '#fbbf24';
-            }
-            if (discountValEl) {
-              discountValEl.innerText = '৮% স্পেশাল ছাড়';
-              discountValEl.style.color = '#fbbf24';
-            }
-            if (tierTipEl) {
-              tierTipEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <strong>অভিনন্দন!</strong> আপনি আমাদের সর্বোচ্চ <strong>প্রিমিয়াম মেম্বার</strong> হিসেবে প্রতিটি অর্ডারে <strong>৮% ডিসকাউন্ট</strong> ও প্রায়োরিটি সাপোর্ট উপভোগ করছেন।';
-            }
-          } else if (totalSpent >= 1000) {
-            // এলিট মেম্বার (১০০০ টাকার বেশি খরচকারী)
-            const remainingForPremium = 2000 - totalSpent;
-            if (badgeEl) {
-              badgeEl.className = 'profile-badge-pill elite';
-              badgeEl.innerHTML = '<i class="fa-solid fa-gem"></i> এলিট মেম্বার (৪% ছাড়)';
-            }
-            if (tierValEl) {
-              tierValEl.innerText = 'এলিট মেম্বার (Elite)';
-              tierValEl.style.color = '#c084fc';
-            }
-            if (discountValEl) {
-              discountValEl.innerText = '৪% বিশেষ ছাড়';
-              discountValEl.style.color = '#c084fc';
-            }
-            if (tierTipEl) {
-              tierTipEl.innerHTML = `<i class="fa-solid fa-gem" style="color: #c084fc;"></i> আপনি একজন <strong>এলিট মেম্বার</strong> (৪% ছাড় সক্রিয়)! আর মাত্র <strong>৳ ${toBanglaNum(remainingForPremium.toFixed(2))}</strong> খরচ করলেই পেয়ে যাবেন <strong>প্রিমিয়াম মেম্বারশিপ (৮% ছাড়)</strong>।`;
-            }
-          } else {
-            // সাধারণ সদস্য (১০০০ টাকার কম খরচকারী)
-            const remainingForElite = 1000 - totalSpent;
-            if (badgeEl) {
-              badgeEl.className = 'profile-badge-pill normal';
-              badgeEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য';
-            }
-            if (tierValEl) {
-              tierValEl.innerText = 'সাধারণ সদস্য';
-              tierValEl.style.color = 'var(--text-main)';
-            }
-            if (discountValEl) {
-              discountValEl.innerText = 'প্রযোজ্য নয় (১,০০০+ অর্ডারে ৪% ছাড়)';
-              discountValEl.style.color = 'var(--text-sub)';
-            }
-            if (tierTipEl) {
-              tierTipEl.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-pink);"></i> মোট <strong>৳ ১,০০০</strong> বা তার বেশি অর্ডার করলেই স্বয়ংক্রিয়ভাবে হয়ে যাবেন <strong>এলিট মেম্বার (৪% ডিসকাউন্ট)</strong>! আর মাত্র <strong>৳ ${toBanglaNum(remainingForElite.toFixed(2))}</strong> প্রয়োজন।`;
-            }
-          }
-
+                const avatarWrap = document.querySelector('.profile-avatar-wrap');
+                if (totalSpent >= 2000) {
+                  if(avatarWrap) {
+                    avatarWrap.classList.add('premium-frame');
+                    if (!avatarWrap.querySelector('.premium-crown')) {
+                      avatarWrap.insertAdjacentHTML('beforeend', '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>');
+                    }
+                  }
+                  if (badgeEl) {
+                    badgeEl.className = 'profile-badge-pill premium';
+                    badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার (৮% ছাড়)';
+                  }
+                  if (tierValEl) {
+                    tierValEl.innerText = 'প্রিমিয়াম মেম্বার (Premium)';
+                    tierValEl.style.color = '#fbbf24';
+                  }
+                  if (discountValEl) {
+                    discountValEl.innerText = '৮% স্পেশাল ছাড়';
+                    discountValEl.style.color = '#fbbf24';
+                  }
+                  if (tierTipEl) {
+                    tierTipEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <strong>অভিনন্দন!</strong> আপনি আমাদের সর্বোচ্চ <strong>প্রিমিয়াম মেম্বার</strong> হিসেবে প্রতিটি অর্ডারে <strong>৮% ডিসকাউন্ট</strong> ও প্রায়োরিটি সাপোর্ট উপভোগ করছেন।';
+                  }
+                } else if (totalSpent >= 1000) {
+                  if(avatarWrap) {
+                    avatarWrap.classList.add('elite-frame');
+                    if (!avatarWrap.querySelector('.elite-crown')) {
+                      avatarWrap.insertAdjacentHTML('beforeend', '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>');
+                    }
+                  }
+                  const remainingForPremium = 2000 - totalSpent;
+                  if (badgeEl) {
+                    badgeEl.className = 'profile-badge-pill elite';
+                    badgeEl.innerHTML = '<i class="fa-solid fa-gem"></i> এলিট মেম্বার (৪% ছাড়)';
+                  }
+                  if (tierValEl) {
+                    tierValEl.innerText = 'এলিট মেম্বার (Elite)';
+                    tierValEl.style.color = '#c084fc';
+                  }
+                  if (discountValEl) {
+                    discountValEl.innerText = '৪% বিশেষ ছাড়';
+                    discountValEl.style.color = '#c084fc';
+                  }
+                  if (tierTipEl) {
+                    tierTipEl.innerHTML = `<i class="fa-solid fa-gem" style="color: #c084fc;"></i> আপনি একজন <strong>এলিট মেম্বার</strong> (৪% ছাড় সক্রিয়)! আর মাত্র <strong>৳ ${toBanglaNum(remainingForPremium.toFixed(2))}</strong> খরচ করলেই পেয়ে যাবেন <strong>প্রিমিয়াম মেম্বারশিপ (৮% ছাড়)</strong>।`;
+                  }
+                } else {
+                  const remainingForElite = 1000 - totalSpent;
+                  if (badgeEl) {
+                    badgeEl.className = 'profile-badge-pill normal';
+                    badgeEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য';
+                  }
+                  if (tierValEl) {
+                    tierValEl.innerText = 'সাধারণ সদস্য';
+                    tierValEl.style.color = 'var(--text-main)';
+                  }
+                  if (discountValEl) {
+                    discountValEl.innerText = 'প্রযোজ্য নয় (১,০০০+ অর্ডারে ৪% ছাড়)';
+                    discountValEl.style.color = 'var(--text-sub)';
+                  }
+                  if (tierTipEl) {
+                    tierTipEl.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-pink);"></i> মোট <strong>৳ ১,০০০</strong> বা তার বেশি অর্ডার করলেই স্বয়ংক্রিয়ভাবে হয়ে যাবেন <strong>এলিট মেম্বার (৪% ডিসকাউন্ট)</strong>! আর মাত্র <strong>৳ ${toBanglaNum(remainingForElite.toFixed(2))}</strong> প্রয়োজন।`;
+                  }
+                }
+              }
+            })
+            .catch(console.error);
+        
         } catch (e) {
           console.error(e);
         }
       } else {
         window.location.href = '../sign-in/index.html';
       }
-
       // প্রোফাইল থেকে সরাসরি লগআউট হ্যান্ডলার
       const btnProfileLogout = document.getElementById('btnProfileLogout');
       if (btnProfileLogout) {
@@ -461,6 +471,9 @@
 
   <!-- Official Navigation & Theme Controller -->
   <script src="../js/official-nav.js"></script>
+
+  
+  
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>

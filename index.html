@@ -107,16 +107,42 @@
           const userName = user.full_name || user.username || 'ইউজার';
           const userInitial = userName.charAt(0).toUpperCase();
 
+          // Calculate spending for dashboard avatar
+          let orders = [];
+          try {
+            const rawOrders = localStorage.getItem('loveweb_orders_' + (user.username || '')) || localStorage.getItem('loveweb_orders');
+            if (rawOrders) orders = JSON.parse(rawOrders);
+          } catch (e) {}
+
+          let totalSpent = 0;
+          if (Array.isArray(orders)) {
+            totalSpent = orders.reduce((sum, item) => sum + (Number(item.price || item.amount) || 0), 0);
+          }
+
+          let avatarFrameClass = '';
+          let crownBadge = '';
+          let dashMemberChip = '<span class="dash-member-chip"><i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য</span>';
+
+          if (totalSpent >= 2000) {
+            avatarFrameClass = 'premium-frame';
+            crownBadge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
+            dashMemberChip = '<span class="dash-member-chip premium" style="color: #fbbf24; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার</span>';
+          } else if (totalSpent >= 1000) {
+            avatarFrameClass = 'elite-frame';
+            crownBadge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
+            dashMemberChip = '<span class="dash-member-chip elite" style="color: #c084fc; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4);"><i class="fa-solid fa-gem"></i> এলিট মেম্বার</span>';
+          }
+
           appRoot.innerHTML = `
             <main class="dashboard-wrapper">
               <!-- ১. ইউজার ওয়েলকাম হেডার -->
               <section class="dash-welcome-section">
                 <div class="dash-user-meta">
-                  <div class="dash-avatar-circle">${userInitial}</div>
+                  <div class="profile-avatar-wrap ${avatarFrameClass}" style="margin: 0; padding: 4px;">${crownBadge}<div class="dash-avatar-circle" style="margin: 0;">${userInitial}</div></div>
                   <div class="dash-meta-info">
                     <div class="dash-title-row">
                       <h1 class="dash-greeting">স্বাগতম, <span class="dash-name">${userName}</span> 👋</h1>
-                      <span class="dash-member-chip"><i class="fa-solid fa-circle-check"></i> ভেরিফায়েড সদস্য</span>
+                      ${dashMemberChip}
                     </div>
                     <p class="dash-lead">লাভওয়েব অফিশিয়াল হোম পোর্টাল • আপনার ডিজিটাল উইশিং সেবা</p>
                   </div>
@@ -132,7 +158,7 @@
                     জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ যেকোনো দিনে আকর্ষণীয় রোমান্টিক মিউজিক, ফটো গ্যালারি ও কাস্টম অ্যানিমেশনসহ ওয়েবসাইট উপহার দিন।
                   </p>
                   <div class="dash-hero-buttons">
-                    <a href="order-details/index.html" class="dash-cta-primary">
+                    <a href="/place-order" class="dash-cta-primary">
                       <i class="fa-solid fa-wand-magic-sparkles"></i> নতুন ওয়েবসাইট অর্ডার করুন
                     </a>
                     <a href="help/index.html" class="dash-cta-outline">
@@ -159,7 +185,7 @@
 
                 <div class="dash-services-grid" style="margin-top: 14px;">
                   <!-- কার্ড ১: অর্ডার হিস্ট্রি -->
-                  <a href="order-details/index.html" class="dash-service-card" id="cardOrderDetails">
+                  <a href="/order-details" class="dash-service-card" id="cardOrderDetails">
                     <div class="card-icon-wrap pink">
                       <i class="fa-solid fa-box-archive"></i>
                     </div>
@@ -237,6 +263,50 @@
               </section>
             </main>
           `;
+
+          // Async update total spent from DB
+          fetch('/api/orders/' + (user.username || user.phone))
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && Array.isArray(data.orders)) {
+                let dbSpent = 0;
+                data.orders.filter(o => o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত')
+                           .forEach(o => dbSpent += (Number(o.totalPrice) || 0));
+                
+                if (dbSpent >= 1000) {
+                  let badge = '';
+                  let tag = '';
+                  let frameClass = '';
+                  let chipHtml = '';
+                  
+                  if (dbSpent >= 2000) {
+                    frameClass = 'premium-frame';
+                    badge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
+                    chipHtml = '<span class="dash-member-chip premium" style="color: #fbbf24; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার</span>';
+                  } else {
+                    frameClass = 'elite-frame';
+                    badge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
+                    chipHtml = '<span class="dash-member-chip elite" style="color: #c084fc; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4);"><i class="fa-solid fa-gem"></i> এলিট মেম্বার</span>';
+                  }
+                  
+                  // Update DOM safely
+                  const avatarWrap = document.querySelector('.profile-avatar-wrap');
+                  if (avatarWrap) {
+                    avatarWrap.className = 'profile-avatar-wrap ' + frameClass;
+                    avatarWrap.innerHTML = badge + '<div class="dash-avatar-circle" style="margin: 0;">' + userInitial + '</div>';
+                  }
+                  
+                  // Find and replace the generic chip
+                  const titleRow = document.querySelector('.dash-title-row');
+                  if (titleRow) {
+                    const existingChip = titleRow.querySelector('.dash-member-chip');
+                    if (existingChip) existingChip.remove();
+                    titleRow.insertAdjacentHTML('beforeend', chipHtml);
+                  }
+                }
+              }
+            }).catch(e => console.log('Error fetching orders for spending check', e));
+
         } catch (e) {
           showLoggedOutState();
         }

@@ -1,122 +1,666 @@
 <!DOCTYPE html>
-<html lang="bn">
-
+<html lang="bn" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>অর্ডার বিস্তারিত - LoveWeb</title>
-  <meta name="description" content="LoveWeb উইশিং ওয়েবসাইট অর্ডারের বিবরণ">
-
-  <!-- Favicon Links -->
-  <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon.png">
-  <link rel="apple-touch-icon" href="../img/favicon.png">
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Font Awesome Icons -->
+  <title>আমার অর্ডারসমূহ | LoveWeb</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- External CSS -->
   <link rel="stylesheet" href="../css/style.css">
-
-  <!-- Theme Manager -->
-  <script src="../js/theme.js"></script>
-
-  <style>
-    .order-card {
-      width: 620px;
-      max-width: 94%;
-      height: auto;
-      min-height: 540px;
-      padding: 44px 34px;
+      <style>
+    .btn-customize {
+      background: linear-gradient(135deg, #00d46a 0%, #00bcd4 100%);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+    .btn-customize:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 212, 106, 0.3);
+    }
+    .orders-wrapper {
+      width: 1000px;
+      max-width: 96%;
+      margin: 30px auto;
       display: flex;
       flex-direction: column;
+      gap: 20px;
+    }
+    .orders-top-actions {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      position: relative;
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 15px 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
-
-    .empty-order-state {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px dashed var(--border-color);
-      border-radius: 18px;
-      padding: 34px 24px;
-      margin: 24px 0;
-      text-align: center;
-      width: 100%;
+    .orders-tabs {
+      display: flex;
+      gap: 15px;
     }
-
-    .empty-order-icon {
-      font-size: 3rem;
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-sub);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      background: rgba(255, 42, 109, 0.1);
       color: var(--primary-pink);
-      margin-bottom: 14px;
-      opacity: 0.9;
+      border-color: rgba(255, 42, 109, 0.3);
+    }
+    .btn-new-order {
+      background: linear-gradient(135deg, #ff2a6d 0%, #ff6b6b 100%);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+    .btn-new-order:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 42, 109, 0.4);
+    }
+
+    /* Details Card (Invoice) */
+    .order-details-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      border-bottom: 1px solid rgba(255, 42, 109, 0.2);
+      padding-bottom: 15px;
+    }
+    .order-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-pink);
+    }
+    .status-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(0, 188, 212, 0.15);
+      color: #00bcd4;
+      border: 1px solid rgba(0, 188, 212, 0.3);
+    }
+    .status-badge.success {
+      background: rgba(0, 212, 106, 0.15);
+      color: #00d46a;
+      border: 1px solid rgba(0, 212, 106, 0.3);
+    }
+    
+    /* Responsive Table Styles */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .details-table th, .details-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+    .details-table th {
+      background: rgba(255, 42, 109, 0.05);
+      color: var(--primary-pink);
+      font-weight: 600;
+      width: 35%;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .details-table tr:last-child th,
+    .details-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Previous Orders Grid */
+    .previous-orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .old-order-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .old-order-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: var(--primary-pink);
+      transform: translateY(-3px);
+    }
+    .old-order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .old-order-id {
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 1.1rem;
+    }
+    .old-order-date {
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .old-order-type {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      margin-bottom: 15px;
+    }
+
+    /* Hide section class */
+    .hidden-section {
+      display: none !important;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .orders-top-actions {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+      }
+      .orders-tabs {
+        width: 100%;
+        display: flex;
+      }
+      .tab-btn {
+        flex: 1;
+        text-align: center;
+      }
+      .btn-new-order {
+        justify-content: center;
+      }
+      
+      .details-table, .details-table tbody, .details-table tr, .details-table th, .details-table td {
+        display: block;
+        width: 100%;
+      }
+      .details-table tr {
+        margin-bottom: 15px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .details-table th {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding: 10px 15px;
+        background: rgba(255, 42, 109, 0.1);
+      }
+      .details-table td {
+        padding: 12px 15px;
+        border-bottom: none;
+      }
+      .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+
+    [data-theme="light"] .details-table th {
+      background: rgba(255, 42, 109, 0.08);
+      border-right: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    [data-theme="light"] .details-table th,
+    [data-theme="light"] .details-table td {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    [data-theme="light"] .table-container {
+      background: #ffffff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    [data-theme="light"] .orders-top-actions {
+      background: rgba(255, 255, 255, 0.95);
+    }
+    [data-theme="light"] .old-order-card {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
   </style>
 </head>
-
 <body>
-
-  <div class="auth-card order-card">
-    <div class="brand-logo" style="margin-bottom: 12px;">
-      <a href="/"><img src="../img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 50px; width: auto;"></a>
+  
+  <div class="dashboard-menu-header" onclick="window.location.href='/dashboard'">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <img src="../img/logo.png" alt="LoveWeb" style="height: 32px;">
+      <span style="font-weight: 700; color: var(--primary-pink); font-size: 1.1rem;">আমার অর্ডারসমূহ</span>
     </div>
-
-    <h2 class="title" style="margin-bottom: 8px;">অর্ডার হিস্ট্রি ও বিস্তারিত</h2>
-    <p class="desc">আপনার তৈরিকৃত উইশিং ওয়েবসাইটের অর্ডারের তথ্য ও ডেলিভারি ট্র্যাকিং</p>
-
-    <div class="empty-order-state">
-      <div class="empty-order-icon">
-        <i class="fa-solid fa-gift"></i>
-      </div>
-      <h3 style="font-size: 1.15rem; color: var(--text-main); margin-bottom: 8px;">কোনো সক্রিয় অর্ডার পাওয়া যায়নি</h3>
-      <p style="font-size: 0.92rem; color: var(--text-sub); line-height: 1.6;">
-        আপনি এখনো কোনো কাস্টম উইশিং ওয়েবসাইট অর্ডার করেননি। আপনার প্রিয়জনের বিশেষ মুহূর্তের জন্য রোমান্টিক পেজ তৈরি করতে সরাসরি আমাদের সাথে যোগাযোগ করুন।
-      </p>
-    </div>
-
-    <div class="profile-actions-container" style="margin-top: 14px;">
-      <div class="profile-actions-grid">
-        <a href="/profile" class="profile-action-card">
-          <div class="action-card-icon blue">
-            <i class="fa-solid fa-user"></i>
-          </div>
-          <div class="action-card-text">
-            <span class="action-card-title">প্রোফাইল বিবরণ</span>
-            <span class="action-card-sub">অ্যাকাউন্টের তথ্য</span>
-          </div>
-        </a>
-
-        <a href="/settings" class="profile-action-card">
-          <div class="action-card-icon pink">
-            <i class="fa-solid fa-gear"></i>
-          </div>
-          <div class="action-card-text">
-            <span class="action-card-title">অ্যাকাউন্ট সেটিংস</span>
-            <span class="action-card-sub">পাসওয়ার্ড ও নিরাপত্তা</span>
-          </div>
-        </a>
-      </div>
-
-      <a href="/" class="btn-submit profile-home-btn">
-        <i class="fa-solid fa-house"></i> হোমে ফিরে যান
-      </a>
-    </div>
+    <i class="fa-solid fa-arrow-left" style="color: var(--text-main);"></i>
   </div>
 
-  <footer class="auth-footer" style="margin-top: 20px;">
-    <a href="../help/index.html" class="footer-link"><i class="fa-solid fa-circle-question"></i> সাহায্য</a>
-    <span class="footer-divider">•</span>
-    <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
-  </footer>
+  <div class="orders-wrapper">
+    <!-- Top Actions / Tabs -->
+    <div class="orders-top-actions">
+      <div class="orders-tabs">
+        <button class="tab-btn active" id="tabLatestOrder" onclick="switchTab('latest')">
+          <i class="fa-solid fa-clock-rotate-left"></i> সর্বশেষ অর্ডার
+        </button>
+        <button class="tab-btn" id="tabPreviousOrders" onclick="switchTab('previous')">
+          <i class="fa-solid fa-list-check"></i> পূর্বের অর্ডারসমূহ
+        </button>
+      </div>
+      <a href="/place-order" class="btn-new-order">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> নতুন অর্ডার করুন
+      </a>
+    </div>
 
-  <!-- Official Navigation & Theme Controller -->
-  <script src="../js/official-nav.js"></script>
+    <!-- Latest Order View -->
+    <div id="latestOrderView" class="order-details-card">
+      <div class="order-header">
+        <div class="order-title"><i class="fa-solid fa-receipt"></i> অর্ডার ইনভয়েস</div>
+        <div class="status-badge"><i class="fa-solid fa-spinner fa-spin"></i> প্রক্রিয়াকরণ চলছে</div>
+      </div>
+      
+      <div class="table-container">
+        <table class="details-table">
+          <tbody>
+            <tr>
+              <th><i class="fa-solid fa-hashtag"></i> অর্ডার নম্বর (Order No)</th>
+              <td id="tdOrderId">#LW-98237492</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-user"></i> ইউজারনেম (Username)</th>
+              <td id="tdUsername">user123</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-phone"></i> ফোন নম্বর (Phone Number)</th>
+              <td id="tdPhone">01XXXXXXXXX</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-gift"></i> ওয়েবসাইটের ধরন (Website Type)</th>
+              <td id="tdType">Birthday Wish</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-layer-group"></i> ওয়েবসাইট ক্যাটাগরি (Category)</th>
+              <td id="tdCategory">Premium</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-align-left"></i> বিস্তারিত বিবরণ (Description)</th>
+              <td style="line-height: 1.6; font-size: 0.9rem;" id="tdDesc">
+                আমার প্রিয় বন্ধুর জন্মদিনের জন্য একটি স্পেশাল ওয়েবসাইট চাই। ব্যাকগ্রাউন্ডে আমাদের কিছু ছবি থাকবে এবং সুন্দর একটি মিউজিক বাজবে। মেসেজ হিসেবে আমার লেখা ৩শ শব্দের একটি বার্তা থাকবে।
+              </td>
+            </tr>
+
+            <tr>
+              <th><i class="fa-solid fa-money-bill-wave"></i> মোট মূল্য (Total Price)</th>
+              <td style="font-weight: 700; color: #ff2a6d;" id="tdTotal">৳ ৬৫০</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-hand-holding-dollar"></i> অগ্রিম পেমেন্ট (Advance Payment)</th>
+              <td id="tdAdvance">৳ ৩২০</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-mobile-screen"></i> অগ্রিম পেমেন্ট নম্বর</th>
+              <td id="tdAdvancePhone">01XXXXXXXXX (bKash)</td>
+            </tr>
+            <tr>
+              <th><i class="fa-regular fa-clock"></i> অগ্রিম পেমেন্টের সময়</th>
+              <td id="tdAdvanceTime">০৪ সেপ্টেম্বর ২০২৬, বিকাল ৩:৩০</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-money-check-dollar"></i> অগ্রিম পেমেন্ট স্ট্যাটাস (Payment Verify)</th>
+              <td id="tdPaymentStatus" style="font-weight: 600; color: #ff9800;"><i class="fa-solid fa-hourglass-start"></i> ভেরিফাই করা হচ্ছে</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-check-double"></i> অর্ডার কনফার্মেশন</th>
+              <td style="color: #00d46a; font-weight: 600;" id="tdConfirmation"><i class="fa-solid fa-circle-check"></i> কনফার্ম হয়েছে</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-file-invoice-dollar"></i> বাকি পেমেন্ট (Due Payment)</th>
+              <td style="color: #ff4d4d; font-weight: 600;" id="tdDue">৳ ৩৩০</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-hourglass-half"></i> বাকি পেমেন্টের সময়</th>
+              <td id="tdDueTime">ডেলিভারির পর (Unpaid)</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-truck-fast"></i> অর্ডার ডেলিভারি</th>
+              <td id="tdDeliveryStatus">প্রক্রিয়াকরণ চলছে (Estimated: ২৪ ঘণ্টা)</td>
+            </tr>
+            <tr>
+              <th><i class="fa-solid fa-key"></i> অর্ডার অ্যাক্সেস কোড (Access Code)</th>
+              <td id="tdAccessCode">
+                <span style="font-size: 0.85rem; color: var(--text-sub);"><i class="fa-solid fa-lock"></i> ফুল পেমেন্টের পর কোডটি দেখানো হবে</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Feedback Section (Visible only when Delivered) -->
+      <div id="feedbackSection" style="display: none; margin-top: 20px; background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color);">
+        <h4 style="margin-bottom: 15px; color: var(--text-main); font-size: 1.1rem;"><i class="fa-solid fa-comment-dots"></i> আপনার মতামত দিন (Feedback)</h4>
+        <textarea id="feedbackText" placeholder="আপনার অর্ডারটি কেমন লেগেছে? আমাদের সার্ভিসের মান বাড়াতে আপনার মতামত আমাদের জন্য গুরুত্বপূর্ণ..." style="width: 100%; min-height: 100px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); margin-bottom: 15px; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical;"></textarea>
+        <button id="submitFeedbackBtn" onclick="submitFeedback()" style="background: var(--primary-pink); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-paper-plane"></i> সাবমিট করুন
+        </button>
+        <div id="feedbackMessage" style="margin-top: 10px; font-size: 0.9rem; font-weight: 600;"></div>
+      </div>
+    </div>
+
+    <!-- Previous Orders View (Hidden by default) -->
+    <div id="previousOrdersView" class="hidden-section">
+      <h3 style="color: var(--text-main); margin-bottom: 15px; font-size: 1.2rem;">আপনার আগের অর্ডারসমূহ</h3>
+      
+      <div class="previous-orders-grid">
+        <!-- Dynamic orders will be rendered here -->
+      </div>
+
+        <!-- Mock Order 2 -->
+        
+    </div>
+
+  </div>
+
+  <script src="../js/theme.js">
+    function openCustomizeModal() {
+      alert("কাস্টমাইজেশনের জন্য প্যানেলটি শীঘ্রই আসছে!");
+    }
+  </script>
+  <script>
+    let userOrders = [];
+    document.addEventListener('DOMContentLoaded', async () => {
+      const sessionRaw = localStorage.getItem('loveweb_session');
+      if (sessionRaw) {
+        try {
+          const user = JSON.parse(sessionRaw);
+          document.getElementById('tdUsername').innerText = user.username || 'N/A';
+          document.getElementById('tdPhone').innerText = user.phone || 'N/A';
+          
+          if (user.phone) {
+            const response = await fetch(`/api/orders/${user.username}`);
+            const data = await response.json();
+            if (data.success) {
+              userOrders = data.orders;
+              renderOrders();
+            }
+          }
+        } catch(e) {}
+      }
+    });
+
+    function renderOrders() {
+      if (userOrders.length === 0) {
+        document.getElementById('latestOrderView').innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-sub);">আপনার কোনো অর্ডার পাওয়া যায়নি।</div>';
+        document.getElementById('tabPreviousOrders').style.display = 'none';
+        return;
+      }
+      
+      const latest = userOrders[0];
+      if (latest) {
+        populateInvoice(latest);
+      }
+      
+      if (userOrders.length > 1) {
+        const grid = document.querySelector('.previous-orders-grid');
+        grid.innerHTML = '';
+        for (let i = 1; i < userOrders.length; i++) {
+          const o = userOrders[i];
+          const dateStr = new Date(o.createdAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
+          const isDelivered = o.status === 'ডেলিভারড' || o.status === 'Delivered';
+          const badgeClass = isDelivered ? 'success' : '';
+          const badgeIcon = isDelivered ? 'check-double' : 'spinner fa-spin';
+          const badgeLabel = isDelivered ? 'ডেলিভারড' : o.status;
+          
+          grid.innerHTML += `
+            <div class="old-order-card" onclick="viewOldOrder(${i})">
+              <div class="old-order-header">
+                <span class="old-order-id">${o.orderId}</span>
+                <span class="status-badge ${badgeClass}" style="font-size: 0.75rem; padding: 4px 10px;">${badgeLabel}</span>
+              </div>
+              <div class="old-order-date"><i class="fa-regular fa-calendar"></i> ${dateStr}</div>
+              <div class="old-order-type"><i class="fa-solid fa-gift"></i> ${o.websiteType} (${o.package})</div>
+              <div style="color: var(--primary-pink); font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-eye"></i> বিস্তারিত দেখুন</div>
+            </div>
+          `;
+        }
+      } else {
+         document.getElementById('tabPreviousOrders').style.display = 'none';
+      }
+    }
+
+    function populateInvoice(order) {
+      if (!order) return;
+      document.getElementById('tdOrderId').innerText = order.orderId;
+      document.getElementById('tdType').innerText = order.websiteType;
+      document.getElementById('tdCategory').innerText = order.package;
+      document.getElementById('tdDesc').innerText = order.description;
+      
+      let totalText = '৳ ' + convertToBanglaNumber(order.totalPrice);
+      if (order.discountPercent) {
+        totalText += ' <span style="font-size:0.8rem; color:#c084fc;">(-' + convertToBanglaNumber(order.discountPercent) + '% মেম্বারশিপ ছাড়)</span>';
+      }
+      document.getElementById('tdTotal').innerHTML = totalText;
+      
+      if (order.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
+         document.getElementById('tdDue').innerHTML = '৳ ০ <span style="font-size:0.8rem; color:#00d46a;">(পরিশোধিত)</span>';
+      } else {
+         document.getElementById('tdDue').innerText = '৳ ' + convertToBanglaNumber(order.duePayment);
+      }
+
+      document.getElementById('tdAdvance').innerText = '৳ ' + convertToBanglaNumber(order.advancePayment);
+      document.getElementById('tdAdvancePhone').innerText = order.advancePaymentPhone;
+      document.getElementById('tdAdvanceTime').innerText = new Date(order.createdAt).toLocaleString('bn-BD');
+      
+      const paymentStatusTd = document.getElementById('tdPaymentStatus');
+      if (order.advancePaymentStatus === 'কনফার্মড' || order.advancePaymentStatus === 'Confirmed') {
+        paymentStatusTd.innerHTML = '<i class="fa-solid fa-circle-check"></i> সম্পূর্ণ (Complete)';
+        paymentStatusTd.style.color = '#00d46a';
+      } else if (order.advancePaymentStatus === 'বাতিল' || order.advancePaymentStatus === 'Rejected') {
+        paymentStatusTd.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> পেমেন্ট বাতিল (Rejected)';
+        paymentStatusTd.style.color = '#ff4d4d';
+      } else {
+        paymentStatusTd.innerHTML = '<i class="fa-solid fa-hourglass-start"></i> ভেরিফাই করা হচ্ছে (Verifying...)';
+        paymentStatusTd.style.color = '#ff9800';
+      }
+      
+      window.currentOrderId = order.id; // Save current doc id for feedback
+      
+      const badge = document.querySelector('.order-header .status-badge');
+      const isDelivered = order.status === 'ডেলিভারড' || order.status === 'Delivered';
+      
+      if (isDelivered) {
+        badge.innerHTML = '<i class="fa-solid fa-check-double"></i> সম্পূর্ণ ডেলিভারড';
+        badge.classList.add('success');
+        document.getElementById('tdConfirmation').innerHTML = '<i class="fa-solid fa-circle-check"></i> কনফার্ম হয়েছে';
+        document.getElementById('tdConfirmation').style.color = '#00d46a';
+        document.getElementById('tdDue').innerText = '৳ ০ (পরিশোধিত)';
+        document.getElementById('tdDue').style.color = '#00d46a';
+        document.getElementById('tdAccessCode').innerHTML = '<span class="access-code">' + (order.accessCode || 'LWX9A2B4C5D6') + '</span>';
+        
+        const trCustom = document.getElementById('trCustomizeAction');
+        if (trCustom) trCustom.style.display = 'table-row';
+        
+        // Show feedback section
+        const feedbackSec = document.getElementById('feedbackSection');
+        const feedbackBtn = document.getElementById('submitFeedbackBtn');
+        const feedbackMsg = document.getElementById('feedbackMessage');
+        const feedbackTxt = document.getElementById('feedbackText');
+        if (feedbackSec) {
+          feedbackSec.style.display = 'block';
+          feedbackBtn.style.display = order.feedback ? 'none' : 'inline-flex';
+          feedbackTxt.value = order.feedback || '';
+          feedbackTxt.disabled = !!order.feedback;
+          feedbackMsg.innerText = order.feedback ? 'আপনার মতামত ইতিমধ্যে গ্রহণ করা হয়েছে। ধন্যবাদ!' : '';
+          feedbackMsg.style.color = order.feedback ? '#00d46a' : '';
+        }
+      } else {
+        badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + order.status;
+        badge.classList.remove('success');
+        document.getElementById('tdConfirmation').innerHTML = '<i class="fa-solid fa-clock"></i> পেন্ডিং';
+        document.getElementById('tdConfirmation').style.color = 'var(--text-sub)';
+        if (order.advancePaymentStatus !== 'সম্পূর্ণ পরিশোধিত') {
+          document.getElementById('tdDue').style.color = '#ff4d4d';
+        } else {
+          document.getElementById('tdDue').style.color = '#00d46a';
+        }
+        document.getElementById('tdAccessCode').innerHTML = '<span style="font-size: 0.85rem; color: var(--text-sub);"><i class="fa-solid fa-lock"></i> ফুল পেমেন্টের পর কোডটি দেখানো হবে</span>';
+        
+        const trCustom = document.getElementById('trCustomizeAction');
+        if (trCustom) trCustom.style.display = 'none';
+        
+        const feedbackSec = document.getElementById('feedbackSection');
+        if (feedbackSec) feedbackSec.style.display = 'none';
+      }
+    }
+    
+    async function submitFeedback() {
+      const feedback = document.getElementById('feedbackText').value.trim();
+      const btn = document.getElementById('submitFeedbackBtn');
+      const msg = document.getElementById('feedbackMessage');
+      
+      if (!feedback) {
+        msg.innerText = 'দয়া করে কিছু লিখুন।';
+        msg.style.color = '#ff4d4d';
+        return;
+      }
+      
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> সাবমিট হচ্ছে...';
+      btn.disabled = true;
+      
+      try {
+        const response = await fetch('/api/submit-feedback', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ orderId: window.currentOrderId, feedback })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          msg.innerText = 'ধন্যবাদ! আপনার মতামত সফলভাবে জমা হয়েছে।';
+          msg.style.color = '#00d46a';
+          btn.style.display = 'none';
+          document.getElementById('feedbackText').disabled = true;
+          
+          // Update in local array
+          const order = userOrders.find(o => o.id === window.currentOrderId);
+          if (order) order.feedback = feedback;
+        } else {
+          msg.innerText = 'ত্রুটি: ' + (data.message || 'সাবমিট করা যায়নি।');
+          msg.style.color = '#ff4d4d';
+          btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> সাবমিট করুন';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        msg.innerText = 'ত্রুটি: সাবমিট করা যায়নি।';
+        msg.style.color = '#ff4d4d';
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> সাবমিট করুন';
+        btn.disabled = false;
+      }
+    }
+
+    function convertToBanglaNumber(num) {
+      const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return num.toString().replace(/[0-9]/g, w => banglaDigits[w]);
+    }
+
+
+    function switchTab(tab) {
+      const latestTabBtn = document.getElementById('tabLatestOrder');
+      const prevTabBtn = document.getElementById('tabPreviousOrders');
+      const latestView = document.getElementById('latestOrderView');
+      const prevView = document.getElementById('previousOrdersView');
+
+      if (tab === 'latest') {
+        latestTabBtn.classList.add('active');
+        prevTabBtn.classList.remove('active');
+        latestView.classList.remove('hidden-section');
+        prevView.classList.add('hidden-section');
+        
+        if (userOrders.length > 0) {
+          populateInvoice(userOrders[0]);
+        }
+      } else {
+        prevTabBtn.classList.add('active');
+        latestTabBtn.classList.remove('active');
+        prevView.classList.remove('hidden-section');
+        latestView.classList.add('hidden-section');
+      }
+    }
+
+    function viewOldOrder(index) {
+      const order = userOrders[index];
+      const latestTabBtn = document.getElementById('tabLatestOrder');
+      const prevTabBtn = document.getElementById('tabPreviousOrders');
+      const latestView = document.getElementById('latestOrderView');
+      const prevView = document.getElementById('previousOrdersView');
+
+      latestTabBtn.classList.add('active');
+      prevTabBtn.classList.remove('active');
+      latestView.classList.remove('hidden-section');
+      prevView.classList.add('hidden-section');
+
+      populateInvoice(order);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>
 </body>
-
 </html>
