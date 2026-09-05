@@ -337,20 +337,16 @@ app.post('/api/generate-page-descriptions', async (req, res) => {
     const numOptionalToGenerate = Math.floor(Math.random() * (optionalPages + 1));
     const totalToGenerate = requiredPages + numOptionalToGenerate;
 
-    const prompt = `The user wants to build a relationship/anniversary wishing website. 
+    const prompt = `The user wants to build a website.
 Idea: "${idea}"
 Package: ${packageType}.
+You MUST generate detailed descriptions for exactly ${totalToGenerate} pages (e.g., Home, About, Services, Contact, etc.).
+Make the descriptions detailed and tailored to the idea. Write in Bengali (বাংলা).
 
-IMPORTANT INSTRUCTIONS:
-- You MUST generate detailed descriptions for exactly ${totalToGenerate} sections/pages.
-- Default to styles like "Auto Queue Theme", "Normal", or "Wishing Website".
-- DO NOT suggest or create descriptions for "Home Page", "About Us", "Contact Us", professional portfolios, or corporate websites. LoveWeb ONLY builds wishing websites.
-- Make the descriptions detailed, romantic, and tailored to the idea. Write in Bengali (বাংলা).
-
-Return a JSON array of strings, where each string is the detailed description of a specific section/page. The length of the array must be exactly ${totalToGenerate}.`;
+Return a JSON array of strings, where each string is the detailed description of a specific page. The length of the array must be exactly ${totalToGenerate}.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-3.6-flash",
       contents: prompt,
       config: {
         
@@ -871,7 +867,7 @@ You have tools to check order status or place a new order. Always provide helpfu
     }
 
     const chatSession = ai.chats.create({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-3.6-flash",
       config: {
         systemInstruction: systemInstruction + " You have tools to place orders and check order status. Always use them if the user asks. Before placing an order, ask for all required details nicely.",
         temperature: 0.7,
