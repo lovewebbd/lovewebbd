@@ -62,12 +62,98 @@ const ai = new GoogleGenAI({
 });
 
 const app = express();
+
+app.get('/api/firebase-config', (req, res) => {
+  let config = {};
+  if (fs.existsSync(path.join(__dirname, 'firebase-applet-config.json'))) {
+    config = JSON.parse(fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf8'));
+  } else if (process.env.FIREBASE_API_KEY) {
+    config = {
+      apiKey: process.env.FIREBASE_API_KEY,
+      authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.FIREBASE_APP_ID,
+      firestoreDatabaseId: process.env.FIREBASE_DATABASE_ID
+    };
+  }
+  res.json({ success: true, config });
+});
+
 const PORT = 3000;
 const HOST = '0.0.0.0';
 
 // Body parser middleware for JSON POST requests
 app.use(express.json());
 
+app.post('/api/db-query', async (req, res) => {
+  if (!firestoreDb) return res.json({ data: null, error: 'Database not initialized.' });
+  const { action, table, filters = [], data } = req.body;
+  try {
+    const colRef = collection(firestoreDb, table);
+    if (action === 'select') {
+      let q = colRef;
+      let orMatches = null;
+      for (const f of filters) {
+        if (f.type === 'eq') q = query(q, where(f.col, '==', f.val));
+        if (f.type === 'gte') q = query(q, where(f.col, '>=', f.val));
+        if (f.type === 'or') {
+          if (f.cond.includes('email.eq') && f.cond.includes('username.eq')) {
+            let id = f.cond.split('email.eq.')[1].split(',')[0];
+            orMatches = id;
+          }
+        }
+      }
+      const snap = await getDocs(q);
+      let results = [];
+      snap.forEach(d => results.push({ id: d.id, ...d.data() }));
+      if (orMatches) {
+        // Fallback for custom 'or' logic from frontend mockup
+        const allSnap = await getDocs(colRef);
+        results = [];
+        allSnap.forEach(d => {
+          const docData = { id: d.id, ...d.data() };
+          if (docData.email === orMatches || docData.username === orMatches) results.push(docData);
+        });
+      }
+      res.json({ data: results, error: null });
+    } else if (action === 'insert') {
+      const inserted = [];
+      for (const item of data) {
+        const docRef = await addDoc(colRef, item);
+        inserted.push({ id: docRef.id, ...item });
+      }
+      res.json({ data: inserted, error: null });
+    } else if (action === 'update') {
+      let q = colRef;
+      for (const f of filters) {
+        if (f.type === 'eq') q = query(q, where(f.col, '==', f.val));
+      }
+      const snap = await getDocs(q);
+      const promises = [];
+      snap.forEach(d => promises.push(updateDoc(doc(firestoreDb, table, d.id), data)));
+      await Promise.all(promises);
+      res.json({ data: null, error: null });
+    } else if (action === 'delete') {
+      let q = colRef;
+      for (const f of filters) {
+        if (f.type === 'eq') q = query(q, where(f.col, '==', f.val));
+        if (f.type === 'in') q = query(q, where(f.col, 'in', f.vals));
+      }
+      const snap = await getDocs(q);
+      const promises = [];
+      snap.forEach(d => promises.push(deleteDoc(doc(firestoreDb, table, d.id))));
+      await Promise.all(promises);
+      res.json({ data: null, error: null });
+    } else {
+      res.json({ data: null, error: 'Unknown action' });
+    }
+  } catch (err) {
+    console.error('db-query error:', err);
+    res.json({ data: null, error: err.message });
+  }
+});
 
 const db = firestoreDb;
 
@@ -90,7 +176,6 @@ const transporter = nodemailer.createTransport({
 // Helper to generate stylish LoveWeb Email HTML (for OTPs and Notifications)
 function generateLoveWebEmailHtml({ title, badge, message, otp, note }) {
   const displayTitle = title || 'অ্যাকাউন্ট ভেরিফিকেশন কোড';
-  const displayBadge = badge || '💖 LOVEWEB';
   const displayMessage = message || 'আপনার অ্যাকাউন্টের নিরাপত্তা নিশ্চিত করতে নিচের ভেরিফিকেশন কোডটি ব্যবহার করুন।';
   const displayNote = note || '🔒 <strong>সতর্কতা:</strong> এই ভেরিফিকেশন কোডটি অত্যন্ত গোপনীয়। এটি কারো সাথে শেয়ার করবেন না। আপনি যদি এই অনুরোধটি না করে থাকেন, তবে নিশ্চিন্তে এই ইমেইলটি উপেক্ষা করুন।';
 
@@ -98,12 +183,12 @@ function generateLoveWebEmailHtml({ title, badge, message, otp, note }) {
     <!-- OTP Code Display -->
     <tr>
       <td style="padding: 15px 30px; text-align: center;">
-        <div style="background: rgba(5, 217, 232, 0.05); border: 2px dashed #05d9e8; border-radius: 14px; padding: 20px 15px; margin: 8px 0;">
-          <span style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 12px; color: #05d9e8; text-shadow: 0 0 12px rgba(5, 217, 232, 0.4); display: inline-block; padding-left: 12px;">
+        <div style="background: rgba(255, 42, 109, 0.08); border: 2px dashed #ff2a6d; border-radius: 12px; padding: 20px 15px; margin: 8px 0;">
+          <span style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 12px; color: #ff2a6d; text-shadow: 0 0 8px rgba(255, 42, 109, 0.3); display: inline-block; padding-left: 12px;">
             ${otp}
           </span>
         </div>
-        <div style="display: inline-block; margin-top: 8px; color: #ffaa00; font-size: 13px; font-weight: 600;">
+        <div style="display: inline-block; margin-top: 8px; color: #575e70; font-size: 13px; font-weight: 600;">
           ⏱️ এই কোডটির মেয়াদ থাকবে পরবর্তী <strong>১০ মিনিট</strong>
         </div>
       </td>
@@ -118,26 +203,24 @@ function generateLoveWebEmailHtml({ title, badge, message, otp, note }) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${displayTitle}</title>
   </head>
-  <body style="margin: 0; padding: 0; background-color: #0b0c10; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0b0c10; padding: 35px 12px;">
+  <body style="margin: 0; padding: 0; background-color: #fff5f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fff5f8; padding: 40px 15px;">
       <tr>
         <td align="center">
           <!-- Main Card Container -->
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; background: #161824; border: 1px solid rgba(255, 42, 109, 0.3); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6);">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 500px; background: #ffffff; border: 1px solid rgba(255, 42, 109, 0.15); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(255, 42, 109, 0.08);">
             
             <!-- Top Gradient Bar -->
             <tr>
-              <td style="background: linear-gradient(135deg, #ff2a6d 0%, #05d9e8 100%); height: 5px;"></td>
+              <td style="background: linear-gradient(135deg, #ff2a6d 0%, #ff758c 100%); height: 6px;"></td>
             </tr>
 
             <!-- Header & Branding -->
             <tr>
-              <td style="padding: 32px 30px 10px 30px; text-align: center;">
-                <div style="display: inline-block; padding: 8px 18px; background: rgba(255, 42, 109, 0.12); border-radius: 50px; border: 1px solid rgba(255, 42, 109, 0.3); margin-bottom: 14px;">
-                  <span style="font-size: 15px; font-weight: 800; letter-spacing: 1.2px; color: #ff2a6d;">${displayBadge}</span>
-                </div>
-                <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 8px 0 8px 0;">${displayTitle}</h1>
-                <p style="color: #a0a5b8; font-size: 14px; margin: 0; line-height: 1.6;">${displayMessage}</p>
+              <td style="padding: 35px 30px 15px 30px; text-align: center;">
+                <img src="https://loveweb.vercel.app/img/logo.png" alt="LoveWeb BD" style="max-width: 180px; height: auto; margin-bottom: 20px;">
+                <h1 style="color: #181d28; font-size: 24px; font-weight: 700; margin: 0 0 10px 0;">${displayTitle}</h1>
+                <p style="color: #575e70; font-size: 15px; margin: 0; line-height: 1.6;">${displayMessage}</p>
               </td>
             </tr>
 

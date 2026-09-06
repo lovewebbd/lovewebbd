@@ -496,7 +496,7 @@ p.desc {
         max-height: none !important;
         overflow: visible !important;
         width: 100% !important;
-        margin: 10px 0 20px 0 !important;
+        margin: auto !important;
         border-radius: 20px;
     }
 

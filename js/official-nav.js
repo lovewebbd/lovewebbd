@@ -32,10 +32,14 @@
     if (document.getElementById('officialTopBar')) return;
 
     const user = getSessionUser();
+    const isUserLoggedIn = !!user;
+
+    // লগইন করা না থাকলে টপ বার দেখাবে না
+    if (!isUserLoggedIn) return;
+
     const userName = user ? (user.name || user.full_name || 'ইউজার') : 'অতিথি ইউজার';
     const userInitial = userName.trim().charAt(0).toUpperCase();
     const userEmail = user ? (user.email || user.phone || 'লাভওয়েব সদস্য') : 'অ্যাকাউন্টে সাইন-ইন করুন';
-    const isUserLoggedIn = !!user;
 
     // মেম্বারশিপ লেভেল নির্ধারণ (ব্যয়কৃত টাকার ওপর ভিত্তি করে)
     let membershipBadgeText = 'অতিথি ভিজিটর';

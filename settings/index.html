@@ -643,62 +643,57 @@
   <!-- Supabase & Logic -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Supabase Mock (Replaced for AI Studio compatibility)
+    // Firebase-backed Supabase Mock API
     const _supabase = (() => {
-        const getDB = (table) => JSON.parse(localStorage.getItem('mock_db_' + table) || '[]');
-        const saveDB = (table, data) => localStorage.setItem('mock_db_' + table, JSON.stringify(data));
+        async function runQuery(payload) {
+            try {
+                const res = await fetch('/api/db-query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                return await res.json();
+            } catch (err) {
+                return { data: null, error: err.message };
+            }
+        }
+
         return {
             functions: { invoke: async () => ({ error: null, data: {} }) },
             from: (table) => ({
                 select: () => {
-                    let data = getDB(table);
+                    const query = { action: 'select', table, filters: [], single: false };
                     const builder = {
-                        eq: (col, val) => { data = data.filter(r => r[col] === val); return builder; },
-                        gte: (col, val) => { data = data.filter(r => r[col] >= val); return builder; },
-                        or: (cond) => {
-                            if (cond.includes('email.eq') && cond.includes('username.eq')) {
-                                let id = cond.split('email.eq.')[1].split(',')[0];
-                                data = data.filter(r => r.email === id || r.username === id);
-                            }
-                            return builder;
-                        },
-                        single: () => Promise.resolve({ data: data[0] || null, error: null }),
-                        then: (res) => res({ data, error: null })
+                        eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return builder; },
+                        gte: (col, val) => { query.filters.push({ type: 'gte', col, val }); return builder; },
+                        or: (cond) => { query.filters.push({ type: 'or', cond }); return builder; },
+                        single: () => { query.single = true; return builder; },
+                        then: (res) => runQuery(query).then(r => {
+                            if (query.single) return res({ data: (r.data && r.data[0]) || null, error: r.error });
+                            return res(r);
+                        })
                     };
                     return builder;
                 },
                 insert: (arr) => {
-                    let db = getDB(table);
-                    db.push(...arr);
-                    saveDB(table, db);
+                    const query = { action: 'insert', table, data: arr };
                     const builder = {
-                        select: () => Promise.resolve({ data: arr, error: null }),
-                        then: (res) => res({ data: arr, error: null })
+                        select: () => builder,
+                        then: (res) => runQuery(query).then(res)
                     };
                     return builder;
                 },
                 update: (obj) => ({
                     eq: (col, val) => {
-                        let db = getDB(table);
-                        db = db.map(r => r[col] === val ? { ...r, ...obj } : r);
-                        saveDB(table, db);
-                        return Promise.resolve({ data: null, error: null });
+                        const query = { action: 'update', table, data: obj, filters: [{ type: 'eq', col, val }] };
+                        return { then: (res) => runQuery(query).then(res) };
                     }
                 }),
                 delete: () => {
+                    const query = { action: 'delete', table, filters: [] };
                     const builder = {
-                        eq: (col, val) => {
-                            let db = getDB(table);
-                            db = db.filter(r => r[col] !== val);
-                            saveDB(table, db);
-                            return Promise.resolve({ data: null, error: null });
-                        },
-                        in: (col, vals) => {
-                            let db = getDB(table);
-                            db = db.filter(r => !vals.includes(r[col]));
-                            saveDB(table, db);
-                            return Promise.resolve({ data: null, error: null });
-                        }
+                        eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return { then: (res) => runQuery(query).then(res) }; },
+                        in: (col, vals) => { query.filters.push({ type: 'in', col, vals }); return { then: (res) => runQuery(query).then(res) }; }
                     };
                     return builder;
                 }

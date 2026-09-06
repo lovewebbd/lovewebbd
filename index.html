@@ -306,7 +306,18 @@
     function showLoggedOutState() {
       const appRoot = document.getElementById('appRoot');
       if (!appRoot) return;
+      
+      const currentTheme = (typeof window.getLoveWebTheme === 'function') ? window.getLoveWebTheme() : (localStorage.getItem('loveweb_theme') || 'dark');
+      const themeText = currentTheme === 'light' ? 'ডার্ক মোড' : 'লাইট মোড';
+      const themeIcon = currentTheme === 'light' ? 'fa-moon' : 'fa-sun';
+      
       appRoot.innerHTML = `
+        <div class="auth-theme-corner-toggle" style="position: fixed; top: 16px; right: 18px; z-index: 999;">
+            <button type="button" class="top-bar-action-btn theme-toggle-btn" onclick="window.toggleLoveWebTheme(); setTimeout(() => location.reload(), 100)" title="থিম পরিবর্তন করুন">
+                <i class="fa-solid ${themeIcon}"></i>
+                <span class="theme-text" style="display:none;">${themeText}</span>
+            </button>
+        </div>
         <div class="auth-card landing-card" style="margin-top: 20px;">
           <img src="img/logo.png" alt="LoveWeb Logo" class="watermark-bg" onerror="this.style.display='none'">
           <div class="brand-logo" style="margin-bottom: 12px;">
