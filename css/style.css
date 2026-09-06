@@ -166,6 +166,9 @@ p, p.desc, input, .mobile-toggle {
     overflow-y: auto;
     z-index: 2;
 }
+.form-box form {
+    margin-top: 15px;
+}
 
 .form-box::-webkit-scrollbar {
     width: 4px;
@@ -243,8 +246,35 @@ p, p.desc, input, .mobile-toggle {
     padding: 40px;
     text-align: center;
 }
+/* Force text colors in overlay to be light regardless of theme */
+[data-theme="light"] .overlay-panel h2.title,
+[data-theme="dark"] .overlay-panel h2.title,
+.overlay-panel h2.title {
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    color: #ffffff !important;
+}
 
-/* লোগো সেকশন */
+[data-theme="light"] .overlay-panel p.desc,
+[data-theme="dark"] .overlay-panel p.desc,
+.overlay-panel p.desc {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .overlay-panel .btn-ghost,
+[data-theme="dark"] .overlay-panel .btn-ghost,
+.overlay-panel .btn-ghost {
+    background: transparent !important;
+    border: 2px solid #fff !important;
+    color: #fff !important;
+}
+
+[data-theme="light"] .overlay-panel .btn-ghost:hover,
+[data-theme="dark"] .overlay-panel .btn-ghost:hover,
+.overlay-panel .btn-ghost:hover {
+    background: #fff !important;
+    color: var(--primary-pink) !important;
+}
 .brand-logo {
     display: flex;
     justify-content: center;
@@ -291,7 +321,7 @@ p, p.desc, input, .mobile-toggle {
 
 h2.title {
     font-size: 1.8rem;
-    margin-bottom: 4px;
+    margin-bottom: 10px;
     text-align: center;
     background: linear-gradient(45deg, #ffffff, var(--primary-pink));
     -webkit-background-clip: text;
@@ -496,7 +526,7 @@ p.desc {
         max-height: none !important;
         overflow: visible !important;
         width: 100% !important;
-        margin: auto !important;
+        margin: 60px auto 40px auto !important;
         border-radius: 20px;
     }
 
@@ -515,7 +545,7 @@ p.desc {
         width: 100%;
         position: relative;
         left: 0 !important;
-        padding: 20px 16px 25px 16px;
+        padding: 35px 16px 30px 16px;
         overflow-y: visible !important;
         height: auto !important;
     }
@@ -700,7 +730,7 @@ p.desc {
         min-height: 490px !important;
         padding: 36px 20px !important;
         border-radius: 20px !important;
-        margin: auto !important;
+        margin: 60px auto 40px auto !important;
     }
 
     .reset-form-box {
