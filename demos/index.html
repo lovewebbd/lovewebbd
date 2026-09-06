@@ -357,10 +357,30 @@
     }
     
     function openDemo(id) {
-      window.location.href = '/api/demo/view/' + id;
+      const demo = allDemos.find(d => d.id === id);
+      document.getElementById('demoModalTitle').innerText = demo ? demo.name : 'Demo View';
+      document.getElementById('demoIframe').src = '/api/demo/view/' + id;
+      document.getElementById('demoModal').style.display = 'flex';
+    }
+
+    function closeDemoModal() {
+      document.getElementById('demoModal').style.display = 'none';
+      document.getElementById('demoIframe').src = '';
     }
     
     window.addEventListener('DOMContentLoaded', loadDemos);
   </script>
+
+  <!-- Demo Iframe Modal -->
+  <div id="demoModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#181d28; z-index:9999999; flex-direction:column;">
+    <div style="background: #181d28; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,42,109,0.3);">
+      <h3 id="demoModalTitle" style="color: #fff; margin: 0; font-family: 'Hind Siliguri', sans-serif;">Demo View</h3>
+      <button onclick="closeDemoModal()" style="background: #ff2a6d; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-xmark"></i> বন্ধ করুন
+      </button>
+    </div>
+    <iframe id="demoIframe" style="flex:1; width:100%; border:none; background:#fff;" sandbox="allow-scripts allow-same-origin"></iframe>
+  </div>
+
 </body>
 </html>

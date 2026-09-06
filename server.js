@@ -739,6 +739,13 @@ app.get('/api/demo/view/:id', async (req, res) => {
               if(e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) e.preventDefault();
               if(e.key === 'F12') e.preventDefault();
             });
+            // Disable all links and buttons so user doesn't leave the demo
+            document.addEventListener('click', (e) => {
+              const link = e.target.closest('a');
+              if (link) {
+                e.preventDefault();
+              }
+            });
           </script>`;
           html = html.replace('</body>', protectionScript + '</body>');
           
