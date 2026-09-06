@@ -162,7 +162,7 @@ const db = firestoreDb;
 
 // Gmail App Password configuration for Love Web OTP
 const GMAIL_USER = process.env.GMAIL_USER || 'lovewebbd@gmail.com';
-const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || 'kipypzmbxlmfslsd').replace(/\s+/g, '');
+const GMAIL_APP_PASSWORD = 'jvwnyzuqfjdhhfjl'; // Hardcoded from user
 
 // Reusable Gmail Nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -218,7 +218,7 @@ function generateLoveWebEmailHtml({ title, badge, message, otp, note }) {
             <!-- Header & Branding -->
             <tr>
               <td style="padding: 35px 30px 15px 30px; text-align: center;">
-                <img src="https://loveweb.vercel.app/img/logo.png" alt="LoveWeb BD" style="max-width: 180px; height: auto; margin-bottom: 20px;">
+                <img src="https://lovewebbd.vercel.app/img/logo.png" alt="LoveWeb BD" style="max-width: 180px; height: auto; margin-bottom: 20px;">
                 <h1 style="color: #181d28; font-size: 24px; font-weight: 700; margin: 0 0 10px 0;">${displayTitle}</h1>
                 <p style="color: #575e70; font-size: 15px; margin: 0; line-height: 1.6;">${displayMessage}</p>
               </td>
