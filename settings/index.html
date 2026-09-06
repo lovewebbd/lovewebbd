@@ -643,10 +643,68 @@
   <!-- Supabase & Logic -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Supabase Credentials
-    const SUPABASE_URL = "https://xotiwgyalsnqpzbvodmd.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdGl3Z3lhbHNucXB6YnZvZG1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNTY2NDMsImV4cCI6MjEwMzkzMjY0M30.RoSQVbj0ZSPKlLEnD8MP5ECjDUUg0yNkJF2B6QHc-x8";
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Supabase Mock (Replaced for AI Studio compatibility)
+    const _supabase = (() => {
+        const getDB = (table) => JSON.parse(localStorage.getItem('mock_db_' + table) || '[]');
+        const saveDB = (table, data) => localStorage.setItem('mock_db_' + table, JSON.stringify(data));
+        return {
+            functions: { invoke: async () => ({ error: null, data: {} }) },
+            from: (table) => ({
+                select: () => {
+                    let data = getDB(table);
+                    const builder = {
+                        eq: (col, val) => { data = data.filter(r => r[col] === val); return builder; },
+                        gte: (col, val) => { data = data.filter(r => r[col] >= val); return builder; },
+                        or: (cond) => {
+                            if (cond.includes('email.eq') && cond.includes('username.eq')) {
+                                let id = cond.split('email.eq.')[1].split(',')[0];
+                                data = data.filter(r => r.email === id || r.username === id);
+                            }
+                            return builder;
+                        },
+                        single: () => Promise.resolve({ data: data[0] || null, error: null }),
+                        then: (res) => res({ data, error: null })
+                    };
+                    return builder;
+                },
+                insert: (arr) => {
+                    let db = getDB(table);
+                    db.push(...arr);
+                    saveDB(table, db);
+                    const builder = {
+                        select: () => Promise.resolve({ data: arr, error: null }),
+                        then: (res) => res({ data: arr, error: null })
+                    };
+                    return builder;
+                },
+                update: (obj) => ({
+                    eq: (col, val) => {
+                        let db = getDB(table);
+                        db = db.map(r => r[col] === val ? { ...r, ...obj } : r);
+                        saveDB(table, db);
+                        return Promise.resolve({ data: null, error: null });
+                    }
+                }),
+                delete: () => {
+                    const builder = {
+                        eq: (col, val) => {
+                            let db = getDB(table);
+                            db = db.filter(r => r[col] !== val);
+                            saveDB(table, db);
+                            return Promise.resolve({ data: null, error: null });
+                        },
+                        in: (col, vals) => {
+                            let db = getDB(table);
+                            db = db.filter(r => !vals.includes(r[col]));
+                            saveDB(table, db);
+                            return Promise.resolve({ data: null, error: null });
+                        }
+                    };
+                    return builder;
+                }
+            })
+        };
+    })();
 
     // Google Apps Script Web App URL (Gmail দিয়ে সরাসরি ওটিপি পাঠানোর জন্য)
     const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";

@@ -124,6 +124,36 @@
         "headColor": "#FF2A6D",
         "order": 3
       }
+    },
+    "demos": {
+      "list": [
+        {
+          "id": "demo_1788705437128",
+          "name": "google",
+          "url": "https://for-my-lovenuray.netlify.app",
+          "category": "Birthday"
+        }
+      ]
+    },
+    "membership": {
+      "tiers": [
+        {
+          "name": "এলিট মেম্বার",
+          "threshold": 1000,
+          "discount": 4,
+          "icon": "fa-solid fa-gem",
+          "bgColor": "#c084fc",
+          "nameEn": "elite"
+        },
+        {
+          "name": "প্রিমিয়াম মেম্বার",
+          "threshold": 2000,
+          "discount": 8,
+          "icon": "fa-solid fa-crown",
+          "bgColor": "#fbbf24",
+          "nameEn": "premium "
+        }
+      ]
     }
   },
   "coupons": {

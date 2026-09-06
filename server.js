@@ -7,12 +7,30 @@ import { WebSocketServer } from 'ws';
 import http from 'http';
 import fs from 'fs';
 import multer from 'multer';
-
-
-
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, doc, addDoc, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, getDocs } from 'firebase/firestore';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Initialize Firebase Client SDK
+let firestoreDb;
+try {
+  if (fs.existsSync(path.join(__dirname, 'firebase-applet-config.json'))) {
+    const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf8'));
+    const app = initializeApp(config);
+    firestoreDb = getFirestore(app, config.firestoreDatabaseId);
+  }
+} catch (e) {
+  console.error("Firebase init error:", e);
+}
+
+
+
+
+
+
+
 
 
 const ai = new GoogleGenAI({
@@ -32,94 +50,8 @@ const HOST = '0.0.0.0';
 app.use(express.json());
 
 
-// Mock Firebase Firestore using local JSON
-const DB_FILE = path.join(__dirname, 'database.json');
-function getDB() {
-  if (!fs.existsSync(DB_FILE)) return { orders: {}, settings: {}, coupons: {} };
-  return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-}
-function saveDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
+const db = firestoreDb;
 
-let db = true; // Bypass !db checks
-
-function collection(db, name) { return name; }
-function doc(db, collName, docId) { return { collName, docId }; }
-async function addDoc(collName, data) {
-  const d = getDB();
-  if (!d[collName]) d[collName] = {};
-  const id = Date.now().toString();
-  d[collName][id] = data;
-  saveDB(d);
-  return { id };
-}
-async function getDoc(docRef) {
-  const d = getDB();
-  const coll = d[docRef.collName] || {};
-  const data = coll[docRef.docId];
-  return { exists: () => !!data, data: () => data, id: docRef.docId };
-}
-async function setDoc(docRef, data, options) {
-  const d = getDB();
-  if (!d[docRef.collName]) d[docRef.collName] = {};
-  if (options && options.merge) {
-    d[docRef.collName][docRef.docId] = { ...d[docRef.collName][docRef.docId], ...data };
-  } else {
-    d[docRef.collName][docRef.docId] = data;
-  }
-  saveDB(d);
-}
-async function updateDoc(docRef, data) {
-  await setDoc(docRef, data, { merge: true });
-}
-async function deleteDoc(docRef) {
-  const d = getDB();
-  if (d[docRef.collName] && d[docRef.collName][docRef.docId]) {
-    delete d[docRef.collName][docRef.docId];
-    saveDB(d);
-  }
-}
-function query(collName, ...args) {
-  return { collName, args };
-}
-function where(field, op, value) {
-  return { type: 'where', field, op, value };
-}
-function orderBy(field, dir) {
-  return { type: 'orderBy', field, dir };
-}
-async function getDocs(q) {
-  const d = getDB();
-  let collName = typeof q === 'string' ? q : q.collName;
-  let items = Object.entries(d[collName] || {}).map(([id, data]) => ({ id, ...data }));
-  
-  if (typeof q !== 'string' && q.args) {
-    for (const arg of q.args) {
-      if (arg.type === 'where') {
-        items = items.filter(i => {
-           if (arg.op === '==') return i[arg.field] === arg.value;
-           return true;
-        });
-      }
-      if (arg.type === 'orderBy') {
-        items.sort((a, b) => {
-          if (a[arg.field] < b[arg.field]) return arg.dir === 'desc' ? 1 : -1;
-          if (a[arg.field] > b[arg.field]) return arg.dir === 'desc' ? -1 : 1;
-          return 0;
-        });
-      }
-    }
-  }
-  
-  return {
-    forEach: (cb) => {
-      items.forEach(i => cb({ id: i.id, data: () => i, exists: true }));
-    },
-    empty: items.length === 0,
-    docs: items.map(i => ({ id: i.id, data: () => i }))
-  };
-}
 
 
 
@@ -541,7 +473,7 @@ app.post('/api/place-order', async (req, res) => {
     res.json({ success: true, orderId, message: 'Order placed successfully!' });
   } catch (error) {
     console.error('Error placing order:', error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -569,16 +501,17 @@ app.get('/api/orders/:username', async (req, res) => {
   if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { username } = req.params;
-    const q = query(collection(db, 'orders'), where('username', '==', username), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'orders'), where('username', '==', username));
     const snapshot = await getDocs(q);
     const orders = [];
     snapshot.forEach((doc) => {
       orders.push({ id: doc.id, ...doc.data() });
     });
+    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json({ success: true, orders });
   } catch (error) {
     console.error('Error fetching orders:', error);
-    res.status(500).json({ success: false, message: 'Internal server error.' });
+    res.status(500).json({ success: false, message: '' + error.message + '' });
   }
 });
 
@@ -716,7 +649,7 @@ app.get('/api/demo/view/:id', async (req, res) => {
     }
     res.status(404).send('Demo not found.');
   } catch (e) {
-    res.status(500).send('Server Error.');
+    res.status(500).send('Server Error: ' + e.message + '\n' + e.stack);
   }
 });
 
