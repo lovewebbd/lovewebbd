@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/index.html";</script>
   <title>প্রোফাইল - LoveWeb</title>
   <meta name="description" content="LoveWeb প্রোফাইল ব্যবস্থাপনা">
 
@@ -349,9 +350,15 @@
 
           // অর্ডার হিস্ট্রি ও মোট ব্যয় ক্যালকুলেশন (Database থেকে)
           const usernameForQuery = user.username || user.phone;
-          fetch('/api/orders/' + usernameForQuery)
-            .then(res => res.json())
-            .then(data => {
+          Promise.all([
+            fetch('/api/orders/' + usernameForQuery).then(r => r.json()),
+            fetch('/api/membership').then(r => r.json())
+          ])
+            .then(([data, tierData]) => {
+              let tiers = [];
+              if (tierData && tierData.success && tierData.tiers) {
+                 tiers = tierData.tiers.sort((a,b) => b.threshold - a.threshold);
+              }
               if (data.success && Array.isArray(data.orders)) {
                 // Filter only completed / delivered orders for total spent and count
                 const deliveredOrders = data.orders.filter(o => 
@@ -376,55 +383,78 @@
                 const tierValEl = document.getElementById('valMembershipTier');
                 const discountValEl = document.getElementById('valMembershipDiscount');
                 const tierTipEl = document.getElementById('tierTipBox');
-
                 const avatarWrap = document.querySelector('.profile-avatar-wrap');
-                if (totalSpent >= 2000) {
+
+                let matchedTier = null;
+                let nextTier = null;
+                // Sort ascending by threshold for easier interval checking
+                const ascTiers = [...tiers].sort((a,b) => a.threshold - b.threshold);
+                for (let i = 0; i < ascTiers.length; i++) {
+                   const t = ascTiers[i];
+                   const maxT = t.maxThreshold;
+                   if (totalSpent >= t.threshold && (!maxT || totalSpent <= maxT)) {
+                      matchedTier = t;
+                      if (i < ascTiers.length - 1) nextTier = ascTiers[i+1];
+                      break;
+                   }
+                }
+                
+                if (!matchedTier && ascTiers.length > 0) {
+                   // Fallback if none matched but there are tiers
+                   if (totalSpent < ascTiers[0].threshold) {
+                       nextTier = ascTiers[0];
+                   } else {
+                       matchedTier = ascTiers[ascTiers.length - 1]; // highest
+                   }
+                }
+
+                if (matchedTier) {
                   if(avatarWrap) {
                     avatarWrap.classList.add('premium-frame');
+                    // Completely redesigned avatar frame injection to prevent overlapping (like Admin Panel)
                     if (!avatarWrap.querySelector('.premium-crown')) {
-                      avatarWrap.insertAdjacentHTML('beforeend', '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>');
+                      // We inject a clean wrapper for the crown to match the admin preview
+                      avatarWrap.insertAdjacentHTML('beforeend', `
+                        <div class="premium-crown" style="color: ${matchedTier.bgColor} !important; filter: drop-shadow(0 2px 4px ${matchedTier.bgColor}66) !important;">
+                            <i class="${matchedTier.icon}"></i>
+                        </div>
+                        <div class="premium-tag" style="background: ${matchedTier.bgColor} !important; color: #fff !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;">
+                            ${(matchedTier.nameEn || matchedTier.name || '').toUpperCase()}
+                        </div>
+                      `);
+                      
+                      // Inject inline style for the dynamic spinning gradient colors
+                      avatarWrap.style.setProperty('--prem-border-1', matchedTier.bgColor);
+                      avatarWrap.style.setProperty('--prem-border-2', '#ffffff');
+                      avatarWrap.style.setProperty('--prem-color-dark', matchedTier.bgColor);
+                      avatarWrap.style.setProperty('--prem-color-primary', matchedTier.bgColor);
+                      avatarWrap.style.setProperty('--prem-color-light', '#ffffff');
                     }
                   }
                   if (badgeEl) {
                     badgeEl.className = 'profile-badge-pill premium';
-                    badgeEl.innerHTML = '<i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার (৮% ছাড়)';
+                    badgeEl.style.color = matchedTier.bgColor;
+                    badgeEl.style.borderColor = matchedTier.bgColor;
+                    badgeEl.style.background = matchedTier.bgColor + '22';
+                    badgeEl.innerHTML = `<i class="${matchedTier.icon}"></i> ${matchedTier.bnName || matchedTier.name} (${toBanglaNum(matchedTier.discount)}% ছাড়)`;
                   }
                   if (tierValEl) {
-                    tierValEl.innerText = 'প্রিমিয়াম মেম্বার (Premium)';
-                    tierValEl.style.color = '#fbbf24';
+                    tierValEl.innerText = `${matchedTier.bnName || matchedTier.name}`;
+                    tierValEl.style.color = matchedTier.bgColor;
                   }
                   if (discountValEl) {
-                    discountValEl.innerText = '৮% স্পেশাল ছাড়';
-                    discountValEl.style.color = '#fbbf24';
+                    discountValEl.innerText = `${toBanglaNum(matchedTier.discount)}% স্পেশাল ছাড়`;
+                    discountValEl.style.color = matchedTier.bgColor;
                   }
                   if (tierTipEl) {
-                    tierTipEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #fbbf24;"></i> <strong>অভিনন্দন!</strong> আপনি আমাদের সর্বোচ্চ <strong>প্রিমিয়াম মেম্বার</strong> হিসেবে প্রতিটি অর্ডারে <strong>৮% ডিসকাউন্ট</strong> ও প্রায়োরিটি সাপোর্ট উপভোগ করছেন।';
-                  }
-                } else if (totalSpent >= 1000) {
-                  if(avatarWrap) {
-                    avatarWrap.classList.add('elite-frame');
-                    if (!avatarWrap.querySelector('.elite-crown')) {
-                      avatarWrap.insertAdjacentHTML('beforeend', '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>');
+                    if (nextTier) {
+                       const remaining = nextTier.threshold - totalSpent;
+                       tierTipEl.innerHTML = `<i class="${matchedTier.icon}" style="color: ${matchedTier.bgColor};"></i> আপনি একজন <strong>${matchedTier.bnName || matchedTier.name}</strong> (${toBanglaNum(matchedTier.discount)}% ছাড় সক্রিয়)! আর মাত্র <strong>৳ ${toBanglaNum(remaining.toFixed(2))}</strong> খরচ করলেই পেয়ে যাবেন <strong>${nextTier.bnName || nextTier.name} (${toBanglaNum(nextTier.discount)}% ছাড়)</strong>।`;
+                    } else {
+                       tierTipEl.innerHTML = `<i class="${matchedTier.icon}" style="color: ${matchedTier.bgColor};"></i> <strong>অভিনন্দন!</strong> আপনি আমাদের সর্বোচ্চ <strong>${matchedTier.bnName || matchedTier.name}</strong> হিসেবে প্রতিটি অর্ডারে <strong>${toBanglaNum(matchedTier.discount)}% ডিসকাউন্ট</strong> ও প্রায়োরিটি সাপোর্ট উপভোগ করছেন।`;
                     }
                   }
-                  const remainingForPremium = 2000 - totalSpent;
-                  if (badgeEl) {
-                    badgeEl.className = 'profile-badge-pill elite';
-                    badgeEl.innerHTML = '<i class="fa-solid fa-gem"></i> এলিট মেম্বার (৪% ছাড়)';
-                  }
-                  if (tierValEl) {
-                    tierValEl.innerText = 'এলিট মেম্বার (Elite)';
-                    tierValEl.style.color = '#c084fc';
-                  }
-                  if (discountValEl) {
-                    discountValEl.innerText = '৪% বিশেষ ছাড়';
-                    discountValEl.style.color = '#c084fc';
-                  }
-                  if (tierTipEl) {
-                    tierTipEl.innerHTML = `<i class="fa-solid fa-gem" style="color: #c084fc;"></i> আপনি একজন <strong>এলিট মেম্বার</strong> (৪% ছাড় সক্রিয়)! আর মাত্র <strong>৳ ${toBanglaNum(remainingForPremium.toFixed(2))}</strong> খরচ করলেই পেয়ে যাবেন <strong>প্রিমিয়াম মেম্বারশিপ (৮% ছাড়)</strong>।`;
-                  }
                 } else {
-                  const remainingForElite = 1000 - totalSpent;
                   if (badgeEl) {
                     badgeEl.className = 'profile-badge-pill normal';
                     badgeEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য';
@@ -434,11 +464,18 @@
                     tierValEl.style.color = 'var(--text-main)';
                   }
                   if (discountValEl) {
-                    discountValEl.innerText = 'প্রযোজ্য নয় (১,০০০+ অর্ডারে ৪% ছাড়)';
+                    if (nextTier) {
+                      discountValEl.innerText = `প্রযোজ্য নয় (৳ ${toBanglaNum(nextTier.threshold)} অর্ডারে ${toBanglaNum(nextTier.discount)}% ছাড়)`;
+                    } else {
+                      discountValEl.innerText = '০% ছাড়';
+                    }
                     discountValEl.style.color = 'var(--text-sub)';
                   }
-                  if (tierTipEl) {
-                    tierTipEl.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-pink);"></i> মোট <strong>৳ ১,০০০</strong> বা তার বেশি অর্ডার করলেই স্বয়ংক্রিয়ভাবে হয়ে যাবেন <strong>এলিট মেম্বার (৪% ডিসকাউন্ট)</strong>! আর মাত্র <strong>৳ ${toBanglaNum(remainingForElite.toFixed(2))}</strong> প্রয়োজন।`;
+                  if (tierTipEl && nextTier) {
+                    const remainingForNext = nextTier.threshold - totalSpent;
+                    tierTipEl.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-pink);"></i> মোট <strong>৳ ${toBanglaNum(nextTier.threshold)}</strong> বা তার বেশি অর্ডার করলেই স্বয়ংক্রিয়ভাবে হয়ে যাবেন <strong>${nextTier.name} (${toBanglaNum(nextTier.discount)}% ডিসকাউন্ট)</strong>! আর মাত্র <strong>৳ ${toBanglaNum(remainingForNext.toFixed(2))}</strong> প্রয়োজন।`;
+                  } else if (tierTipEl) {
+                    tierTipEl.innerHTML = 'অর্ডার করে মেম্বারশিপ টায়ার অর্জন করুন।';
                   }
                 }
               }

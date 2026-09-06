@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoveWeb - ডেমো গ্যালারি</title>
+  
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="../js/theme.js"></script>
+  
+  <style>
+    /* Add Custom Demo CSS */
+    .demo-page-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+      background: var(--bg-main);
+      overflow: hidden;
+    }
+    
+    .demo-header {
+      padding: 15px 20px;
+      background: var(--card-bg);
+      border-bottom: 1px solid rgba(255, 42, 109, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      z-index: 50;
+    }
+    
+    .demo-header h2 {
+      margin: 0;
+      color: var(--text-main);
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .demo-header h2 i {
+      color: var(--primary-pink);
+    }
+    
+    /* We need to design the category list */
+    .categories-container {
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      overflow-y: auto;
+    }
+    
+    .category-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .category-card:hover {
+      border-color: var(--primary-pink);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255,42,109,0.1);
+    }
+    
+    .category-card i {
+      font-size: 2.5rem;
+      color: var(--primary-pink);
+      margin-bottom: 10px;
+    }
+    
+    .category-card h3 {
+      color: var(--text-main);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .demos-list-container {
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+      overflow-y: auto;
+      height: calc(100vh - 70px);
+    }
+    
+    .demos-list-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .back-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: var(--text-main);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    
+    .back-btn:hover {
+      background: var(--primary-pink);
+      color: var(--text-main);
+    }
+
+    .demos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .demo-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .demo-item:hover {
+      border-color: var(--primary-pink);
+      background: rgba(255, 42, 109, 0.05);
+    }
+    
+    .demo-item-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 42, 109, 0.1);
+      color: var(--primary-pink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    
+    .demo-item-details h4 {
+      margin: 0 0 5px 0;
+      color: var(--text-main);
+      font-size: 1rem;
+    }
+
+    .viewer-container {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+      background: var(--bg-main);
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1500;
+    }
+    
+    .viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .viewer-header h3 {
+      color: var(--text-main);
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .device-toggles {
+      display: flex;
+      gap: 10px;
+      background: rgba(255,255,255,0.1);
+      padding: 4px;
+      border-radius: 8px;
+    }
+    
+    .device-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    
+    .device-btn.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-main);
+    }
+    
+    .iframe-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s ease;
+      background: var(--bg-main);
+      overflow: hidden;
+    }
+    
+    .iframe-wrapper.mobile iframe {
+      width: 375px;
+      height: 812px;
+      max-height: 95%;
+      border-radius: 30px;
+      border: 8px solid var(--border-color);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .iframe-wrapper.desktop iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    .watermark {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      pointer-events: none;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-weight: 500;
+    }
+    
+    .watermark i {
+      color: var(--primary-pink);
+    }
+
+    .hamburger-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    #loadingOverlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: var(--text-main);
+      z-index: 200;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="demo-page-container" id="mainContainer">
+
+  <div style="padding-top: 90px; padding-bottom: 10px; text-align: center; width: 100%;">
+    <h1 style="color: var(--text-main); font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-pink);"></i> ডেমো গ্যালারি</h1>
+  </div>
+
+    
+    
+    <!-- Category View -->
+    <div class="categories-container" id="categoriesView">
+      <div class="category-card" onclick="openCategory('Birthday')">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Birthday%20Cake.png" alt="Birthday" width="70" height="70" style="margin-bottom: 5px;">
+        <h3>Birthday Wish</h3>
+      </div>
+      <div class="category-card" onclick="openCategory('Anniversary')">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Ring.png" alt="Anniversary" width="70" height="70" style="margin-bottom: 5px;">
+        <h3>Anniversary</h3>
+      </div>
+      <div class="category-card" onclick="openCategory('Relationship')">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Hearts.png" alt="Relationship" width="70" height="70" style="margin-bottom: 5px;">
+        <h3>Relationship</h3>
+      </div>
+      <div class="category-card" onclick="openCategory('Others')">
+        <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Star.png" alt="Others" width="70" height="70" style="margin-bottom: 5px;">
+        <h3>Others</h3>
+      </div>
+    </div>
+    
+    <!-- Demos List View -->
+    <div class="demos-list-container" id="demosListView">
+      <div class="demos-list-header">
+        <button class="back-btn" onclick="backToCategories()"><i class="fa-solid fa-arrow-left"></i></button>
+        <h2 style="color: var(--text-main); margin: 0;" id="categoryTitle">Category Name</h2>
+      </div>
+      <div class="demos-grid" id="demosGrid">
+        <!-- Demos will be rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Viewer Container -->
+  <div class="viewer-container" id="viewerContainer">
+    <div class="viewer-header">
+      <button class="back-btn" onclick="closeViewer()" style="background: rgba(255,255,255,0.2); color: var(--text-main);"><i class="fa-solid fa-arrow-left"></i></button>
+      <h3 id="viewerTitle">Demo Title</h3>
+      <div class="device-toggles">
+        <button class="device-btn active" id="btnDesktop" onclick="setDevice('desktop')" title="Desktop View"><i class="fa-solid fa-desktop"></i></button>
+        <button class="device-btn" id="btnMobile" onclick="setDevice('mobile')" title="Mobile View"><i class="fa-solid fa-mobile-screen"></i></button>
+      </div>
+    </div>
+    <div class="iframe-wrapper desktop" id="iframeWrapper">
+      <iframe id="demoFrame" src="about:blank" sandbox="allow-scripts allow-same-origin"></iframe>
+      <div class="watermark"><i class="fa-solid fa-heart"></i> LoveWeb Demo</div>
+    </div>
+    <div id="loadingOverlay" style="display: none;">
+      <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-pink); margin-bottom: 10px;"></i>
+      <span>Loading Demo...</span>
+    </div>
+  </div>
+
+  <script src="../js/official-nav.js"></script>
+  
+  <script>
+    let allDemos = [];
+    
+    async function loadDemos() {
+      try {
+        const res = await fetch('/api/demos');
+        const data = await res.json();
+        if (data.success) {
+          allDemos = data.demos || [];
+        }
+      } catch (err) {
+        console.error("Failed to load demos:", err);
+      }
+    }
+    
+    function openCategory(catName) {
+      document.getElementById('categoriesView').style.display = 'none';
+      document.getElementById('demosListView').style.display = 'flex';
+      document.getElementById('categoryTitle').innerText = catName + ' Demos';
+      
+      const grid = document.getElementById('demosGrid');
+      grid.innerHTML = '';
+      
+      // Filter demos based on category if they have it, otherwise just do basic keyword matching or fallback
+      let filtered = allDemos.filter(d => (d.category && d.category === catName));
+      
+      // Fallback: if no category match, try keyword in name
+      if (filtered.length === 0) {
+         filtered = allDemos.filter(d => d.name.toLowerCase().includes(catName.toLowerCase()));
+      }
+      // If still empty and "Others", show everything else
+      if (filtered.length === 0 && catName === 'Others') {
+         filtered = allDemos.filter(d => !d.category || !['Birthday', 'Anniversary', 'Relationship'].includes(d.category));
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No demos found in this category.</p>';
+      } else {
+        filtered.forEach(demo => {
+          let imgSrc = '';
+          if(demo.category === 'Birthday' || catName === 'Birthday') {
+            imgSrc = 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Food/Birthday%20Cake.png';
+          } else if(demo.category === 'Anniversary' || catName === 'Anniversary') {
+            imgSrc = 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Ring.png';
+          } else if(demo.category === 'Relationship' || catName === 'Relationship') {
+            imgSrc = 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Hearts.png';
+          } else {
+            imgSrc = 'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Star.png';
+          }
+
+          grid.innerHTML += `
+            <div class="demo-item" onclick="openDemo('${demo.id}', '${demo.name.replace(/'/g, "\\'")}')" style="display:flex; flex-direction:column; align-items:center; text-align:center; padding: 25px 15px; border-radius: 16px;">
+              <img src="${imgSrc}" width="60" height="60" style="margin-bottom: 15px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));">
+              <div class="demo-item-details">
+                <h4 style="font-size: 1.1rem; margin-bottom: 5px;">${demo.name}</h4>
+                <span style="font-size: 0.85rem; color: var(--text-muted); background: var(--bg-main); padding: 4px 10px; border-radius: 20px;"><i class="fa-solid fa-eye"></i> View Demo</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+    
+    function backToCategories() {
+      document.getElementById('demosListView').style.display = 'none';
+      document.getElementById('categoriesView').style.display = 'grid';
+    }
+    
+    function openDemo(id, title) {
+      document.getElementById('mainContainer').style.display = 'none';
+      document.getElementById('viewerContainer').style.display = 'flex';
+      document.getElementById('viewerTitle').innerText = title;
+      
+      const frame = document.getElementById('demoFrame');
+      const overlay = document.getElementById('loadingOverlay');
+      
+      overlay.style.display = 'flex';
+      frame.src = '/api/demo/view/' + id;
+      
+      frame.onload = () => {
+        overlay.style.display = 'none';
+      };
+    }
+    
+    function closeViewer() {
+      document.getElementById('viewerContainer').style.display = 'none';
+      document.getElementById('mainContainer').style.display = 'flex';
+      document.getElementById('demoFrame').src = 'about:blank';
+    }
+    
+    function setDevice(type) {
+      document.getElementById('btnDesktop').classList.remove('active');
+      document.getElementById('btnMobile').classList.remove('active');
+      
+      const wrapper = document.getElementById('iframeWrapper');
+      wrapper.className = 'iframe-wrapper ' + type;
+      
+      if(type === 'desktop') {
+        document.getElementById('btnDesktop').classList.add('active');
+      } else {
+        document.getElementById('btnMobile').classList.add('active');
+      }
+    }
+
+    // Block shortcuts in the wrapper
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('viewerContainer').style.display === 'flex') {
+        if(e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) e.preventDefault();
+        if(e.key === 'F12') e.preventDefault();
+      }
+    });
+    
+    window.addEventListener('DOMContentLoaded', loadDemos);
+  </script>
+</body>
+</html>

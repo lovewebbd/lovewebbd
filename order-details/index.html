@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/index.html";</script>
   <title>আমার অর্ডারসমূহ | LoveWeb</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -282,14 +283,13 @@
   </style>
 </head>
 <body>
-  
-  <div class="dashboard-menu-header" onclick="window.location.href='/'">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <img src="../img/logo.png" alt="LoveWeb" style="height: 32px;">
-      <span style="font-weight: 700; color: var(--primary-pink); font-size: 1.1rem;">আমার অর্ডারসমূহ</span>
-    </div>
-    <i class="fa-solid fa-arrow-left" style="color: var(--text-main);"></i>
+
+  <div style="padding-top: 90px; text-align: center; margin-bottom: -10px;">
+    <h1 style="color: var(--text-main); font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-pink);"></i> আমার অর্ডারসমূহ</h1>
   </div>
+
+  
+    
 
   <div class="orders-wrapper">
     <!-- Top Actions / Tabs -->
@@ -462,7 +462,10 @@
           const dateStr = new Date(o.createdAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
           const isDelivered = o.status === 'ডেলিভারড' || o.status === 'Delivered';
           const badgeClass = isDelivered ? 'success' : '';
-          const badgeIcon = isDelivered ? 'check-double' : 'spinner fa-spin';
+          let badgeIcon = 'spinner fa-spin';
+          if (isDelivered) badgeIcon = 'check-double';
+          else if (o.status === 'অর্ডার কনফার্ম') badgeIcon = 'check';
+          else if (o.status === 'অর্ডার বাতিল' || o.status === 'বাতিল') badgeIcon = 'xmark';
           const badgeLabel = isDelivered ? 'ডেলিভারড' : o.status;
           
           grid.innerHTML += `
@@ -506,8 +509,14 @@
       document.getElementById('tdAdvanceTime').innerText = new Date(order.createdAt).toLocaleString('bn-BD');
       
       const paymentStatusTd = document.getElementById('tdPaymentStatus');
-      if (order.advancePaymentStatus === 'কনফার্মড' || order.advancePaymentStatus === 'Confirmed') {
+      if (order.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
+        paymentStatusTd.innerHTML = '<i class="fa-solid fa-circle-check"></i> সম্পূর্ণ পরিশোধিত';
+        paymentStatusTd.style.color = '#00d46a';
+      } else if (order.advancePaymentStatus === 'কনফার্মড' || order.advancePaymentStatus === 'Confirmed') {
         paymentStatusTd.innerHTML = '<i class="fa-solid fa-circle-check"></i> সম্পূর্ণ (Complete)';
+        paymentStatusTd.style.color = '#00d46a';
+      } else if (order.advancePaymentStatus === 'ভেরিফাইড') {
+        paymentStatusTd.innerHTML = '<i class="fa-solid fa-circle-check"></i> ভেরিফাইড (Verified)';
         paymentStatusTd.style.color = '#00d46a';
       } else if (order.advancePaymentStatus === 'বাতিল' || order.advancePaymentStatus === 'Rejected') {
         paymentStatusTd.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> পেমেন্ট বাতিল (Rejected)';
@@ -548,6 +557,29 @@
           feedbackMsg.style.color = order.feedback ? '#00d46a' : '';
         }
       } else {
+        if (order.status === 'অর্ডার কনফার্ম') {
+          badge.innerHTML = '<i class="fa-solid fa-check"></i> ' + order.status;
+          badge.style.background = 'rgba(0, 212, 106, 0.15)';
+          badge.style.color = '#00d46a';
+        } else if (order.status === 'অর্ডার বাতিল' || order.status === 'বাতিল') {
+          badge.innerHTML = '<i class="fa-solid fa-xmark"></i> ' + order.status;
+          badge.style.background = 'rgba(255, 77, 77, 0.15)';
+          badge.style.color = '#ff4d4d';
+        } else {
+          badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + order.status;
+          badge.style.background = '';
+          badge.style.color = '';
+        }
+        badge.classList.remove('success');
+        
+        if (order.status === 'অর্ডার কনফার্ম' || order.advancePaymentStatus === 'ভেরিফাইড' || order.advancePaymentStatus === 'কনফার্মড' || order.advancePaymentStatus === 'Confirmed') {
+           document.getElementById('tdConfirmation').innerHTML = '<i class="fa-solid fa-circle-check"></i> কনফার্ম হয়েছে';
+           document.getElementById('tdConfirmation').style.color = '#00d46a';
+        } else {
+           document.getElementById('tdConfirmation').innerHTML = '<i class="fa-solid fa-clock"></i> পেন্ডিং';
+           document.getElementById('tdConfirmation').style.color = 'var(--text-sub)';
+        }
+
         badge.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + order.status;
         badge.classList.remove('success');
         document.getElementById('tdConfirmation').innerHTML = '<i class="fa-solid fa-clock"></i> পেন্ডিং';
@@ -662,5 +694,7 @@
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>
+  <!-- Official Navigation & Theme Controller -->
+  <script src="../js/official-nav.js"></script>
 </body>
 </html>

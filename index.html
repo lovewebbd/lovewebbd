@@ -96,7 +96,7 @@
     }
 
     // সেশন চেক ও রেন্ডারিং
-    function renderAuthState() {
+    async function renderAuthState() {
       const appRoot = document.getElementById('appRoot');
       if (!appRoot) return;
 
@@ -107,30 +107,65 @@
           const userName = user.full_name || user.username || 'ইউজার';
           const userInitial = userName.charAt(0).toUpperCase();
 
-          // Calculate spending for dashboard avatar
-          let orders = [];
-          try {
-            const rawOrders = localStorage.getItem('loveweb_orders_' + (user.username || '')) || localStorage.getItem('loveweb_orders');
-            if (rawOrders) orders = JSON.parse(rawOrders);
-          } catch (e) {}
-
+          // Fetch real membership and total spent
           let totalSpent = 0;
-          if (Array.isArray(orders)) {
-            totalSpent = orders.reduce((sum, item) => sum + (Number(item.price || item.amount) || 0), 0);
+          let matchedTier = null;
+          
+          try {
+              const usernameForQuery = user.username || user.phone;
+              const [ordersRes, tiersRes] = await Promise.all([
+                 fetch('/api/orders/' + encodeURIComponent(usernameForQuery)),
+                 fetch('/api/membership')
+              ]);
+              
+              const ordersData = await ordersRes.json();
+              const tiersData = await tiersRes.json();
+              
+              if(ordersData.success && ordersData.orders) {
+                 ordersData.orders.forEach(o => {
+                    if (o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
+                       totalSpent += (Number(o.totalPrice) || 0);
+                    }
+                 });
+              }
+              
+              if(tiersData.success && tiersData.tiers) {
+                 const ascTiers = [...tiersData.tiers].sort((a,b) => a.threshold - b.threshold);
+                 for (let i = 0; i < ascTiers.length; i++) {
+                    const t = ascTiers[i];
+                    if (totalSpent >= t.threshold && (!t.maxThreshold || totalSpent <= t.maxThreshold)) {
+                       matchedTier = t;
+                       break;
+                    }
+                 }
+                 if (!matchedTier && ascTiers.length > 0) {
+                    if (totalSpent >= ascTiers[ascTiers.length - 1].threshold) {
+                       matchedTier = ascTiers[ascTiers.length - 1];
+                    }
+                 }
+              }
+          } catch(e) {
+             console.error('Error fetching membership info', e);
           }
 
           let avatarFrameClass = '';
           let crownBadge = '';
           let dashMemberChip = '<span class="dash-member-chip"><i class="fa-solid fa-circle-check"></i> সাধারণ সদস্য</span>';
 
-          if (totalSpent >= 2000) {
-            avatarFrameClass = 'premium-frame';
-            crownBadge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
-            dashMemberChip = '<span class="dash-member-chip premium" style="color: #fbbf24; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার</span>';
-          } else if (totalSpent >= 1000) {
-            avatarFrameClass = 'elite-frame';
-            crownBadge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
-            dashMemberChip = '<span class="dash-member-chip elite" style="color: #c084fc; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4);"><i class="fa-solid fa-gem"></i> এলিট মেম্বার</span>';
+          if (matchedTier) {
+            crownBadge = `
+                <div class="premium-crown" style="color: ${matchedTier.bgColor} !important; filter: drop-shadow(0 2px 4px ${matchedTier.bgColor}66) !important;">
+                    <i class="${matchedTier.icon}"></i>
+                </div>
+                <div class="premium-tag" style="background: ${matchedTier.bgColor} !important; color: #fff !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;">
+                    ${(matchedTier.nameEn || matchedTier.name || '').toUpperCase()}
+                </div>
+            `;
+            avatarFrameClass = 'premium-frame'; 
+            // We can't easily inline the custom CSS variables for the pseudo-element in an innerHTML string here without selecting the element, so we'll add them using a small inline style block.
+            crownBadge += `<style>.profile-avatar-wrap.premium-frame { --prem-border-1: ${matchedTier.bgColor}; --prem-border-2: #ffffff; --prem-color-dark: ${matchedTier.bgColor}; --prem-color-primary: ${matchedTier.bgColor}; --prem-color-light: #ffffff; }</style>`;
+            
+            dashMemberChip = `<span class="dash-member-chip premium" style="color: ${matchedTier.bgColor}; background: ${matchedTier.bgColor}22; border: 1px solid ${matchedTier.bgColor}66;"><i class="${matchedTier.icon}"></i> ${matchedTier.bnName || matchedTier.name}</span>`;
           }
 
           appRoot.innerHTML = `
@@ -138,7 +173,7 @@
               <!-- ১. ইউজার ওয়েলকাম হেডার -->
               <section class="dash-welcome-section">
                 <div class="dash-user-meta">
-                  <div class="profile-avatar-wrap ${avatarFrameClass}" style="margin: 0; padding: 4px;">${crownBadge}<div class="dash-avatar-circle" style="margin: 0;">${userInitial}</div></div>
+                  <div class="profile-avatar-wrap ${avatarFrameClass}" style="margin: 0; padding: 4px; ${matchedTier ? 'border-color: ' + matchedTier.bgColor + ';' : ''}">${crownBadge}<div class="dash-avatar-circle" style="margin: 0;">${userInitial}</div></div>
                   <div class="dash-meta-info">
                     <div class="dash-title-row">
                       <h1 class="dash-greeting">স্বাগতম, <span class="dash-name">${userName}</span> 👋</h1>
@@ -160,9 +195,6 @@
                   <div class="dash-hero-buttons">
                     <a href="/place-order" class="dash-cta-primary">
                       <i class="fa-solid fa-wand-magic-sparkles"></i> নতুন ওয়েবসাইট অর্ডার করুন
-                    </a>
-                    <a href="help/index.html" class="dash-cta-outline">
-                      <i class="fa-solid fa-circle-question"></i> নিয়মাবলী ও ডেমো
                     </a>
                   </div>
                 </div>
@@ -263,51 +295,7 @@
               </section>
             </main>
           `;
-
-          // Async update total spent from DB
-          fetch('/api/orders/' + (user.username || user.phone))
-            .then(res => res.json())
-            .then(data => {
-              if (data.success && Array.isArray(data.orders)) {
-                let dbSpent = 0;
-                data.orders.filter(o => o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত')
-                           .forEach(o => dbSpent += (Number(o.totalPrice) || 0));
-                
-                if (dbSpent >= 1000) {
-                  let badge = '';
-                  let tag = '';
-                  let frameClass = '';
-                  let chipHtml = '';
-                  
-                  if (dbSpent >= 2000) {
-                    frameClass = 'premium-frame';
-                    badge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
-                    chipHtml = '<span class="dash-member-chip premium" style="color: #fbbf24; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4);"><i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার</span>';
-                  } else {
-                    frameClass = 'elite-frame';
-                    badge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
-                    chipHtml = '<span class="dash-member-chip elite" style="color: #c084fc; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.4);"><i class="fa-solid fa-gem"></i> এলিট মেম্বার</span>';
-                  }
-                  
-                  // Update DOM safely
-                  const avatarWrap = document.querySelector('.profile-avatar-wrap');
-                  if (avatarWrap) {
-                    avatarWrap.className = 'profile-avatar-wrap ' + frameClass;
-                    avatarWrap.innerHTML = badge + '<div class="dash-avatar-circle" style="margin: 0;">' + userInitial + '</div>';
-                  }
-                  
-                  // Find and replace the generic chip
-                  const titleRow = document.querySelector('.dash-title-row');
-                  if (titleRow) {
-                    const existingChip = titleRow.querySelector('.dash-member-chip');
-                    if (existingChip) existingChip.remove();
-                    titleRow.insertAdjacentHTML('beforeend', chipHtml);
-                  }
-                }
-              }
-            }).catch(e => console.log('Error fetching orders for spending check', e));
-
-        } catch (e) {
+          } catch (e) {
           showLoggedOutState();
         }
       } else {

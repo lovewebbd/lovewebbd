@@ -3221,8 +3221,8 @@ img,
 }
 
 /* Ensure the inner element holding the initial/image is a perfect circle */
-.premium-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot),
-.elite-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot) {
+.premium-frame > div:not(.premium-crown):not(.premium-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.elite-crown):not(.elite-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.drawer-status-dot),
+.elite-frame > div:not(.premium-crown):not(.premium-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.elite-crown):not(.elite-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.drawer-status-dot) {
   width: 100% !important;
   height: 100% !important;
   border-radius: 50% !important;
@@ -3302,13 +3302,13 @@ img,
 .premium-crown i {
   animation: floatCrown 2.5s ease-in-out infinite;
   display: inline-block;
-  color: #fbbf24;
+  color: inherit;
 }
 
 .elite-crown i {
   animation: floatGem 2s ease-in-out infinite;
   display: inline-block;
-  color: #c084fc;
+  color: inherit;
 }
 
 /* Ensure the crown/gem containers are positioned nicely above everything */
@@ -3459,8 +3459,8 @@ img,
 }
 
 /* Specific fix for inner avatar when framed */
-.premium-frame > div:not(.premium-tag):not(.premium-crown),
-.elite-frame > div:not(.elite-tag):not(.elite-crown) {
+.premium-frame > div:not(.premium-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.premium-crown),
+.elite-frame > div:not(.elite-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.elite-crown) {
   border-radius: 50% !important;
   aspect-ratio: 1/1 !important;
   overflow: hidden !important;
@@ -3531,12 +3531,10 @@ img,
 
 /* OVERRIDE CROWNS */
 .elite-crown i {
-  color: var(--elite-color-light) !important;
-  filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.4));
+  color: inherit !important;
 }
 .premium-crown i {
-  color: var(--prem-color-light) !important;
-  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+  color: inherit !important;
 }
 
 /* OVERRIDE TAGS */
@@ -3685,8 +3683,8 @@ img,
 }
 
 /* The Avatar Inside - MUST BE 100% ROUND */
-.premium-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot),
-.elite-frame > div:not(.premium-crown):not(.premium-tag):not(.elite-crown):not(.elite-tag):not(.drawer-status-dot) {
+.premium-frame > div:not(.premium-crown):not(.premium-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.elite-crown):not(.elite-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.drawer-status-dot),
+.elite-frame > div:not(.premium-crown):not(.premium-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.elite-crown):not(.elite-tag):not(.premium-crown-wrap):not(.premium-tag-wrap):not(.drawer-status-dot) {
   width: 100% !important;
   height: 100% !important;
   max-width: 100% !important;

@@ -14,13 +14,15 @@
   const currentPath = window.location.pathname || '';
   let rootPrefix = './';
   if (
-    currentPath.includes('/reset-password/') ||
-    currentPath.includes('/sign-in/') ||
-    currentPath.includes('/order-details/') ||
-    currentPath.includes('/profile/') ||
-    currentPath.includes('/settings/') ||
-    currentPath.includes('/help/') ||
-    currentPath.includes('/privacy-and-rules/')
+    currentPath.includes('/reset-password') ||
+    currentPath.includes('/sign-in') ||
+    currentPath.includes('/order-details') ||
+    currentPath.includes('/profile') ||
+    currentPath.includes('/settings') ||
+    currentPath.includes('/help') ||
+    currentPath.includes('/privacy-and-rules') ||
+    currentPath.includes('/demos') ||
+    currentPath.includes('/place-order')
   ) {
     rootPrefix = '../';
   }
@@ -57,13 +59,13 @@
       
       if (totalSpent >= 2000) {
         avatarFrameClass = 'premium-frame';
-        crownBadge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
+        crownBadge = `<div class="premium-crown" style="color: #fbbf24 !important; filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4)) !important;"><i class="fa-solid fa-crown"></i></div><div class="premium-tag" style="background: #fbbf24 !important; color: #fff !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;">PREMIUM</div>`;
         membershipBadgeText = 'প্রিমিয়াম মেম্বার (৮% ছাড়)';
         membershipBadgeIcon = 'fa-crown';
         membershipBadgeColorClass = 'style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15);"';
       } else if (totalSpent >= 1000) {
         avatarFrameClass = 'elite-frame';
-        crownBadge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
+        crownBadge = `<div class="premium-crown" style="color: #c084fc !important; filter: drop-shadow(0 2px 4px rgba(192, 132, 252, 0.4)) !important;"><i class="fa-solid fa-gem"></i></div><div class="premium-tag" style="background: #c084fc !important; color: #fff !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;">ELITE</div>`;
         membershipBadgeText = 'এলিট মেম্বার (৪% ছাড়)';
         membershipBadgeIcon = 'fa-gem';
         membershipBadgeColorClass = 'style="color: #c084fc; border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.15);"';
@@ -210,6 +212,14 @@
             </div>
             <i class="fa-solid fa-chevron-right nav-arrow"></i>
           </a>
+          <a href="${rootPrefix}demos/index.html" class="drawer-nav-link ${currentPath.includes('demos') ? 'active' : ''}">
+            <div class="nav-icon-box" style="color: var(--primary-pink);"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="nav-text-box">
+              <span class="nav-label">ডেমো গ্যালারি</span>
+              <span class="nav-sub">আমাদের কাজের নমুনা দেখুন</span>
+            </div>
+            <i class="fa-solid fa-chevron-right nav-arrow"></i>
+          </a>
 
           <a href="${rootPrefix}profile/index.html" class="drawer-nav-link ${currentPath.includes('profile') ? 'active' : ''}">
             <div class="nav-icon-box"><i class="fa-solid fa-user-circle"></i></div>
@@ -304,34 +314,54 @@
     
     // Async update total spent from DB
     if (isUserLoggedIn) {
-      fetch('/api/orders/' + (user.username || user.phone))
-        .then(res => res.json())
-        .then(data => {
+      Promise.all([
+        fetch('/api/orders/' + encodeURIComponent(user.username || user.phone)).then(r => r.json()),
+        fetch('/api/membership').then(r => r.json())
+      ])
+        .then(([data, tierData]) => {
+          let tiers = [];
+          if (tierData && tierData.success && tierData.tiers) {
+             tiers = tierData.tiers.sort((a,b) => b.threshold - a.threshold);
+          }
           if (data.success && Array.isArray(data.orders)) {
             let dbSpent = 0;
             data.orders.filter(o => o.status === 'ডেলিভারড' || o.status === 'Delivered' || o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত')
                        .forEach(o => dbSpent += (Number(o.totalPrice) || 0));
             
-            if (dbSpent >= 1000) {
-              let badge = '';
-              let frameClass = '';
-              let mBadgeHtml = '';
+            let matchedTier = null;
+            const ascTiers = [...tiers].sort((a,b) => a.threshold - b.threshold);
+            for (let i = 0; i < ascTiers.length; i++) {
+               const t = ascTiers[i];
+               if (dbSpent >= t.threshold && (!t.maxThreshold || dbSpent <= t.maxThreshold)) {
+                  matchedTier = t;
+                  break;
+               }
+            }
+            if (!matchedTier && ascTiers.length > 0) {
+               if (dbSpent >= ascTiers[ascTiers.length - 1].threshold) matchedTier = ascTiers[ascTiers.length - 1];
+            }
+            
+            if (matchedTier) {
+              let frameClass = 'premium-frame';
+              let badge = `<div class="premium-crown" style="color: ${matchedTier.bgColor} !important; filter: drop-shadow(0 2px 4px ${matchedTier.bgColor}66) !important;"><i class="${matchedTier.icon}"></i></div><div class="premium-tag" style="background: ${matchedTier.bgColor} !important; color: #fff !important; box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;">${(matchedTier.nameEn || matchedTier.name || '').toUpperCase()}</div>`;
+              let mBadgeHtml = `<div class="drawer-user-badge" style="color: ${matchedTier.bgColor}; border-color: ${matchedTier.bgColor}66; background: ${matchedTier.bgColor}22;"><i class="${matchedTier.icon}"></i><span>${matchedTier.bnName || matchedTier.name} (${matchedTier.discount}% ছাড়)</span></div>`;
               
-              if (dbSpent >= 2000) {
-                frameClass = 'premium-frame';
-                badge = '<div class="premium-crown"><i class="fa-solid fa-crown"></i></div><div class="premium-tag">PREMIUM</div>';
-                mBadgeHtml = '<div class="drawer-user-badge" style="color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15);"><i class="fa-solid fa-crown"></i><span>প্রিমিয়াম মেম্বার (৮% ছাড়)</span></div>';
-              } else {
-                frameClass = 'elite-frame';
-                badge = '<div class="elite-crown"><i class="fa-solid fa-gem"></i></div><div class="elite-tag">ELITE</div>';
-                mBadgeHtml = '<div class="drawer-user-badge" style="color: #c084fc; border-color: rgba(168, 85, 247, 0.4); background: rgba(168, 85, 247, 0.15);"><i class="fa-solid fa-gem"></i><span>এলিট মেম্বার (৪% ছাড়)</span></div>';
-              }
+              // We inject the CSS custom properties safely to the wrapper.
+              const applyDynamicTierColors = (el) => {
+                  if(!el) return;
+                  el.style.setProperty('--prem-border-1', matchedTier.bgColor);
+                  el.style.setProperty('--prem-border-2', '#ffffff');
+                  el.style.setProperty('--prem-color-dark', matchedTier.bgColor);
+                  el.style.setProperty('--prem-color-primary', matchedTier.bgColor);
+                  el.style.setProperty('--prem-color-light', '#ffffff');
+              };
               
               // Update Top Bar DOM safely
               const topBarAvatarWrap = document.querySelector('.top-bar-avatar-wrap');
               if (topBarAvatarWrap) {
                 topBarAvatarWrap.className = 'top-bar-avatar-wrap ' + frameClass;
                 topBarAvatarWrap.innerHTML = badge + '<div class="top-bar-avatar">' + (userInitial || '<i class="fa-solid fa-user"></i>') + '</div>';
+                applyDynamicTierColors(topBarAvatarWrap);
               }
               
               // Update Drawer DOM safely
@@ -339,6 +369,7 @@
               if (drawerAvatarWrap) {
                 drawerAvatarWrap.className = 'drawer-avatar-wrap ' + frameClass;
                 drawerAvatarWrap.innerHTML = badge + '<div class="drawer-avatar">' + (userInitial || '<i class="fa-solid fa-user"></i>') + '</div><span class="drawer-status-dot online"></span>';
+                applyDynamicTierColors(drawerAvatarWrap);
               }
               
               const drawerUserBadge = document.querySelector('.drawer-user-badge');

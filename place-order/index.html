@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+    function e2b(str) {
+       if(!str && str !== 0) return '';
+       const bengaliDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+       return str.toString().replace(/[0-9]/g, w => bengaliDigits[w]);
+    }
+if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/index.html";</script>
   <title>নতুন অর্ডার করুন | LoveWeb</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -321,17 +328,68 @@
         padding: 25px 15px;
       }
     }
-  </style>
+  
+    .image-upload-section {
+       margin-top: 10px;
+       display: flex;
+       flex-direction: column;
+       gap: 10px;
+    }
+    .image-preview-container {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 10px;
+    }
+    .image-preview-box {
+       width: 80px;
+       height: 80px;
+       border-radius: 8px;
+       background-size: cover;
+       background-position: center;
+       border: 1px solid rgba(255, 42, 109, 0.3);
+       position: relative;
+    }
+    .image-preview-box .remove-img-btn {
+       position: absolute;
+       top: -5px;
+       right: -5px;
+       background: #ff2a6d;
+       color: white;
+       border: none;
+       border-radius: 50%;
+       width: 20px;
+       height: 20px;
+       font-size: 10px;
+       cursor: pointer;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+    }
+    .btn-add-image {
+       background: rgba(255, 42, 109, 0.1);
+       color: var(--primary-pink);
+       border: 1px dashed var(--primary-pink);
+       padding: 8px 15px;
+       border-radius: 6px;
+       cursor: pointer;
+       font-size: 0.9rem;
+       font-weight: 600;
+       transition: 0.3s;
+       width: fit-content;
+    }
+    .btn-add-image:hover {
+       background: rgba(255, 42, 109, 0.2);
+    }
+</style>
 </head>
 <body>
-  
-  <div class="dashboard-menu-header" onclick="window.location.href='/'">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <img src="../img/logo.png" alt="LoveWeb" style="height: 32px;">
-      <span style="font-weight: 700; color: var(--primary-pink); font-size: 1.1rem;">অর্ডার করুন</span>
-    </div>
-    <i class="fa-solid fa-arrow-left" style="color: var(--text-main);"></i>
+
+  <div style="padding-top: 90px; text-align: center; margin-bottom: -10px;">
+    <h1 style="color: var(--text-main); font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-pink);"></i> নতুন অর্ডার করুন</h1>
   </div>
+
+  
+    
 
   <div class="order-card">
     <div style="text-align: center; margin-bottom: 35px;">
@@ -389,76 +447,26 @@
       <!-- Package Selection (Grid) -->
       <div class="order-form-group">
         <label><i class="fa-solid fa-layer-group"></i> ওয়েবসাইট প্যাকেজ নির্বাচন করুন</label>
-        <div class="package-grid">
+        <div class="package-grid" id="packagesContainer">
           
-          <!-- Regular -->
-          <div class="package-card" onclick="selectPackage(this, 'Regular')">
-            <div class="tooltip-container">
-              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
-              <div class="tooltip-content">
-                <strong>শর্তাবলী (Regular):</strong><br>
-                ১. ওয়েবসাইটের লিংক ১ বছর অ্যাক্টিভ থাকবে।<br>
-                ২. থিম পরিবর্তন করা যাবে না।<br>
-                ৩. সাধারণ কাস্টমাইজেশন চার্জ প্রযোজ্য হতে পারে।
-              </div>
-            </div>
-            <div class="pkg-name">রেগুলার (Regular)</div>
-            <div class="pkg-price"><span class="pkg-cross">৳৪০০</span> ৳৩৪৯</div>
-            <ul class="pkg-features">
-              <li><i class="fa-solid fa-check"></i> <div>৩-৪টি পেজ</div></li>
-              <li><i class="fa-solid fa-check"></i> <div>বেসিক ডিজাইন ও মিউজিক</div></li>
-              <li><i class="fa-solid fa-check"></i> <div>মোবাইল রেসপন্সিভ</div></li>
-              <li><i class="fa-solid fa-clock" style="color:#FF2A6D;"></i> <div>১-৩ দিনে ডেলিভারি</div></li>
-            </ul>
-          </div>
           
-          <!-- Exclusive -->
-          <div class="package-card" onclick="selectPackage(this, 'Exclusive')">
-            <div class="tooltip-container">
-              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
-              <div class="tooltip-content">
-                <strong>শর্তাবলী (Exclusive):</strong><br>
-                ১. প্রিমিয়াম থিম সিলেক্ট করার সুযোগ।<br>
-                ২. বেশি ছবি ও মেসেজ যুক্ত করা যাবে।<br>
-                ৩. কাস্টম ব্যাকগ্রাউন্ড মিউজিক।
-              </div>
-            </div>
-            <div class="pkg-name">এক্সক্লুসিভ (Exclusive)</div>
-            <div class="pkg-price"><span class="pkg-cross">৳৭০০</span> ৳৬৪৯</div>
-            <ul class="pkg-features">
-              <li><i class="fa-solid fa-check"></i> <div>৫-৭টি পেজ</div></li>
-              <li><i class="fa-solid fa-check"></i> <div>অ্যাডভান্সড ডিজাইন অ্যানিমেশন</div></li>
-              <li><i class="fa-solid fa-check"></i> <div>ফটো গ্যালারি সাপোর্ট</div></li>
-              <li><i class="fa-solid fa-clock" style="color:#FF2A6D;"></i> <div>৩-৫ দিনে ডেলিভারি</div></li>
-            </ul>
-          </div>
-          
-          <!-- Premium -->
-          <div class="package-card" onclick="selectPackage(this, 'Premium')">
-            <div class="tooltip-container">
-              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
-              <div class="tooltip-content">
-                <strong>শর্তাবলী (Premium):</strong><br>
-                ১. সম্পূর্ণ কাস্টম ডিজাইন সাপোর্ট।<br>
-                ২. সর্বোচ্চ সিকিউরিটি ও প্রাইভেট লিঙ্ক।<br>
-                ৩. যেকোনো সময় কন্টেন্ট আপডেটের সুবিধা।
-              </div>
-            </div>
-            <div class="pkg-name" style="color: var(--primary-pink);">প্রিমিয়াম (Premium) <i class="fa-solid fa-crown" style="font-size:1rem; margin-left:4px;"></i></div>
-            <div class="pkg-price"><span class="pkg-cross">৳১০০০</span> ৳৯৪৯</div>
-            <ul class="pkg-features">
-              <li><i class="fa-solid fa-check"></i> <div>৭-১১টি পেজ</div></li>
-              <li><i class="fa-solid fa-check"></i> <div style="color: var(--primary-pink); font-weight:600;">কাস্টমাইজ চার্জ ফ্রি (১ বার)</div></li>
-              <li><i class="fa-solid fa-check"></i> <div>কাস্টম ডোমেইন সাপোর্ট (Optional)</div></li>
-            </ul>
-          </div>
           
         </div>
         <input type="hidden" id="selectedPackage" required>
       </div>
 
       
-      <div style="display:flex; justify-content:flex-end;">
+      
+      <!-- Coupon Section -->
+      <div class="order-form-group" style="background: rgba(255, 42, 109, 0.05); padding: 20px; border-radius: 16px; border: 1px dashed rgba(255, 42, 109, 0.3); margin-bottom: 30px; margin-top: 20px;">
+        <label><i class="fa-solid fa-tag"></i> কুপন কোড (যদি থাকে)</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="couponCode" placeholder="কুপন কোড লিখুন..." style="flex: 1;">
+          <button type="button" id="applyCouponBtn" onclick="applyCoupon()" style="background: var(--primary-pink); color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: 600; cursor: pointer; white-space: nowrap;">প্রয়োগ করুন</button>
+        </div>
+        <div id="couponMessage" style="margin-top: 10px; font-size: 0.9rem; font-weight: 600;"></div>
+      </div>
+<div style="display:flex; justify-content:flex-end;">
          <button type="button" class="submit-btn" style="width: auto; padding: 10px 20px;" onclick="nextStep(2)">পরবর্তী ধাপ (Continue) <i class="fa-solid fa-arrow-right" style="margin-left:8px;"></i></button>
       </div>
       </div> <!-- End Step 1 -->
@@ -576,10 +584,11 @@
 
 
       <div id="step3" style="display:none;">
+      
         <div class="order-form-group">
           <label><i class="fa-solid fa-align-left"></i> সাধারণ বিবরণ (General Description - Optional)</label>
           <textarea id="generalDesc" placeholder="আপনার ওয়েবসাইটের ডিজাইন কেমন হবে বা অন্যান্য নির্দেশনা থাকলে লিখুন..."></textarea>
-        </div>
+          </div>
   
 
       <div class="order-form-group">
@@ -590,18 +599,33 @@
       <div class="order-form-group">
         <div style="background: rgba(255,42,109,0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--primary-pink); margin-bottom: 15px;">
           <h4 style="color: var(--primary-pink); margin-bottom: 10px; font-size: 1rem;"><i class="fa-solid fa-wallet"></i> অগ্রিম পেমেন্ট নিয়মাবলী:</h4>
-          <ul style="list-style: none; padding-left: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.6;">
-            <li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> রেগুলার প্যাকেজ: <strong>৳১৫০ অগ্রিম</strong></li>
-            <li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> এক্সক্লুসিভ প্যাকেজ: <strong>৳২০০ অগ্রিম</strong></li>
-            <li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> প্রিমিয়াম প্যাকেজ: <strong>৳৩০০ অগ্রিম</strong></li>
+          <ul id="dynamicAdvanceRules" style="list-style: none; padding-left: 0; font-size: 0.9rem; color: var(--text-main); line-height: 1.6;">
+            <!-- Rendered via JS -->
           </ul>
           <div style="margin-top: 10px; font-weight: 600; color: #00d46a;">
-            <i class="fa-solid fa-money-bill-transfer"></i> বিকাশ / নগদ নম্বর: 01XXXXXXX (Send Money)
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/BKash_logo.svg" alt="bKash" style="height: 24px;"> 
+              <span id="bkashNumberDisplay" style="color: var(--text-main);">01XXXXXXXXX</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/7/77/Nagad_Logo_2019.svg" alt="Nagad" style="height: 24px;">
+              <span id="nagadNumberDisplay" style="color: var(--text-main);">01XXXXXXXXX</span>
+            </div>
+            <div style="font-size: 0.8rem; margin-top: 5px; color: var(--text-sub);">(Send Money)</div>
           </div>
         </div>
         
         <label><i class="fa-solid fa-hand-holding-dollar"></i> যে নম্বর থেকে পেমেন্ট করেছেন</label>
         <input type="tel" id="orderAdvancePhone" placeholder="01XXXXXXXXX" required>
+      </div>
+      
+      <div class="order-form-group">
+         <label><i class="fa-solid fa-image"></i> পেমেন্টের স্ক্রিনশট (Payment SS) - Required</label>
+         <div class="image-upload-section" id="imageUploadSectionPayment">
+            <div class="image-preview-container" id="imagePreviewContainerPayment"></div>
+            <button type="button" class="btn-add-image" onclick="triggerImageUpload('Payment')"><i class="fa-solid fa-plus"></i> স্ক্রিনশট আপলোড করুন</button>
+            <input type="file" id="imageInputPayment" style="display:none;" accept="image/*" onchange="handleImageUpload(event, 'Payment')">
+         </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; gap:10px;">
@@ -624,18 +648,11 @@
       const pkg = document.getElementById('selectedPackage').value;
       if (pkg === lastRenderedPackage) return;
       lastRenderedPackage = pkg;
-
-      if (pkg === 'Regular') {
-         requiredPages = 3;
-         optionalPages = 1;
-      } else if (pkg === 'Exclusive') {
-         requiredPages = 5;
-         optionalPages = 2;
-      } else if (pkg === 'Premium') {
-         requiredPages = 7;
-         optionalPages = 4;
-      }
-      totalPages = requiredPages + optionalPages;
+      
+      const pkgData = packagesConfig[pkg] || { minPages: 3, maxPages: 4 };
+      requiredPages = pkgData.minPages || 1;
+      totalPages = pkgData.maxPages || requiredPages;
+      optionalPages = Math.max(0, totalPages - requiredPages);
 
       let html = '';
       for (let i = 1; i <= totalPages; i++) {
@@ -646,6 +663,11 @@
         <div class="order-form-group">
           <label><i class="fa-solid fa-align-left"></i> পেজ ${i} এর বিবরণ ${reqStr}</label>
           <textarea id="pageDesc${i}" class="page-desc-input" placeholder="পেজ ${i} এ কি কি লেখা বা ছবি থাকবে তা বিস্তারিত লিখুন..." ${reqAttr}></textarea>
+          <div class="image-upload-section" id="imageUploadSection${i}">
+            <div class="image-preview-container" id="imagePreviewContainer${i}"></div>
+            <button type="button" class="btn-add-image" onclick="triggerImageUpload(${i})"><i class="fa-solid fa-plus"></i> Add Image</button>
+            <input type="file" id="imageInput${i}" style="display:none;" accept="image/*" multiple onchange="handleImageUpload(event, ${i})">
+          </div>
         </div>
         `;
       }
@@ -682,8 +704,12 @@
           showToast('দুঃখিত, কোনো একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
         }
       } catch (err) {
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
         console.error(err);
-        showToast('Error generating pages.', 'error');
+        showToast('পেজ জেনারেট করতে সমস্যা হয়েছে।', 'error');
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-robot"></i> জেনারেট করুন';
@@ -786,8 +812,16 @@
         return;
       }
       
-      const username = localStorage.getItem('username');
-      if(!username) {
+      let sessionUsername = '';
+      const sessionRaw = localStorage.getItem('loveweb_session');
+      if (sessionRaw) {
+        try {
+          const user = JSON.parse(sessionRaw);
+          sessionUsername = user.username || user.phone;
+        } catch(e) {}
+      }
+
+      if(!sessionUsername) {
         msgDiv.innerHTML = '<span style="color:#ef4444;">Please login first</span>';
         return;
       }
@@ -798,7 +832,7 @@
         const response = await fetch('/api/validate-coupon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, username })
+          body: JSON.stringify({ code, username: sessionUsername })
         });
         const data = await response.json();
         
@@ -823,6 +857,7 @@
     async function loadUserDiscount() {
       const sessionRaw = localStorage.getItem('loveweb_session');
       if (!sessionRaw) return;
+      
       try {
         const user = JSON.parse(sessionRaw);
         if (!user.phone) return;
@@ -830,6 +865,16 @@
         const usernameForQuery = user.username || user.phone;
         const res = await fetch('/api/orders/' + encodeURIComponent(usernameForQuery));
         const data = await res.json();
+        
+        let tiers = [];
+        try {
+           const tierRes = await fetch('/api/membership');
+           const tierData = await tierRes.json();
+           if(tierData.success && tierData.tiers) {
+              tiers = tierData.tiers.sort((a,b) => b.threshold - a.threshold); // descending
+           }
+        } catch(e) {}
+        
         if (data.success && data.orders) {
           let totalSpent = 0;
           data.orders.forEach(o => {
@@ -838,27 +883,36 @@
             }
           });
           
-          if (totalSpent >= 2000) userDiscountPercent = 8;
-          else if (totalSpent >= 1000) userDiscountPercent = 4;
+          let matchedTier = null;
+          for(const t of tiers) {
+             if(totalSpent >= t.threshold) {
+                matchedTier = t;
+                break;
+             }
+          }
           
-          if (userDiscountPercent > 0) {
+          if (matchedTier && matchedTier.discount > 0) {
+            userDiscountPercent = matchedTier.discount;
+            
             const banner = document.createElement('div');
             banner.style.padding = '12px 20px';
-            banner.style.background = 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(245, 158, 11, 0.15))';
-            banner.style.border = '1px solid rgba(168, 85, 247, 0.3)';
-            banner.style.borderRadius = '8px';
+            banner.style.background = `linear-gradient(135deg, ${matchedTier.bgColor}22, rgba(255, 255, 255, 0.05))`;
+            banner.style.backdropFilter = 'blur(12px)';
+            banner.style.WebkitBackdropFilter = 'blur(12px)';
+            banner.style.border = `1px solid ${matchedTier.bgColor}66`;
+            banner.style.borderRadius = '12px';
             banner.style.marginBottom = '20px';
             banner.style.color = 'var(--text-main)';
             banner.style.fontSize = '0.95rem';
+            banner.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
             
-            let tierName = userDiscountPercent === 8 ? '<span style="color:#fbbf24;font-weight:600;"><i class="fa-solid fa-crown"></i> প্রিমিয়াম মেম্বার</span>' : '<span style="color:#c084fc;font-weight:600;"><i class="fa-solid fa-gem"></i> এলিট মেম্বার</span>';
+            let tierName = `<span style="color:${matchedTier.bgColor};font-weight:600;"><i class="${matchedTier.icon}"></i> ${matchedTier.name}</span>`;
             
-            banner.innerHTML = `অভিনন্দন! আপনি আমাদের ${tierName}, তাই আপনার জন্য প্রতিটি অর্ডারে <strong>${userDiscountPercent}% বিশেষ ছাড়</strong> প্রযোজ্য।`;
+            banner.innerHTML = `অভিনন্দন! আপনি আমাদের ${tierName}, তাই আপনার জন্য প্রতিটি অর্ডারে <strong>${e2b(userDiscountPercent)}% বিশেষ ছাড়</strong> প্রযোজ্য।`;
             
             const form = document.getElementById('placeOrderForm');
             form.parentNode.insertBefore(banner, form);
             
-            // Update displayed prices
             updateDisplayedPrices();
           }
         }
@@ -867,38 +921,99 @@
       }
     }
     
-    function updateDisplayedPrices() {
-      const packages = {
-        'Regular': { base: 349, original: 400 },
-        'Exclusive': { base: 649, original: 700 },
-        'Premium': { base: 949, original: 1000 }
+    
+    let packagesConfig = {
+        'Regular': { bnName: 'রেগুলার', icon: '', headColor: '', base: 349, advance: 150, original: 400, deliveryTime: 7, minPages: 3, maxPages: 4, features: [], tooltip: '' },
+        'Exclusive': { bnName: 'এক্সক্লুসিভ', icon: 'fa-solid fa-gem', headColor: '#6366f1', base: 649, advance: 200, original: 700, deliveryTime: 10, minPages: 5, maxPages: 7, features: [], tooltip: '' },
+        'Premium': { bnName: 'প্রিমিয়াম', icon: 'fa-solid fa-crown', headColor: '#FF2A6D', base: 949, advance: 300, original: 1000, deliveryTime: 14, minPages: 7, maxPages: 11, features: [], tooltip: '' }
+    };
+
+    async function fetchPackages() {
+      try {
+        const res = await fetch('/api/packages');
+        const data = await res.json();
+        if(data.success && data.packages) {
+          packagesConfig = { ...packagesConfig, ...data.packages };
+        }
+        renderPackages();
+        updateDisplayedPrices();
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    function renderPackages() {
+      const container = document.getElementById('packagesContainer');
+      if(!container) return; 
+      
+      const p = packagesConfig;
+      const buildFeatures = (feats) => {
+        if(!feats) return '';
+        return feats.map(f => `<li><i class="fa-solid fa-check"></i> <div>${f}</div></li>`).join('');
       };
+
+      let htmlContent = '';
+      const sortedEntries = Object.entries(p).sort((a, b) => (a[1].order || 0) - (b[1].order || 0));
+      for(const [pkgName, data] of sortedEntries) {
+         let icon = data.icon ? ` <i class="${data.icon}" style="font-size:1rem; margin-left:4px;"></i>` : '';
+         let color = data.headColor ? 'color: ' + data.headColor + ';' : '';
+         let displayName = data.bnName ? `${data.bnName}` : pkgName;
+         
+         htmlContent += `
+          <div class="package-card" onclick="selectPackage(this, '${pkgName}')">
+            <div class="tooltip-container">
+              <i class="fa-solid fa-circle-info pkg-info-btn"></i>
+              <div class="tooltip-content">
+                <strong>শর্তাবলী (${pkgName}):</strong><br>${data.tooltip || ''}
+              </div>
+            </div>
+            <div class="pkg-name" style="${color}">${displayName}${icon}</div>
+            <div class="pkg-price"><span class="pkg-cross">৳${e2b(data.original || 0)}</span> ৳${e2b(data.base || 0)}</div>
+            <div style="font-size: 0.85rem; color: var(--primary-pink); margin-top: 5px; font-weight: 600;">
+              <i class="fa-solid fa-clock"></i> ${e2b(data.deliveryTime || 7)} দিনে ডেলিভারি
+            </div>
+            <ul class="pkg-features">
+              ${buildFeatures(data.features)}
+            </ul>
+          </div>
+         `;
+      }
+      
+      container.innerHTML = htmlContent;
+
+      const rulesContainer = document.getElementById('dynamicAdvanceRules');
+      if (rulesContainer) {
+        rulesContainer.innerHTML = '<li><i class="fa-solid fa-circle-info" style="color: var(--primary-pink); margin-right: 5px;"></i> অনুগ্রহ করে প্রথম ধাপে একটি প্যাকেজ সিলেক্ট করুন।</li>';
+      }
+    }
+
+    function updateDisplayedPrices() {
+      const packages = packagesConfig;
       
       const cards = document.querySelectorAll('.package-card');
-      cards.forEach((card, index) => {
-        let pkgName = '';
-        if (index === 0) pkgName = 'Regular';
-        if (index === 1) pkgName = 'Exclusive';
-        if (index === 2) pkgName = 'Premium';
-        
-        if (packages[pkgName]) {
+      cards.forEach((card) => {
+        const onclickAttr = card.getAttribute('onclick') || '';
+        const match = onclickAttr.match(/selectPackage\(this,\s*'([^']+)'\)/);
+        if (match && match[1]) {
+          const pkgName = match[1];
+          if (packages[pkgName]) {
           const totalDiscountPercent = userDiscountPercent + couponDiscountPercent;
           const discountAmt = Math.floor(packages[pkgName].base * (totalDiscountPercent / 100));
           const finalPrice = packages[pkgName].base - discountAmt;
           const priceDiv = card.querySelector('.pkg-price');
           
           let desc = '';
-          if(userDiscountPercent > 0) desc += `-${userDiscountPercent}% Member `;
-          if(couponDiscountPercent > 0) desc += `-${couponDiscountPercent}% Coupon`;
+          if(userDiscountPercent > 0) desc += `-${e2b(userDiscountPercent)}% মেম্বারশিপ `;
+          if(couponDiscountPercent > 0) desc += `-${e2b(couponDiscountPercent)}% কুপন`;
           
-          priceDiv.innerHTML = `<span class="pkg-cross">৳${packages[pkgName].base}</span> <span style="color:#10b981;">৳${finalPrice}</span> ${desc ? `<div style="font-size:0.75rem; color:#c084fc; margin-top:2px;">(${desc})</div>` : ''}`;
-
+          priceDiv.innerHTML = `<span class="pkg-cross">৳${e2b(packages[pkgName].original)}</span> <span style="color:#10b981;">৳${e2b(finalPrice)}</span> ${desc ? `<div style="font-size:0.75rem; color:#c084fc; margin-top:2px;">(${desc})</div>` : ''}`;
+          }
         }
       });
     }
-
     
     async function loadSettings() {
+
       try {
         const res = await fetch('/api/settings');
         const data = await res.json();
@@ -912,7 +1027,7 @@
       }
     }
     
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => { fetchPackages(); 
       loadUserDiscount();
       loadSettings();
     });
@@ -923,9 +1038,149 @@
       document.querySelectorAll('.package-card').forEach(card => card.classList.remove('selected'));
       element.classList.add('selected');
       document.getElementById('selectedPackage').value = packageValue;
+      
+      const rulesContainer = document.getElementById('dynamicAdvanceRules');
+      if (rulesContainer && packagesConfig[packageValue]) {
+        const data = packagesConfig[packageValue];
+        let bn = data.bnName ? data.bnName : packageValue;
+        let adv = data.advance !== undefined ? data.advance : 200;
+        rulesContainer.innerHTML = '<li><i class="fa-solid fa-circle-chevron-right" style="color: var(--primary-pink); margin-right: 5px;"></i> ' + bn + ' প্যাকেজ: <strong>৳' + e2b(adv) + ' অগ্রিম</strong></li>';
+      }
     }
 
     // Validation and API call before navigating to details
+    
+    // --- Image Upload Logic ---
+    let selectedImages = {}; // { 'General': [file1, file2], '1': [file1], '2': [] }
+
+    function triggerImageUpload(sectionId) {
+       document.getElementById('imageInput' + sectionId).click();
+    }
+
+    function handleImageUpload(event, sectionId) {
+       const files = Array.from(event.target.files);
+       if (!selectedImages[sectionId]) selectedImages[sectionId] = [];
+       
+       const pkgValue = document.getElementById('selectedPackage').value;
+       const maxImgs = (packagesConfig[pkgValue] && packagesConfig[pkgValue].maxImagesPerDesc) ? packagesConfig[pkgValue].maxImagesPerDesc : 5;
+       if (sectionId === 'Payment') {
+           if (selectedImages['Payment'] && selectedImages['Payment'].length > 0) {
+               showToast('আপনি শুধুমাত্র ১টি স্ক্রিনশট আপলোড করতে পারবেন।', 'error');
+               return;
+           }
+           if (files.length > 1) {
+               showToast('শুধুমাত্র ১টি ছবি নির্বাচন করুন।', 'error');
+               return;
+           }
+           selectedImages[sectionId] = selectedImages[sectionId].concat(files);
+           renderImagePreviews(sectionId);
+           event.target.value = '';
+           return;
+       }
+       const maxTotal = (packagesConfig[pkgValue] && packagesConfig[pkgValue].maxTotalImages !== undefined) ? packagesConfig[pkgValue].maxTotalImages : 15;
+       
+       let currentTotal = 0;
+       for (const key in selectedImages) {
+           currentTotal += selectedImages[key].length;
+       }
+       
+       if (currentTotal + files.length > maxTotal) {
+           showToast(`এই প্যাকেজে সর্বমোট সর্বোচ্চ ${maxTotal} টি ছবি দেওয়া যাবে।`, 'error');
+           return;
+       }
+       
+       if (selectedImages[sectionId].length + files.length > maxImgs) {
+           showToast(`এই প্যাকেজে প্রতি বিবরণের জন্য সর্বোচ্চ ${maxImgs} টি ছবি দেওয়া যাবে।`, 'error');
+           return;
+       }
+       
+       selectedImages[sectionId] = selectedImages[sectionId].concat(files);
+       renderImagePreviews(sectionId);
+       event.target.value = ''; // reset
+    }
+
+    function removeImage(sectionId, index) {
+       selectedImages[sectionId].splice(index, 1);
+       renderImagePreviews(sectionId);
+    }
+
+    function renderImagePreviews(sectionId) {
+       const container = document.getElementById('imagePreviewContainer' + sectionId);
+       container.innerHTML = '';
+       const files = selectedImages[sectionId] || [];
+       files.forEach((file, index) => {
+           const url = URL.createObjectURL(file);
+           const div = document.createElement('div');
+           div.className = 'image-preview-box';
+           div.style.backgroundImage = 'url(' + url + ')';
+           
+           const btn = document.createElement('button');
+           btn.className = 'remove-img-btn';
+           btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+           btn.onclick = () => removeImage(sectionId, index);
+           
+           div.appendChild(btn);
+           container.appendChild(div);
+       });
+    }
+
+    async function uploadAllImagesAndGetUrls(username) {
+       const formData = new FormData();
+       let fileCount = 0;
+       
+       // Process payment image
+       if (selectedImages['Payment']) {
+           selectedImages['Payment'].forEach((file, i) => {
+               const ext = file.name.split('.').pop();
+               const safeUser = (username || 'user').replace(/[^a-zA-Z0-9]/g, '');
+               const newName = `${safeUser}_Payment_img${i+1}.${ext}`;
+               formData.append('images', new File([file], newName, { type: file.type }));
+               fileCount++;
+           });
+       }
+       
+       // Process page images
+       for (const key of Object.keys(selectedImages)) {
+           if (key === 'General') continue;
+           selectedImages[key].forEach((file, i) => {
+               const ext = file.name.split('.').pop();
+               const safeUser = (username || 'user').replace(/[^a-zA-Z0-9]/g, '');
+               const newName = `${safeUser}_Page${key}_img${i+1}.${ext}`;
+               formData.append('images', new File([file], newName, { type: file.type }));
+               fileCount++;
+           });
+       }
+       
+       if (fileCount === 0) return { success: true, urlMap: {} }; // No images
+       
+       try {
+           const res = await fetch('/api/upload', {
+               method: 'POST',
+               body: formData
+           });
+           const data = await res.json();
+           if (!data.success) throw new Error(data.message);
+           
+           // map returned URLs back to sections based on filename
+           const urlMap = { Payment: [] };
+           data.urls.forEach(url => {
+               if (url.includes('_Payment_')) urlMap.Payment.push(url);
+               else {
+                   const match = url.match(/_Page(\d+)_/);
+                   if (match) {
+                       const pageNum = match[1];
+                       if (!urlMap[pageNum]) urlMap[pageNum] = [];
+                       urlMap[pageNum].push(url);
+                   }
+               }
+           });
+           return { success: true, urlMap };
+       } catch(e) {
+           console.error(e);
+           return { success: false, message: e.message };
+       }
+    }
+
     async function submitOrderForm() {
       const type = document.getElementById('selectedWebsiteType').value;
       const pkg = document.getElementById('selectedPackage').value;
@@ -934,7 +1189,11 @@
       for(let i = 1; i <= totalPages; i++) {
          const el = document.getElementById(`pageDesc${i}`);
          if(el) {
-            pages.push(el.value.trim());
+            pages.push({
+               title: `Page ${i}`,
+               description: el.value.trim(),
+               images: [] // populated later
+            });
          }
       }
       const generalDesc = document.getElementById('generalDesc').value;
@@ -950,16 +1209,16 @@
         showToast('অনুগ্রহ করে ওয়েবসাইট প্যাকেজ নির্বাচন করুন।', 'error');
         return;
       }
-      if(!contactPhone || !advancePaymentPhone) {
-        showToast('অনুগ্রহ করে ফর্মের সকল তথ্য সঠিকভাবে পূরণ করুন।', 'error');
-        return;
-      }
-
-
       
+      showLoading(true);
+      const submitBtn = document.querySelector('.submit-btn');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেস হচ্ছে...';
+      submitBtn.disabled = true;
+
       const sessionRaw = localStorage.getItem('loveweb_session');
       let sessionPhone = contactPhone;
-      let sessionUsername = '';
+      let sessionUsername = 'user';
       if (sessionRaw) {
         try {
           const user = JSON.parse(sessionRaw);
@@ -967,6 +1226,38 @@
           if (user.username) sessionUsername = user.username;
         } catch(e) {}
       }
+
+      const uploadResult = await uploadAllImagesAndGetUrls(sessionUsername);
+      if (!uploadResult.success) {
+         submitBtn.innerHTML = originalBtnText;
+         submitBtn.disabled = false;
+         showToast('ছবি আপলোডে সমস্যা হয়েছে: ' + uploadResult.message, 'error');
+         return;
+      }
+      
+      const urlMap = uploadResult.urlMap || {};
+      
+      // Update pages array with images
+      for(let i = 1; i <= totalPages; i++) {
+         if (pages[i-1]) {
+             pages[i-1].images = urlMap[i] || [];
+         }
+      }
+      
+      const paymentScreenshot = (urlMap.Payment && urlMap.Payment.length > 0) ? urlMap.Payment[0] : null;
+
+      if(!contactPhone || !advancePaymentPhone) {
+        showToast('অনুগ্রহ করে ফর্মের সকল তথ্য সঠিকভাবে পূরণ করুন।', 'error');
+        return;
+      }
+      if(!selectedImages['Payment'] || selectedImages['Payment'].length === 0) {
+        showToast('অনুগ্রহ করে পেমেন্টের স্ক্রিনশট আপলোড করুন।', 'error');
+        return;
+      }
+
+
+      
+      
       
       try {
         const response = await fetch('/api/place-order', {
@@ -980,20 +1271,22 @@
             websiteType: type,
             packageType: pkg,
             description,
+            paymentScreenshot,
             pages,
             contactPhone,
-            advancePaymentPhone
+            advancePaymentPhone,
+            couponCode: appliedCouponCode
           })
         });
         const data = await response.json();
         if (data.success) {
           window.location.href = '/order-details';
         } else {
-          showToast('Error: ' + data.message, 'error');
+          showToast('সমস্যা: ' + data.message, 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast('Network error. Please try again.', 'error');
+        showToast('নেটওয়ার্ক সমস্যা। দয়া করে আবার চেষ্টা করুন।', 'error');
       }
     }
   </script>
@@ -1005,5 +1298,7 @@
 
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>
+  <!-- Official Navigation & Theme Controller -->
+  <script src="../js/official-nav.js"></script>
 </body>
 </html>

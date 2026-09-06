@@ -461,8 +461,18 @@
       <!-- Question 1 -->
       
       <div class="faq-item">
-        <h3><i class="fa-solid fa-ticket"></i> কুপন কোড কোথায় পাবো এবং কিভাবে ব্যবহার করবো?</h3>
-        <p>আমাদের অফিসিয়াল <a href="#" style="color:#10b981; text-decoration:underline;">ফেসবুক পেজে</a> নিয়মিত বিভিন্ন কুপন কোড দেওয়া হয়। অর্ডার করার সময় প্যাকেজ সিলেকশনের নিচে কুপন কোড বসানোর অপশন পাবেন। সেখানে কোডটি দিয়ে Apply করলে আপনার নির্দিষ্ট ডিসকাউন্ট অর্ডারে যুক্ত হয়ে যাবে।</p>
+        <button class="faq-header" type="button" aria-expanded="false">
+          <span class="faq-question-title">
+            <span class="faq-title-icon"><i class="fa-solid fa-ticket"></i></span>
+            <span>কুপন কোড কোথায় পাবো এবং কিভাবে ব্যবহার করবো?</span>
+          </span>
+          <span class="faq-icon-arrow"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-body-collapse" style="max-height: 0px;">
+          <div class="faq-content">
+            আমাদের অফিসিয়াল <a href="#" style="color:#10b981; text-decoration:underline;">ফেসবুক পেজে</a> নিয়মিত বিভিন্ন কুপন কোড দেওয়া হয়। অর্ডার করার সময় প্যাকেজ সিলেকশনের নিচে কুপন কোড বসানোর অপশন পাবেন। সেখানে কোডটি দিয়ে Apply করলে আপনার নির্দিষ্ট ডিসকাউন্ট অর্ডারে যুক্ত হয়ে যাবে।
+          </div>
+        </div>
       </div>
 
       <div class="faq-item">
@@ -491,7 +501,7 @@
         </button>
         <div class="faq-body-collapse">
           <div class="faq-content">
-            পাসওয়ার্ড রিসেট করতে <a href="../reset-password/index.html">পাসওয়ার্ড রিসেট পাতায়</a> যান। সেখানে আপনার নিবন্ধিত ইমেইল প্রদান করলে আপনার ইমেইলে একটি ৬-সংখ্যার ওটিপি (OTP) কোড পাঠানো হবে। কোডটি ভেরিফাই করে মুহূর্তেই নতুন পাসওয়ার্ড সেট করতে পারবেন।
+            পাসওয়ার্ড রিসেট করতে <a href="../reset-password/index.html">পাসওয়ার্ড রিসেট পাতায়</a> যান। সেখানে আপনার নিবন্ধিত ইমেইল প্রদান করলে আপনার ইমেইলে একটি ৬-সংখ্যার ওটিপি (OTP) কোড পাঠানো হবে। <b>(বিঃদ্রঃ ওটিপি যদি ইনবক্সে না পান, তবে আপনার ইমেইলের Spam ফোল্ডার চেক করুন)</b>। কোডটি ভেরিফাই করে মুহূর্তেই নতুন পাসওয়ার্ড সেট করতে পারবেন।
           </div>
         </div>
       </div>
@@ -524,7 +534,7 @@
         <div class="faq-body-collapse">
           <div class="faq-content">
             LoveWeb-এ অর্ডারে মোট ব্যয়ের পরিমাণের ওপর ভিত্তি করে গ্রাহকদের স্বয়ংক্রিয়ভাবে মেম্বারশিপ মর্যাদা প্রদান করা হয়:
-            <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+            <ul style="margin: 8px 0 0 18px; line-height: 1.7;" id="dynamic-faq-membership-levels">
               <li><strong>সাধারণ সদস্য (Normal Member):</strong> ১,০০০ টাকার নিচে অর্ডার সম্পন্নকারী গ্রাহকগণ।</li>
               <li><strong>এলিট মেম্বার (Elite Member):</strong> মোট ১,০০০ টাকার বেশি (৳১,০০০+) খরচ করলেই স্বয়ংক্রিয়ভাবে প্রোফাইল 'এলিট মেম্বার' হিসেবে আপগ্রেড হয়ে যায়।</li>
               <li><strong>প্রিমিয়াম মেম্বার (Premium Member):</strong> মোট ২,০০০ টাকার বেশি (৳২,০০০+) ব্যয়কারী গ্রাহকগণ লাভ করেন LoveWeb-এর সর্বোচ্চ 'প্রিমিয়াম মেম্বার' পদবি।</li>
@@ -545,7 +555,7 @@
         <div class="faq-body-collapse">
           <div class="faq-content">
             মেম্বারদের জন্য LoveWeb-এ রয়েছে স্থায়ী ও আকর্ষণীয় ক্যাশব্যাক ও ছাড় সুবিধা:
-            <ul style="margin: 8px 0 0 18px; line-height: 1.7;">
+            <ul style="margin: 8px 0 0 18px; line-height: 1.7;" id="dynamic-faq-membership-discounts">
               <li><strong>এলিট মেম্বারদের জন্য:</strong> পরবর্তী প্রতিটি অর্ডারে নিশ্চিত <strong>৪% (4%) স্পেশাল ডিসকাউন্ট</strong>।</li>
               <li><strong>প্রিমিয়াম মেম্বারদের জন্য:</strong> প্রতিটি অর্ডারে সর্বোচ্চ <strong>৮% (8%) এক্সক্লুসিভ ডিসকাউন্ট</strong> ও প্রায়োরিটি এক্সপ্রেস কাস্টমাইজেশন সেবা।</li>
               <li>এই মেম্বারশিপ ডিসকাউন্ট আজীবন সচল থাকে এবং কোনো কুপন কোড ছাড়াই চেকআউটের সময় স্বয়ংক্রিয়ভাবে সমন্বিত হয়।</li>
@@ -901,6 +911,41 @@
   <!-- Live Messenger Floating Widget -->
   <script src="../js/messenger.js"></script>
 
+
+  <!-- Dynamic Membership Policy Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('/api/membership');
+        const data = await res.json();
+        if (data.success && data.tiers && data.tiers.length >= 2) {
+          const sorted = data.tiers.sort((a,b) => a.threshold - b.threshold);
+          const elite = sorted[0];
+          const premium = sorted[1];
+          
+          const ulLevels = document.getElementById('dynamic-faq-membership-levels');
+          if (ulLevels) {
+            ulLevels.innerHTML = `
+              <li><strong>সাধারণ সদস্য (Normal Member):</strong> ১,০০০ টাকার নিচে অর্ডার সম্পন্নকারী গ্রাহকগণ।</li>
+              <li><strong>${elite.name || 'এলিট মেম্বার'}:</strong> মোট ${elite.threshold.toLocaleString('en-US')} টাকার বেশি (৳${elite.threshold.toLocaleString('en-US')}+) খরচ করলেই স্বয়ংক্রিয়ভাবে প্রোফাইল '${elite.name || 'এলিট মেম্বার'}' হিসেবে আপগ্রেড হয়ে যায়।</li>
+              <li><strong>${premium.name || 'প্রিমিয়াম মেম্বার'}:</strong> মোট ${premium.threshold.toLocaleString('en-US')} টাকার বেশি (৳${premium.threshold.toLocaleString('en-US')}+) ব্যয়কারী গ্রাহকগণ লাভ করেন LoveWeb-এর সর্বোচ্চ '${premium.name || 'প্রিমিয়াম মেম্বার'}' পদবি।</li>
+            `;
+          }
+          
+          const ulDiscounts = document.getElementById('dynamic-faq-membership-discounts');
+          if (ulDiscounts) {
+            ulDiscounts.innerHTML = `
+              <li><strong>${elite.name || 'এলিট মেম্বার'}দের জন্য:</strong> পরবর্তী প্রতিটি অর্ডারে নিশ্চিত <strong>${elite.discount}% স্পেশাল ডিসকাউন্ট</strong>।</li>
+              <li><strong>${premium.name || 'প্রিমিয়াম মেম্বার'}দের জন্য:</strong> প্রতিটি অর্ডারে সর্বোচ্চ <strong>${premium.discount}% এক্সক্লুসিভ ডিসকাউন্ট</strong> ও প্রায়োরিটি এক্সপ্রেস কাস্টমাইজেশন সেবা।</li>
+              <li>এই মেম্বারশিপ ডিসকাউন্ট আজীবন সচল থাকে এবং কোনো কুপন কোড ছাড়াই চেকআউটের সময় স্বয়ংক্রিয়ভাবে সমন্বিত হয়।</li>
+            `;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load dynamic membership tiers', e);
+      }
+    });
+  </script>
 </body>
 
 </html>

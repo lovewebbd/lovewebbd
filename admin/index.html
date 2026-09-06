@@ -150,11 +150,17 @@
     .login-box h2 i { color: var(--admin-primary); margin-right: 8px; }
     .input-group { margin-bottom: 16px; }
     .input-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--admin-text-sub); }
-    .input-group input { 
+    .input-group input, .input-group textarea { 
       width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--admin-border);
       background: var(--admin-bg); color: var(--admin-text); font-size: 1rem; outline: none; transition: 0.2s;
+      box-sizing: border-box;
     }
-    .input-group input:focus { border-color: var(--admin-primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+    .input-group input:focus, .input-group textarea:focus { border-color: var(--admin-primary); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+    .input-group textarea {
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.5;
+    }
     .btn-admin {
       width: 100%; padding: 12px; background: var(--admin-primary); color: white; border: none; border-radius: 8px;
       font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -263,70 +269,320 @@
       .main-content { margin-left: 60px; max-width: calc(100vw - 60px); padding: 15px; }
     }
   </style>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js">
-    // --- Coupons Logic ---
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script>
+    // --- Packages Logic ---
+    let adminPackagesConfig = {};
+    let adminSelectedPkg = null;
+    
+    function changeEditPackage(pkgName) {
+       adminSelectedPkg = pkgName;
+       renderAdminPackages();
+    }
+
+    async function loadPackages() {
+      try {
+        const res = await fetch('/api/packages');
+        const data = await res.json();
+        if(data.success && data.packages) {
+          adminPackagesConfig = data.packages;
+          renderAdminPackages();
+        }
+      } catch(e) {
+         console.error('Error loading packages', e);
+      }
+    }
+    
+    function renderAdminPackages() {
+      const container = document.getElementById('adminPackagesContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const packageNames = Object.keys(adminPackagesConfig).sort((a,b) => (adminPackagesConfig[a].order || 0) - (adminPackagesConfig[b].order || 0));
+      if(packageNames.length === 0) {
+        container.innerHTML = '<p style="color:var(--admin-text-sub);">No packages found. Add a new package.</p>';
+        return;
+      }
+      
+      if(!adminSelectedPkg || !adminPackagesConfig[adminSelectedPkg]) {
+        adminSelectedPkg = packageNames[0];
+      }
+      
+      let optionsHtml = '';
+      for(const name of packageNames) {
+         optionsHtml += `<option value="${name}" ${name === adminSelectedPkg ? 'selected' : ''}>${name} Package</option>`;
+      }
+      
+      const pkgName = adminSelectedPkg;
+      const pkgData = adminPackagesConfig[pkgName];
+      
+      const icons = [
+         {val: '', name: 'None (No Icon)'},
+         {val: 'fa-solid fa-star', name: 'Star'},
+         {val: 'fa-solid fa-crown', name: 'Crown'},
+         {val: 'fa-solid fa-gem', name: 'Gem'},
+         {val: 'fa-solid fa-rocket', name: 'Rocket'},
+         {val: 'fa-solid fa-fire', name: 'Fire'},
+         {val: 'fa-solid fa-bolt', name: 'Lightning'},
+         {val: 'fa-solid fa-medal', name: 'Medal'},
+         {val: 'fa-solid fa-heart', name: 'Heart'},
+         {val: 'fa-solid fa-check-circle', name: 'Check Circle'},
+         {val: 'fa-solid fa-gift', name: 'Gift'}
+      ];
+      let iconOptions = '';
+      let hasCustom = pkgData.icon && !icons.find(i => i.val === pkgData.icon);
+      if(hasCustom) {
+         iconOptions += `<option value="${pkgData.icon}" selected>Custom (${pkgData.icon})</option>`;
+      }
+      for(const icon of icons) {
+         iconOptions += `<option value="${icon.val}" ${(!hasCustom && pkgData.icon === icon.val) ? 'selected' : ''}>${icon.name}</option>`;
+      }
+      
+      container.innerHTML = `
+        <div class="settings-panel" style="position:relative; width: 100%; box-sizing: border-box;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 20px; gap: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+               <label style="display:block; font-size: 0.85rem; color: var(--admin-text-sub); margin-bottom: 5px;">Select Package to Edit</label>
+               <select onchange="changeEditPackage(this.value)" style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); color: var(--admin-primary); font-family: inherit; font-size: 1rem; font-weight: 600;">
+                  ${optionsHtml}
+               </select>
+            </div>
+            <button type="button" class="btn-action" style="background:#6366f1; color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer; margin-right: 10px;" onclick="openReorderModal()" title="Reorder Packages">
+              <i class="fa-solid fa-sort"></i> Reorder Packages
+            </button>
+            <button type="button" class="btn-action btn-pay-reject" style="background:var(--admin-danger); color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer;" onclick="deletePackage('${pkgName}')" title="Delete Package">
+              <i class="fa-solid fa-trash"></i> Delete Package
+            </button>
+          </div>
+          
+          <hr style="border:none; border-top: 1px solid var(--admin-border); margin-bottom: 20px;">
+          
+          <form class="packageForm" data-pkg="${pkgName}">
+            <div class="input-group" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+              <div>
+                <label>Bangla Name</label>
+                <input type="text" class="pkgBnName" value="${pkgData.bnName || ''}" placeholder="e.g. রেগুলার">
+              </div>
+              <div>
+                <label>Icon (FontAwesome)</label>
+                <select class="pkgIcon" style="width: 100%; padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); color: var(--admin-text-main); font-family: inherit;">
+                  ${iconOptions}
+                </select>
+              </div>
+              <div>
+                <label>Title Color</label>
+                <input type="color" class="pkgHeadColor" value="${pkgData.headColor || '#ffffff'}" style="width: 100%; height: 42px; padding: 2px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); cursor:pointer;">
+              </div>
+            </div>
+            
+            <div class="input-group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label>Base Price (৳)</label>
+                <input type="number" class="pkgBasePrice" required value="${pkgData.base || ''}">
+              </div>
+              <div>
+                <label>Advance (৳)</label>
+                <input type="number" class="pkgAdvance" required value="${pkgData.advance !== undefined ? pkgData.advance : ''}">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Original Crossed Price (৳)</label>
+              <input type="number" class="pkgOriginalPrice" required value="${pkgData.original || ''}">
+            </div>
+            <div class="input-group">
+              <label>Delivery Time (Days)</label>
+              <input type="number" class="pkgDeliveryTime" required value="${pkgData.deliveryTime || 7}">
+            </div>
+            <div class="input-group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label>Min Pages (Required)</label>
+                <input type="number" class="pkgMinPages" required value="${pkgData.minPages || 3}">
+              </div>
+              <div>
+                <label>Max Pages</label>
+                <input type="number" class="pkgMaxPages" required value="${pkgData.maxPages || 4}">
+              </div>
+            </div>
+            <div class="input-group" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label>Max Images Per Description</label>
+                <input type="number" class="pkgMaxImages" required value="${pkgData.maxImagesPerDesc !== undefined ? pkgData.maxImagesPerDesc : 5}">
+              </div>
+              <div>
+                <label>Max Total Images</label>
+                <input type="number" class="pkgMaxTotalImages" required value="${pkgData.maxTotalImages !== undefined ? pkgData.maxTotalImages : 15}">
+              </div>
+            </div>
+            <div class="input-group">
+              <label><i class="fa-solid fa-list-check"></i> Features (One per line)</label>
+              <div style="font-size: 0.8rem; color: var(--admin-text-sub); margin-bottom: 5px;">Press Enter to add a new feature.</div>
+              <textarea class="pkgFeatures" rows="5" required>${(pkgData.features || []).join('\n')}</textarea>
+            </div>
+            <div class="input-group">
+              <label><i class="fa-solid fa-circle-info"></i> Tooltip Text</label>
+              <div style="font-size: 0.8rem; color: var(--admin-text-sub); margin-bottom: 5px;">Press Enter for a new line. No need to use &lt;br&gt; tags.</div>
+              <textarea class="pkgTooltip" rows="4" required>${(pkgData.tooltip || '').replace(/<br\s*\/?>/gi, '\n')}</textarea>
+            </div>
+            <button type="submit" class="btn-admin">Save ${pkgName} Settings</button>
+          </form>
+        </div>
+      `;
+      
+      // Re-attach listeners
+      document.querySelectorAll('.packageForm').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const pkgName = form.getAttribute('data-pkg');
+          const payload = {
+            bnName: form.querySelector('.pkgBnName').value.trim(),
+            icon: form.querySelector('.pkgIcon').value.trim(),
+            headColor: form.querySelector('.pkgHeadColor').value.trim(),
+            base: Number(form.querySelector('.pkgBasePrice').value),
+            advance: Number(form.querySelector('.pkgAdvance').value),
+            order: pkgData.order || 0,
+            original: Number(form.querySelector('.pkgOriginalPrice').value),
+            deliveryTime: Number(form.querySelector('.pkgDeliveryTime').value),
+            minPages: Number(form.querySelector('.pkgMinPages').value),
+            maxPages: Number(form.querySelector('.pkgMaxPages').value),
+            maxImagesPerDesc: Number(form.querySelector('.pkgMaxImages').value),
+            maxTotalImages: Number(form.querySelector('.pkgMaxTotalImages').value),
+            features: form.querySelector('.pkgFeatures').value.split('\n').filter(l => l.trim() !== ''),
+            tooltip: form.querySelector('.pkgTooltip').value.replace(/\n/g, '<br>')
+          };
+          try {
+            const res = await fetch('/api/admin/packages/' + encodeURIComponent(pkgName), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+              body: JSON.stringify(payload)
+            });
+            if(res.ok) showToast(pkgName + ' package updated!');
+            else showToast('Error updating package');
+          } catch(e) { showToast('Error updating package'); }
+        });
+      });
+    }
+
+    function addNewPackage() {
+      document.getElementById('addPackageModal').style.display = 'flex';
+      document.getElementById('newPackageNameInput').value = '';
+      document.getElementById('newPackageNameInput').focus();
+    }
+    
+    function closeAddPackageModal() {
+      document.getElementById('addPackageModal').style.display = 'none';
+    }
+    
+    function confirmAddPackage() {
+      const input = document.getElementById('newPackageNameInput');
+      const pkgName = input.value.trim();
+      if(!pkgName) {
+         showToast('Please enter a package name');
+         return;
+      }
+      if(adminPackagesConfig[pkgName]) {
+         showToast('Package already exists!');
+         return;
+      }
+      
+      const newOrder = Object.keys(adminPackagesConfig).length + 1;
+      adminPackagesConfig[pkgName] = { order: newOrder, bnName: '', icon: '', headColor: '#ffffff', base: 0, advance: 0, original: 0, deliveryTime: 7, minPages: 3, maxPages: 4, features: [], tooltip: '' };
+      closeAddPackageModal();
+      renderAdminPackages();
+      
+      // Auto-save the new empty package to DB to ensure it persists immediately
+      fetch('/api/admin/packages/' + encodeURIComponent(pkgName), {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+         body: JSON.stringify(adminPackagesConfig[pkgName])
+      }).catch(e => console.error(e));
+    }
+
+    async function deletePackage(pkgName) {
+      if(!confirm('Are you sure you want to delete the ' + pkgName + ' package?')) return;
+      try {
+        const token = window.adminToken || localStorage.getItem('loveweb_admin_token');
+        const res = await fetch('/api/admin/packages/delete/' + encodeURIComponent(pkgName), {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if(res.ok) {
+           delete adminPackagesConfig[pkgName];
+           if (adminSelectedPkg === pkgName) adminSelectedPkg = null;
+           renderAdminPackages();
+           showToast('Package deleted');
+        } else {
+           showToast('Failed to delete package');
+        }
+      } catch(e) {
+        showToast('Error deleting package');
+      }
+    }
+
+    // --- Settings Logic ---
+    
     async function loadCoupons() {
       try {
-        const res = await fetch('/api/admin/coupons', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        const res = await fetch('/api/admin/coupons', { headers: { 'Authorization': 'Bearer ' + adminToken } });
         const data = await res.json();
+        const tbody = document.getElementById('couponsBody');
+        tbody.innerHTML = '';
         if(data.success) {
-          const tbody = document.getElementById('coupons-table-body');
-          if(data.coupons.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No coupons found</td></tr>';
-            return;
-          }
-          let html = '';
           data.coupons.forEach(c => {
-            html += `<tr>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
               <td><strong>${c.code}</strong></td>
               <td>${c.discountPercent}%</td>
+              <td>${c.expiryDate || 'No Expiry'}</td>
               <td>${c.maxUsesPerUser || 'Unlimited'}</td>
-              <td>${c.expiryDate ? new Date(c.expiryDate).toLocaleDateString() : 'No expiry'}</td>
-              <td><button class="btn-action" style="background:#ef4444; border-color:#dc2626;" onclick="deleteCoupon('${c.code}')"><i class="fa-solid fa-trash"></i></button></td>
-            </tr>`;
+              <td><button class="btn-action btn-pay-reject" onclick="deleteCoupon('${c.code}')">Delete</button></td>
+            `;
+            tbody.appendChild(tr);
           });
-          tbody.innerHTML = html;
         }
-      } catch(e) { console.error(e); }
+      } catch(e) {}
     }
-    
-    async function saveCoupon() {
-      const code = document.getElementById('newCouponCode').value.trim();
-      const discountPercent = document.getElementById('newCouponDiscount').value;
-      const maxUsesPerUser = document.getElementById('newCouponUses').value;
-      const expiryDate = document.getElementById('newCouponExpiry').value;
-      if(!code || !discountPercent) return alert('Code and discount are required');
-      
-      try {
-        const res = await fetch('/api/admin/coupons', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
-          body: JSON.stringify({ code, discountPercent, maxUsesPerUser, expiryDate })
-        });
-        const data = await res.json();
-        if(data.success) {
-          document.getElementById('newCouponCode').value = '';
-          document.getElementById('newCouponDiscount').value = '';
-          loadCoupons();
-        } else {
-          alert(data.message);
-        }
-      } catch(e) { alert('Error'); }
-    }
-    
+
     async function deleteCoupon(code) {
       if(!confirm('Delete coupon ' + code + '?')) return;
       try {
         const res = await fetch('/api/admin/coupons/delete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
           body: JSON.stringify({ code })
         });
-        if(res.ok) loadCoupons();
-      } catch(e) { alert('Error'); }
+        const data = await res.json();
+        if(data.success) loadCoupons();
+        else showToast(data.message);
+      } catch(e) {}
     }
-    
-    // --- Settings Logic ---
+
+    document.getElementById('couponForm')?.addEventListener('submit', async(e) => {
+      e.preventDefault();
+      const payload = {
+        code: document.getElementById('cpnCode').value.trim(),
+        discountPercent: document.getElementById('cpnDiscount').value,
+        expiryDate: document.getElementById('cpnExpiry').value,
+        maxUsesPerUser: document.getElementById('cpnMaxUses').value
+      };
+      try {
+        const res = await fetch('/api/admin/coupons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(data.success) {
+          document.getElementById('couponForm').reset();
+          loadCoupons();
+        } else showToast(data.message);
+      } catch(e) {}
+    });
+
+    document.getElementById('paymentSettingsForm')?.addEventListener('submit', async(e) => {
+      e.preventDefault();
+      saveSettings();
+    });
+
     async function loadSettings() {
       try {
         const res = await fetch('/api/settings');
@@ -344,13 +600,13 @@
       try {
         const res = await fetch('/api/admin/settings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
           body: JSON.stringify({ bkashNumber, nagadNumber })
         });
         const data = await res.json();
-        if(data.success) alert('Settings saved');
-        else alert(data.message);
-      } catch(e) { alert('Error saving settings'); }
+        if(data.success) showToast('Settings saved');
+        else showToast(data.message);
+      } catch(e) { showToast('Error saving settings'); }
     }
 </script>
 
@@ -397,7 +653,10 @@
       <div class="sidebar-menu">
         
         <div class="menu-item active" onclick="switchTab('dashboard')">
-          <i class="fa-solid fa-chart-line"></i> <span>Dashboard (All)</span>
+          <i class="fa-solid fa-chart-line"></i> <span>Dashboard</span>
+        </div>
+        <div class="menu-item" onclick="switchTab('allOrders')">
+          <i class="fa-solid fa-list-ul"></i> <span>All Orders</span>
         </div>
         <div class="menu-item" onclick="switchTab('pendingPayment')">
           <i class="fa-solid fa-hourglass-half"></i> <span>Pending Payment</span>
@@ -405,8 +664,23 @@
         <div class="menu-item" onclick="switchTab('ongoingOrder')">
           <i class="fa-solid fa-bars-progress"></i> <span>Ongoing Orders</span>
         </div>
+        <div class="menu-item" onclick="switchTab('coupons')">
+          <i class="fa-solid fa-tags"></i> <span>Coupons</span>
+        </div>
+        <div class="menu-item" onclick="switchTab('packages')">
+          <i class="fa-solid fa-box"></i> <span>Packages</span>
+        </div>
+        <div class="menu-item" onclick="switchTab('demos')">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Demos</span>
+        </div>
+        <div class="menu-item" onclick="switchTab('membership')">
+          <i class="fa-solid fa-crown"></i> <span>Membership</span>
+        </div>
         <div class="menu-item" onclick="switchTab('settings')">
-          <i class="fa-solid fa-gear"></i> <span>Settings</span>
+          <i class="fa-solid fa-money-check-dollar"></i> <span>Payment Settings</span>
+        </div>
+        <div class="menu-item" onclick="switchTab('security')">
+          <i class="fa-solid fa-lock"></i> <span>Security</span>
         </div>
         <div class="menu-item" onclick="logout()" style="color: var(--admin-danger);">
           <i class="fa-solid fa-power-off"></i> <span>Logout</span>
@@ -427,26 +701,29 @@
       <!-- Dashboard View -->
       <div id="view-dashboard">
         <div class="stats-grid">
-          
+          <div class="stat-card">
+            <div class="stat-title">Total Revenue</div>
+            <div class="stat-value" style="color: var(--admin-success);" id="statRevenue">৳ 0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Pending Orders</div>
+            <div class="stat-value" style="color: var(--admin-primary);" id="statPendingDel">0</div>
+          </div>
           <div class="stat-card">
             <div class="stat-title">Total Orders</div>
             <div class="stat-value" id="statTotal">0</div>
           </div>
           <div class="stat-card">
             <div class="stat-title">Pending Payments</div>
-            <div class="stat-value" style="color: var(--admin-warning);" id="statPendingPay">0</div>
+            <div class="stat-value" style="color: var(--admin-danger);" id="statPendingPay">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-title">Pending Deliveries</div>
-            <div class="stat-value" style="color: var(--admin-primary);" id="statPendingDel">0</div>
+            <div class="stat-title">Delivered Orders</div>
+            <div class="stat-value" style="color: var(--admin-success);" id="statDelivered">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-title">Rejected Orders</div>
-            <div class="stat-value" style="color: var(--admin-danger);" id="statRejected">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-title">Total Revenue</div>
-            <div class="stat-value" style="color: var(--admin-success);" id="statRevenue">৳ 0</div>
+            <div class="stat-title">Half Payments</div>
+            <div class="stat-value" style="color: var(--admin-warning);" id="statHalfPay">0</div>
           </div>
         </div>
 
@@ -455,6 +732,10 @@
           <div id="recharts-container" style="width:100%; height:300px;"></div>
         </div>
 
+      </div>
+
+      <!-- Orders View -->
+      <div id="view-orders" class="hidden">
         <div class="orders-section">
           <div class="orders-header">
             <h3>Recent Orders</h3>
@@ -498,20 +779,141 @@
         </div>
       </div>
 
-      <!-- Settings View -->
-      <div id="view-settings" class="hidden">
+      
+      
+      <!-- Membership View -->
+      
+      <!-- Demos View -->
+      <div id="view-demos" class="hidden">
         <div class="settings-panel">
-          <h2>Change Password</h2>
-          <form id="changePasswordForm">
-            <div class="input-group">
-              <label>New Password</label>
-              <input type="password" id="newPass" required minlength="6">
-            </div>
-            <button type="submit" class="btn-admin">Update Password</button>
-            <div class="error-msg" id="passMsg" style="margin-top:10px;"></div>
-          </form>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h2 style="margin:0;">Manage Demos</h2>
+              <button class="btn-admin" style="width: auto; padding: 8px 15px;" onclick="addDemoRow()"><i class="fa-solid fa-plus"></i> Add Demo</button>
+          </div>
+          
+          <div id="demosContainer" style="display:flex; flex-direction:column; gap:15px; margin-bottom: 20px;">
+              <!-- Loaded via JS -->
+          </div>
+          
+          <button class="btn-admin" onclick="saveDemos()">Save Demos</button>
         </div>
       </div>
+      
+      <div id="view-membership" class="hidden">
+        <div style="background: var(--admin-card); padding: 20px; border-radius: 12px; border: 1px solid var(--admin-border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">Membership Tiers</h3>
+                <button class="btn-admin" style="width: auto; padding: 8px 15px;" onclick="addMembershipTier()"><i class="fa-solid fa-plus"></i> Add Tier</button>
+            </div>
+            
+            <div id="membershipTiersContainer" style="display:flex; flex-direction:column; gap:15px;">
+                <!-- Loaded via JS -->
+            </div>
+            
+            <button class="btn-admin" style="margin-top:20px;" onclick="saveMembershipTiers()">Save Membership Settings</button>
+            
+            <hr style="border-color:var(--admin-border); margin: 30px 0;">
+            
+            <h3>Live Preview</h3>
+            <div id="membershipLivePreview" style="padding: 20px; border-radius: 10px; background: var(--admin-bg); border: 1px solid var(--admin-border); min-height: 100px;">
+                <!-- Preview here -->
+            </div>
+        </div>
+      </div>
+      
+      <!--Coupons View -->
+      <div id="view-coupons" class="hidden">
+        <div class="settings-panel">
+          <h2>Manage Coupons</h2>
+          <form id="couponForm" style="margin-bottom: 20px; display: grid; gap: 15px; grid-template-columns: 1fr 1fr;">
+            <div class="input-group">
+              <label>Coupon Code (e.g. LOVE50)</label>
+              <input type="text" id="cpnCode" required>
+            </div>
+            <div class="input-group">
+              <label>Discount Percent (%)</label>
+              <input type="number" id="cpnDiscount" required min="1" max="100">
+            </div>
+            <div class="input-group">
+              <label>Expiry Date</label>
+              <input type="date" id="cpnExpiry">
+            </div>
+            <div class="input-group">
+              <label>Max Uses Per User</label>
+              <input type="number" id="cpnMaxUses" value="1">
+            </div>
+            <button type="submit" class="btn-admin" style="grid-column: 1 / -1;">Add Coupon</button>
+          </form>
+          <div class="table-container">
+            <table class="data-table" id="couponsTable">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Discount</th>
+                  <th>Expiry</th>
+                  <th>Max Uses</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="couponsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Packages View -->
+      <!-- Packages View -->
+      <div id="view-packages" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+           <h2 style="margin:0;">Manage Packages</h2>
+           <button class="btn-admin" style="width: auto; padding: 10px 20px;" onclick="addNewPackage()"><i class="fa-solid fa-plus"></i> Add Package</button>
+        </div>
+        <div id="adminPackagesContainer" style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+            <!-- Dynamic Packages render here -->
+        </div>
+      </div>
+      
+
+      <div id="view-settings" class="hidden">
+        <div style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+          <div class="settings-panel">
+            <h2>Payment Methods</h2>
+            <form id="paymentSettingsForm">
+              <div class="input-group">
+                <label>bKash Number</label>
+                <input type="text" id="settingBkash" placeholder="e.g. 017XXXXXXXX">
+              </div>
+              <div class="input-group">
+                <label>Nagad Number</label>
+                <input type="text" id="settingNagad" placeholder="e.g. 018XXXXXXXX">
+              </div>
+              <button type="submit" class="btn-admin">Save Payment Info</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Security View -->
+      <div id="view-security" class="hidden">
+        <div style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+          <div class="settings-panel">
+            <h2>Change Admin Password</h2>
+            <form id="changePasswordForm">
+              <div class="input-group">
+                <label>Old Password</label>
+                <input type="password" id="oldPass" required>
+              </div>
+              <div class="input-group">
+                <label>New Password</label>
+                <input type="password" id="newPass" required minlength="6">
+              </div>
+              <button type="submit" class="btn-admin">Update Password</button>
+              <div class="error-msg" id="passMsg" style="margin-top:10px;"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
 
     </div>
   </div>
@@ -562,6 +964,22 @@
       </div>
     </div>
   </div>
+
+  <!-- Add Package Modal -->
+  <div class="confirm-modal-overlay" id="addPackageModal">
+    <div class="confirm-modal">
+      <h3>Add New Package</h3>
+      <div style="margin-top: 15px; margin-bottom: 20px; text-align: left;">
+        <label style="display: block; font-size: 0.85rem; color: var(--admin-text-sub); margin-bottom: 8px;">Package Name</label>
+        <input type="text" id="newPackageNameInput" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); padding: 10px; border-radius: 6px; color: var(--admin-text-main); font-family: inherit;" placeholder="e.g. Standard">
+      </div>
+      <div class="confirm-modal-actions">
+        <button class="btn-cancel" onclick="closeAddPackageModal()">Cancel</button>
+        <button class="btn-confirm" onclick="confirmAddPackage()">Add</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let adminToken = localStorage.getItem('loveweb_admin_token');
     let allOrders = [];
@@ -664,24 +1082,70 @@
       currentMenuTab = tab;
       document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
       document.getElementById('view-dashboard').classList.add('hidden');
+      document.getElementById('view-orders').classList.add('hidden');
       document.getElementById('view-settings').classList.add('hidden');
+      document.getElementById('view-packages').classList.add('hidden');
+      document.getElementById('view-membership').classList.add('hidden');
+      if(document.getElementById('view-demos')) document.getElementById('view-demos').classList.add('hidden');
+      document.getElementById('view-coupons').classList.add('hidden');
+      document.getElementById('view-security').classList.add('hidden');
 
-      if (tab === 'dashboard' || tab === 'pendingPayment' || tab === 'ongoingOrder') {
-        const itemIdx = tab === 'dashboard' ? 0 : (tab === 'pendingPayment' ? 1 : 2);
-        document.querySelectorAll('.menu-item')[itemIdx].classList.add('active');
+      
+      const tabs = ['dashboard', 'allOrders', 'pendingPayment', 'ongoingOrder', 'coupons', 'packages', 'demos', 'membership', 'settings', 'security'];
+      const index = tabs.indexOf(tab);
+      if(index !== -1) {
+         document.querySelectorAll('.menu-item')[index].classList.add('active');
+      }
+
+      if (tab === 'dashboard') {
         document.getElementById('view-dashboard').classList.remove('hidden');
-        
-        let title = 'Dashboard Overview';
-        if (tab === 'pendingPayment') title = 'Pending Payments';
-        if (tab === 'ongoingOrder') title = 'Ongoing Orders';
-        document.getElementById('pageTitle').innerText = title;
-        
-        updateStats(allOrders);
-          applyFilters();
+        document.getElementById('pageTitle').innerText = 'Dashboard Overview';
+        loadDashboardStats();
+      } else if (tab === 'allOrders') {
+        document.getElementById('view-orders').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'All Orders';
+        currentOrdersFilter = 'all';
+        applyFilters();
+      } else if (tab === 'pendingPayment') {
+        document.getElementById('view-orders').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Pending Payment';
+        currentOrdersFilter = 'pending_payment';
+        applyFilters();
+      } else if (tab === 'ongoingOrder') {
+        document.getElementById('view-orders').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Ongoing Orders';
+        currentOrdersFilter = 'ongoing';
+        applyFilters();
+      } else if (tab === 'coupons') {
+        document.getElementById('view-coupons').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Coupons';
+        loadCoupons();
+      } else if (tab === 'packages') {
+        document.getElementById('view-packages').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Package Settings';
+        loadPackages();
+      
+      } else if (tab === 'demos') {
+        document.getElementById('view-demos').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Demo Management';
+        loadDemosAdmin();
+      } else if (tab === 'membership') {
+        document.getElementById('view-membership').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Membership Settings';
+        loadMembership();
       } else if (tab === 'settings') {
-        document.querySelectorAll('.menu-item')[3].classList.add('active');
         document.getElementById('view-settings').classList.remove('hidden');
-        document.getElementById('pageTitle').innerText = 'System Settings';
+        document.getElementById('pageTitle').innerText = 'Payment Settings';
+        loadSettings();
+      } else if (tab === 'security') {
+        document.getElementById('view-security').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Security Settings';
+      }
+ else if (tab === 'coupons') {
+        document.querySelectorAll('.menu-item')[4].classList.add('active');
+        document.getElementById('view-coupons').classList.remove('hidden');
+        document.getElementById('pageTitle').innerText = 'Manage Coupons';
+        loadCoupons();
       }
     }
 
@@ -788,7 +1252,7 @@
         const pkgPrice = o.package === 'Premium' ? 949 : (o.package === 'Exclusive' ? 649 : 349);
         const actualTotal = o.totalPrice !== undefined ? Number(o.totalPrice) : pkgPrice;
         
-        if (o.advancePaymentStatus === 'কনফার্মড' || o.advancePaymentStatus === 'Confirmed') {
+        if (o.advancePaymentStatus === 'কনফার্মড' || o.advancePaymentStatus === 'ভেরিফাইড' || o.advancePaymentStatus === 'Confirmed') {
           revenue += Number(o.advancePayment) || 0;
         } else if (o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
           revenue += actualTotal;
@@ -821,13 +1285,13 @@
         // Payment Badge
         let payBadge = 'badge-pending';
         let payText = o.advancePaymentStatus || 'পেন্ডিং';
-        if (payText === 'কনফার্মড' || payText === 'Confirmed' || payText === 'সম্পূর্ণ পরিশোধিত') payBadge = 'badge-success';
+        if (payText === 'কনফার্মড' || payText === 'ভেরিফাইড' || payText === 'Confirmed' || payText === 'সম্পূর্ণ পরিশোধিত') payBadge = 'badge-success';
         if (payText === 'বাতিল' || payText === 'Rejected' || payText === 'পেমেন্ট বাতিল') payBadge = 'badge-danger';
 
         // Status Badge
         let statusBadge = 'badge-pending';
         let statusText = o.status || 'প্রক্রিয়াকরণ চলছে';
-        if (statusText === 'ডেলিভারড' || statusText === 'Delivered') statusBadge = 'badge-success';
+        if (statusText === 'ডেলিভারড' || statusText === 'Delivered' || statusText === 'অর্ডার কনফার্ম') statusBadge = 'badge-success';
         if (statusText === 'অর্ডার বাতিল' || statusText === 'বাতিল') statusBadge = 'badge-danger';
 
         tr.innerHTML = `
@@ -866,11 +1330,11 @@
           <td>
             <div class="action-btn-group">
               ${payText === 'পেন্ডিং' ? `
-                <button class="btn-action btn-pay-adv" onclick="updateOrder(event, '${o.id}', 'payment', 'কনফার্মড')">Confirm Adv.</button>
+                <button class="btn-action btn-pay-adv" onclick="updateOrder(event, '${o.id}', 'payment', 'ভেরিফাইড')">কনফার্ম অ্যাডভান্স</button>
                 <button class="btn-action btn-pay-reject" onclick="updateOrder(event, '${o.id}', 'payment', 'পেমেন্ট বাতিল')">Reject</button>
               ` : ''}
               
-              ${payText === 'কনফার্মড' || payText === 'Confirmed' ? `
+              ${payText === 'কনফার্মড' || payText === 'ভেরিফাইড' || payText === 'Confirmed' ? `
                 <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
                   <button class="btn-action btn-pay-full" onclick="updateOrder(event, '${o.id}', 'payment', 'সম্পূর্ণ পরিশোধিত')">Full Paid</button>
                   <div style="display:flex; gap:4px; width:100%;">
@@ -881,7 +1345,7 @@
               ` : ''}
 
               ${payText === 'সম্পূর্ণ পরিশোধিত' ? `
-                <button class="btn-action btn-undo" onclick="updateOrder(event, '${o.id}', 'payment', 'কনফার্মড')" title="Undo"><i class="fa-solid fa-rotate-left"></i> Undo</button>
+                <button class="btn-action btn-undo" onclick="updateOrder(event, '${o.id}', 'payment', 'ভেরিফাইড')" title="Undo"><i class="fa-solid fa-rotate-left"></i> Undo</button>
               ` : ''}
 
               ${payText === 'পেমেন্ট বাতিল' || payText === 'বাতিল' || payText === 'Rejected' ? `
@@ -928,9 +1392,23 @@
       }
       
       if (order.pages && Array.isArray(order.pages)) {
-         order.pages.forEach((pageDesc, idx) => {
-            if(pageDesc) {
-               content += `<div style="margin-bottom:15px;"><strong>Page ${idx + 1} Details:</strong><br><div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; margin-top:5px; white-space:pre-wrap;">${pageDesc}</div></div>`;
+         order.pages.forEach((page, idx) => {
+            let pageDesc = '';
+            let imagesHtml = '';
+            
+            if (typeof page === 'string') {
+                pageDesc = page;
+            } else {
+                pageDesc = page.description || '';
+                if (page.images && page.images.length > 0) {
+                    imagesHtml = '<div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">' + 
+                        page.images.map(img => `<a href="${img}" target="_blank"><img src="${img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--admin-border);" alt="Image"></a>`).join('') +
+                    '</div>';
+                }
+            }
+            
+            if(pageDesc || imagesHtml) {
+               content += `<div style="margin-bottom:15px;"><strong>Page ${idx + 1} Details:</strong><br><div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; margin-top:5px; white-space:pre-wrap;">${pageDesc}${imagesHtml}</div></div>`;
             }
          });
       } else {
@@ -972,7 +1450,7 @@
       allOrders.forEach(o => {
         if (o.userPhone === phone) {
           totalO++;
-          if (o.advancePaymentStatus === 'কনফার্মড' || o.advancePaymentStatus === 'Confirmed') {
+          if (o.advancePaymentStatus === 'কনফার্মড' || o.advancePaymentStatus === 'ভেরিফাইড' || o.advancePaymentStatus === 'Confirmed') {
             totalR += Number(o.advancePayment) || 0;
           } else if (o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
             const pkgPrice = o.package === 'Premium' ? 949 : (o.package === 'Exclusive' ? 649 : 349);
@@ -1051,10 +1529,10 @@
         if (data.success) {
           loadOrders(); 
         } else {
-          alert('Error: ' + data.message);
+          showToast('Error: ' + data.message);
         }
       } catch (err) {
-        alert('Connection error');
+        showToast('Connection error');
       } finally {
         showLoading(false);
       }
@@ -1063,8 +1541,170 @@
     function showLoading(show) {
       document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
     }
-  </script>
+  
+    let membershipTiers = [];
+    
+    async function loadMembership() {
+      try {
+         const res = await fetch('/api/membership');
+         const data = await res.json();
+         if(data.success && data.tiers) {
+             membershipTiers = data.tiers;
+             renderMembershipTiers();
+         }
+      } catch(e) {
+         console.error(e);
+      }
+    }
+    
+    function renderMembershipTiers() {
+       const container = document.getElementById('membershipTiersContainer');
+       if(!container) return;
+       container.innerHTML = '';
+       membershipTiers.sort((a, b) => a.threshold - b.threshold).forEach((tier, index) => {
+           const div = document.createElement('div');
+           div.style.cssText = 'background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--admin-border); display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));';
+           div.innerHTML = `
+              <div class="input-group">
+                 <label>Tier Name (English)</label>
+                 <input type="text" value="${tier.nameEn || tier.name || ''}" oninput="updateMembershipData(${index}, 'nameEn', this.value)">
+              </div>
+              <div class="input-group">
+                 <label>Tier Name (Bangla)</label>
+                 <input type="text" value="${tier.bnName || tier.name || ''}" oninput="updateMembershipData(${index}, 'bnName', this.value)">
+              </div>
+              <div class="input-group">
+                 <label>Minimum Spent (৳)</label>
+                 <input type="number" value="${tier.threshold}" oninput="updateMembershipData(${index}, 'threshold', this.value)">
+              </div>
+              <div class="input-group">
+                 <label>Maximum Spent (৳) (Optional)</label>
+                 <input type="number" value="${tier.maxThreshold !== null && tier.maxThreshold !== undefined ? tier.maxThreshold : ''}" oninput="updateMembershipData(${index}, 'maxThreshold', this.value)">
+              </div>
+              <div class="input-group">
+                 <label>Discount (%)</label>
+                 <input type="number" value="${tier.discount}" oninput="updateMembershipData(${index}, 'discount', this.value)">
+              </div>
+              
+              <div class="input-group" style="grid-column: 1 / -1;">
+                 <label style="margin-bottom: 8px; display: block; color: var(--admin-text-sub);">Select Icon</label>
+                 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    ${[
+                        'fa-solid fa-crown', 'fa-solid fa-gem', 'fa-solid fa-heart', 
+                        'fa-solid fa-star', 'fa-solid fa-award', 'fa-solid fa-medal', 
+                        'fa-solid fa-fire', 'fa-solid fa-bolt', 'fa-solid fa-shield-halved', 
+                        'fa-solid fa-trophy', 'fa-solid fa-certificate', 'fa-solid fa-ribbon',
+                        'fa-solid fa-check-circle', 'fa-solid fa-leaf', 'fa-solid fa-diamond'
+                    ].map(ic => `
+                        <div onclick="updateMembershipData(${index}, 'icon', '${ic}')" 
+                             style="width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; background: ${tier.icon === ic ? 'var(--admin-primary)' : 'rgba(0,0,0,0.2)'}; border: 1px solid ${tier.icon === ic ? 'var(--admin-primary)' : 'var(--admin-border)'}; border-radius: 8px; cursor: pointer; color: ${tier.icon === ic ? '#fff' : 'var(--admin-text)'}; transition: all 0.2s;" title="${ic}">
+                            <i class="${ic}" style="font-size: 1.2rem;"></i>
+                        </div>
+                    `).join('')}
+                 </div>
+              </div>
+              <div class="input-group">
+                 <label>Background Color</label>
+                 <input type="color" value="${tier.bgColor}" oninput="updateMembershipData(${index}, 'bgColor', this.value)" style="width: 100%; height: 42px; padding: 2px; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid var(--admin-border); cursor:pointer;">
+              </div>
+              <div class="input-group" style="display:flex; align-items:flex-end;">
+                 <button class="btn-admin" style="background:#ef4444;" onclick="removeMembershipTier(${index})"><i class="fa-solid fa-trash"></i> Remove</button>
+              </div>
+           `;
+           container.appendChild(div);
+       });
+       updateMembershipPreview();
+    }
+    
+    function updateMembershipData(index, key, value) {
+        if(key === 'threshold' || key === 'maxThreshold' || key === 'discount') {
+             value = (value === '' || value === null) ? null : Number(value);
+        }
+        membershipTiers[index][key] = value;
+        updateMembershipPreview();
+    }
+    
+    function addMembershipTier() {
+        membershipTiers.push({ nameEn: 'New Member', bnName: 'নতুন মেম্বার', name: 'নতুন মেম্বার', threshold: 0, maxThreshold: null, discount: 0, icon: 'fa-solid fa-star', bgColor: '#4ade80' });
+        renderMembershipTiers();
+    }
+    
+    function removeMembershipTier(index) {
+        membershipTiers.splice(index, 1);
+        renderMembershipTiers();
+    }
+    
+    // E2B for preview
+    function e2b(str) {
+       if(!str && str !== 0) return '';
+       const bengaliDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+       return str.toString().replace(/[0-9]/g, w => bengaliDigits[w]);
+    }
+    
+    function updateMembershipPreview() {
+        const preview = document.getElementById('membershipLivePreview');
+        if(!preview) return;
+        preview.innerHTML = '';
+        
+        membershipTiers.forEach(tier => {
+            const wrapper = document.createElement('div');
+            wrapper.style.marginBottom = '25px';
+            wrapper.style.padding = '15px';
+            wrapper.style.background = 'rgba(0,0,0,0.2)';
+            wrapper.style.borderRadius = '12px';
+            wrapper.style.border = '1px solid var(--admin-border)';
+            
+            const avatarPreview = `
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom: 15px;">
+                    <div style="width: 78px; height: 78px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative; color: #fff; font-size: 2.1rem; font-weight: bold; background: linear-gradient(135deg, var(--admin-primary), #80002a); padding: 4px;">
+                        <div style="position: absolute; inset: 0; border-radius: 50%; padding: 3px; background: conic-gradient(from 0deg, ${tier.bgColor}, #ffffff, ${tier.bgColor}); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; pointer-events: none;"></div>
+                        <div style="width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--admin-primary), #80002a);">
+                            U
+                        </div>
+                        <div style="position: absolute; top: -10px; right: -8px; color: ${tier.bgColor}; font-size: 1.6rem; z-index: 25; filter: drop-shadow(0 2px 4px ${tier.bgColor}66); transform: rotate(15deg);">
+                            <i class="${tier.icon}"></i>
+                        </div>
+                        <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); background: ${tier.bgColor}; color: #fff; font-size: 0.65rem; padding: 2px 10px; border-radius: 12px; font-weight: bold; white-space: nowrap; z-index: 25; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                            ${(tier.nameEn || tier.name || '').toUpperCase()}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: var(--admin-text); font-size: 1.1rem; font-weight: 600;">User Name</h4>
+                        <span style="color: ${tier.bgColor}; background: ${tier.bgColor}22; border: 1px solid ${tier.bgColor}66; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-top: 5px;">
+                            <i class="${tier.icon}"></i> ${tier.bnName || tier.name}
+                        </span>
+                    </div>
+                </div>
+            `;
 
+            const bannerPreview = `
+                <div style="padding: 12px 20px; background: linear-gradient(135deg, ${tier.bgColor}22, rgba(255,255,255,0.05)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px dashed ${tier.bgColor}66; border-radius: 12px; color: #fff; font-size: 0.84rem; text-align: center;">
+                    <i class="${tier.icon}" style="color: ${tier.bgColor};"></i> <strong>অভিনন্দন!</strong> আপনি আমাদের সর্বোচ্চ <strong>${tier.bnName || tier.name}</strong> হিসেবে প্রতিটি অর্ডারে <strong>${e2b(tier.discount)}% ডিসকাউন্ট</strong> ও প্রায়োরিটি সাপোর্ট উপভোগ করছেন। (Required: ৳${e2b(tier.threshold)}${tier.maxThreshold ? ' - ৳' + e2b(tier.maxThreshold) : ''})
+                </div>
+            `;
+
+            wrapper.innerHTML = avatarPreview + bannerPreview;
+            preview.appendChild(wrapper);
+        });
+        if(membershipTiers.length === 0) {
+            preview.innerHTML = '<p style="color:#888;">No membership tiers configured.</p>';
+        }
+    }
+    
+    async function saveMembershipTiers() {
+        try {
+            const res = await fetch('/api/admin/membership', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+                body: JSON.stringify({ tiers: membershipTiers })
+            });
+            if(res.ok) showToast('Membership settings saved successfully!');
+            else showToast('Error saving membership settings');
+        } catch(e) {
+            showToast('Network error while saving');
+        }
+    }
+</script>
   <script type="text/babel">
     window.renderRevenueChart = function(orders) {
       try {
@@ -1091,7 +1731,7 @@
                 const pkgPrice = o.package === 'Premium' ? 949 : (o.package === 'Exclusive' ? 649 : 349);
                 const actualTotal = o.totalPrice !== undefined ? Number(o.totalPrice) : pkgPrice;
                 
-                if (o.advancePaymentStatus === 'কনফার্মড' || o.advancePaymentStatus === 'Confirmed') {
+                if (o.advancePaymentStatus === 'কনফার্মড' || o.advancePaymentStatus === 'ভেরিফাইড' || o.advancePaymentStatus === 'Confirmed') {
                   dailyRevenue += Number(o.advancePayment) || 0;
                 } else if (o.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
                   dailyRevenue += actualTotal;
@@ -1156,7 +1796,207 @@
     }
   </script>
 
-  <!-- Live Messenger Floating Widget -->
-  <script src="../js/messenger.js"></script>
-</body>
+
+  <!-- Reorder Modal -->
+  <div class="modal-overlay" id="reorderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content" style="background:var(--admin-card); padding:25px; border-radius:12px; width:90%; max-width:400px; border:1px solid var(--admin-border); max-height: 80vh; overflow-y:auto;">
+      <h3 style="margin-top:0; color:var(--admin-text);"><i class="fa-solid fa-sort"></i> Reorder Packages</h3>
+      <p style="font-size:0.85rem; color:var(--admin-text-sub); margin-bottom: 15px;">Drag and drop to reorder the packages.</p>
+      
+      <ul id="reorderList" style="list-style:none; padding:0; margin:0;">
+         <!-- Populated via JS -->
+      </ul>
+      
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <button class="btn-action" style="background:var(--admin-border); padding:8px 15px;" onclick="closeReorderModal()">Cancel</button>
+        <button class="btn-action" style="background:var(--admin-primary); padding:8px 15px;" onclick="saveReorder()">Save Order</button>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    .reorder-item {
+       padding: 12px;
+       margin-bottom: 8px;
+       background: rgba(0,0,0,0.2);
+       border: 1px solid var(--admin-border);
+       border-radius: 6px;
+       display: flex;
+       align-items: center;
+       gap: 10px;
+       cursor: grab;
+       color: var(--admin-text);
+       font-weight: 600;
+    }
+    .reorder-item:active {
+       cursor: grabbing;
+       opacity: 0.8;
+    }
+    .reorder-item.dragging {
+       opacity: 0.5;
+       background: var(--admin-border);
+    }
+  </style>
+
+  
+  <script>
+    let sortableInst = null;
+    function openReorderModal() {
+       document.getElementById('reorderModal').style.display = 'flex';
+       const list = document.getElementById('reorderList');
+       list.innerHTML = '';
+       
+       const sorted = Object.entries(adminPackagesConfig).sort((a,b) => (a[1].order || 0) - (b[1].order || 0));
+       for(const [pkgName, data] of sorted) {
+          const li = document.createElement('li');
+          li.className = 'reorder-item';
+          li.setAttribute('data-id', pkgName);
+          li.innerHTML = '<i class="fa-solid fa-grip-vertical"></i> ' + pkgName;
+          list.appendChild(li);
+       }
+       
+       if(sortableInst) sortableInst.destroy();
+       sortableInst = new Sortable(list, {
+          animation: 150,
+          ghostClass: 'dragging'
+       });
+    }
+    
+    function closeReorderModal() {
+       document.getElementById('reorderModal').style.display = 'none';
+    }
+    
+    async function saveReorder() {
+       const list = document.getElementById('reorderList');
+       const items = list.querySelectorAll('li');
+       const orderData = {};
+       items.forEach((item, index) => {
+          orderData[item.getAttribute('data-id')] = index + 1;
+       });
+       
+       try {
+          const res = await fetch('/api/admin/packages/reorder', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
+             body: JSON.stringify({ orderData })
+          });
+          if(res.ok) {
+             for(const [pkg, order] of Object.entries(orderData)) {
+                if(adminPackagesConfig[pkg]) adminPackagesConfig[pkg].order = order;
+             }
+             renderAdminPackages();
+             closeReorderModal();
+             showToast('Packages reordered successfully!');
+          } else {
+             showToast('Failed to reorder');
+          }
+       } catch(e) {
+          showToast('Network error');
+       }
+    }
+
+    let currentDemos = [];
+    
+    async function loadDemosAdmin() {
+      showLoading(true);
+      try {
+        const res = await fetch('/api/admin/demos', {
+          headers: { 'Authorization': 'Bearer ' + adminToken }
+        });
+        if (res.status === 401 || res.status === 403) return logout();
+        const data = await res.json();
+        if (data.success) {
+          currentDemos = data.demos || [];
+          renderDemosAdmin();
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        showLoading(false);
+      }
+    }
+    
+    function renderDemosAdmin() {
+      const container = document.getElementById('demosContainer');
+      container.innerHTML = '';
+      if(currentDemos.length === 0) {
+        container.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No demos found. Click "Add Demo" to create one.</div>';
+        return;
+      }
+      currentDemos.forEach((demo, idx) => {
+        container.innerHTML += `
+          <div class="tier-box" style="padding: 15px; border: 1px solid var(--admin-border); border-radius: 8px; background: rgba(0,0,0,0.2); display: grid; gap: 10px; grid-template-columns: 1fr 1fr 2fr auto;">
+            <input type="text" class="demo-name" value="${demo.name}" placeholder="Demo Name">
+            <select class="demo-category" style="padding: 8px; border-radius: 6px; border: 1px solid var(--admin-border); background: var(--admin-bg); color: var(--admin-text);">
+              <option value="Birthday" ${demo.category === 'Birthday' ? 'selected' : ''}>Birthday Wish</option>
+              <option value="Anniversary" ${demo.category === 'Anniversary' ? 'selected' : ''}>Anniversary</option>
+              <option value="Relationship" ${demo.category === 'Relationship' ? 'selected' : ''}>Relationship</option>
+              <option value="Others" ${!['Birthday','Anniversary','Relationship'].includes(demo.category) ? 'selected' : ''}>Others</option>
+            </select>
+            <input type="url" class="demo-url" value="${demo.url}" placeholder="URL (e.g. https://lovewebbd.com/...)">
+            <input type="hidden" class="demo-id" value="${demo.id || 'demo_'+Date.now()+'_'+idx}">
+            <button class="btn-admin" style="background:var(--admin-danger);" onclick="deleteDemoRow(${idx})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+      });
+    }
+    
+    function addDemoRow() {
+      currentDemos.push({ id: 'demo_'+Date.now(), name: '', url: '' });
+      renderDemosAdmin();
+    }
+    
+    function deleteDemoRow(idx) {
+      if(confirm('Are you sure you want to remove this demo?')) {
+        currentDemos.splice(idx, 1);
+        renderDemosAdmin();
+      }
+    }
+    
+    async function saveDemos() {
+      const container = document.getElementById('demosContainer');
+      const boxes = container.querySelectorAll('.tier-box');
+      const updatedDemos = [];
+      let valid = true;
+      
+      boxes.forEach(box => {
+        const name = box.querySelector('.demo-name').value.trim();
+        const url = box.querySelector('.demo-url').value.trim();
+        const category = box.querySelector('.demo-category').value;
+        const id = box.querySelector('.demo-id').value;
+        if(!name || !url) valid = false;
+        updatedDemos.push({ id, name, url, category });
+      });
+      
+      if(!valid) return showToast('Please fill in all demo names and URLs.');
+      
+      showLoading(true);
+      try {
+        const res = await fetch('/api/admin/demos', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + adminToken 
+          },
+          body: JSON.stringify({ demos: updatedDemos })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Demos saved successfully!');
+          currentDemos = updatedDemos;
+          renderDemosAdmin();
+        } else {
+          showToast('Failed to save demos: ' + data.message);
+        }
+      } catch (err) {
+        showToast('Error saving demos.');
+        console.error(err);
+      } finally {
+        showLoading(false);
+      }
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div><script>function showToast(message) { let type = "success"; let icon = "<i class=\"fa-solid fa-circle-check\" style=\"color: #10b981;\"></i>"; const lowerMsg = String(message).toLowerCase(); if (lowerMsg.includes("error") || lowerMsg.includes("fail") || lowerMsg.includes("please")) { type = "error"; icon = "<i class=\"fa-solid fa-circle-exclamation\" style=\"color: #ef4444;\"></i>"; } let toastContainer = document.getElementById("toast-container"); const toast = document.createElement("div"); toast.style.cssText = "background: var(--admin-card); color: var(--admin-text); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--admin-border); border-left: 4px solid " + (type === "success" ? "#10b981" : "#ef4444") + "; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; font-size: 0.9rem; font-weight: 500;"; toast.innerHTML = icon + " <span>" + message + "</span>"; toastContainer.appendChild(toast); requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.transform = "translateY(0)"; toast.style.opacity = "1"; }); }); setTimeout(() => { toast.style.transform = "translateY(100px)"; toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000); }</script></body>
 </html>

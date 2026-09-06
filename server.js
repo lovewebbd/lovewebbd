@@ -6,8 +6,9 @@ import { GoogleGenAI, Type, Modality } from '@google/genai';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import fs from 'fs';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, getDoc, query, where, orderBy, doc, updateDoc, setDoc } from 'firebase/firestore';
+import multer from 'multer';
+
+
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,23 +31,96 @@ const HOST = '0.0.0.0';
 // Body parser middleware for JSON POST requests
 app.use(express.json());
 
-// Firebase Client SDK Init
-const configPath = path.join(__dirname, 'firebase-applet-config.json');
-let db = null;
-if (fs.existsSync(configPath)) {
-  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  const firebaseConfig = {
-    projectId: config.projectId,
-    appId: config.appId,
-    apiKey: config.apiKey,
-    authDomain: config.authDomain,
-    storageBucket: config.storageBucket,
-    messagingSenderId: config.messagingSenderId
-  }
-  const app = initializeApp(firebaseConfig);
-  db = config.firestoreDatabaseId ? getFirestore(app, config.firestoreDatabaseId) : getFirestore(app);
-  console.log('Firebase Client SDK initialized.');
+
+// Mock Firebase Firestore using local JSON
+const DB_FILE = path.join(__dirname, 'database.json');
+function getDB() {
+  if (!fs.existsSync(DB_FILE)) return { orders: {}, settings: {}, coupons: {} };
+  return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 }
+function saveDB(data) {
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
+
+let db = true; // Bypass !db checks
+
+function collection(db, name) { return name; }
+function doc(db, collName, docId) { return { collName, docId }; }
+async function addDoc(collName, data) {
+  const d = getDB();
+  if (!d[collName]) d[collName] = {};
+  const id = Date.now().toString();
+  d[collName][id] = data;
+  saveDB(d);
+  return { id };
+}
+async function getDoc(docRef) {
+  const d = getDB();
+  const coll = d[docRef.collName] || {};
+  const data = coll[docRef.docId];
+  return { exists: () => !!data, data: () => data, id: docRef.docId };
+}
+async function setDoc(docRef, data, options) {
+  const d = getDB();
+  if (!d[docRef.collName]) d[docRef.collName] = {};
+  if (options && options.merge) {
+    d[docRef.collName][docRef.docId] = { ...d[docRef.collName][docRef.docId], ...data };
+  } else {
+    d[docRef.collName][docRef.docId] = data;
+  }
+  saveDB(d);
+}
+async function updateDoc(docRef, data) {
+  await setDoc(docRef, data, { merge: true });
+}
+async function deleteDoc(docRef) {
+  const d = getDB();
+  if (d[docRef.collName] && d[docRef.collName][docRef.docId]) {
+    delete d[docRef.collName][docRef.docId];
+    saveDB(d);
+  }
+}
+function query(collName, ...args) {
+  return { collName, args };
+}
+function where(field, op, value) {
+  return { type: 'where', field, op, value };
+}
+function orderBy(field, dir) {
+  return { type: 'orderBy', field, dir };
+}
+async function getDocs(q) {
+  const d = getDB();
+  let collName = typeof q === 'string' ? q : q.collName;
+  let items = Object.entries(d[collName] || {}).map(([id, data]) => ({ id, ...data }));
+  
+  if (typeof q !== 'string' && q.args) {
+    for (const arg of q.args) {
+      if (arg.type === 'where') {
+        items = items.filter(i => {
+           if (arg.op === '==') return i[arg.field] === arg.value;
+           return true;
+        });
+      }
+      if (arg.type === 'orderBy') {
+        items.sort((a, b) => {
+          if (a[arg.field] < b[arg.field]) return arg.dir === 'desc' ? 1 : -1;
+          if (a[arg.field] > b[arg.field]) return arg.dir === 'desc' ? -1 : 1;
+          return 0;
+        });
+      }
+    }
+  }
+  
+  return {
+    forEach: (cb) => {
+      items.forEach(i => cb({ id: i.id, data: () => i, exists: true }));
+    },
+    empty: items.length === 0,
+    docs: items.map(i => ({ id: i.id, data: () => i }))
+  };
+}
+
 
 
 // Gmail App Password configuration for Love Web OTP
@@ -372,7 +446,7 @@ Return a JSON array of strings, where each string is the detailed description of
 app.post('/api/place-order', async (req, res) => {
   if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const { username, phone, websiteType, packageType, description, pages, contactPhone, advancePaymentPhone, couponCode } = req.body;
+    const { username, phone, websiteType, packageType, description, pages, contactPhone, advancePaymentPhone, couponCode, paymentScreenshot } = req.body;
     let couponDiscountPercent = 0;
     
     // Validate coupon
@@ -412,21 +486,28 @@ app.post('/api/place-order', async (req, res) => {
     if (totalSpent >= 2000) discountPercent = 8;
     else if (totalSpent >= 1000) discountPercent = 4;
 
-    // Determine prices
-    let advancePayment = 200; // default (Exclusive)
-    let basePrice = 649;
-    if (packageType === 'Regular') {
-      advancePayment = 150;
-      basePrice = 349;
-    } else if (packageType === 'Exclusive') {
-      advancePayment = 200;
-      basePrice = 649;
-    } else if (packageType === 'Premium') {
-      advancePayment = 300;
-      basePrice = 949;
-    }
     
-    const discountAmount = Math.floor(basePrice * (discountPercent / 100));
+    // Determine prices dynamically from database
+    let advancePayment = 200; // fallback
+    let basePrice = 649; // fallback
+    try {
+      const pkgRef = doc(db, 'settings', 'packages');
+      const pkgSnap = await getDoc(pkgRef);
+      if (pkgSnap.exists()) {
+        const pkgs = pkgSnap.data();
+        const selectedPkg = pkgs[packageType];
+        if (selectedPkg) {
+          basePrice = Number(selectedPkg.base) || basePrice;
+          advancePayment = selectedPkg.advance !== undefined ? Number(selectedPkg.advance) : advancePayment;
+        }
+      }
+    } catch(e) {
+      console.error('Error fetching package prices', e);
+    }
+
+    const totalDiscountPercent = discountPercent + couponDiscountPercent;
+
+    const discountAmount = Math.floor(basePrice * (totalDiscountPercent / 100));
     const totalPrice = basePrice - discountAmount;
     const duePayment = totalPrice - advancePayment;
 
@@ -442,9 +523,11 @@ app.post('/api/place-order', async (req, res) => {
       pages,
       contactPhone,
       advancePaymentPhone,
+      couponCode: couponDiscountPercent > 0 ? couponCode : null,
+      couponDiscountPercent: couponDiscountPercent > 0 ? couponDiscountPercent : null,
       status: 'প্রক্রিয়াকরণ চলছে',
       basePrice,
-      discountPercent,
+      discountPercent: totalDiscountPercent,
       discountAmount,
       totalPrice,
       advancePayment,
@@ -500,10 +583,28 @@ app.get('/api/orders/:username', async (req, res) => {
 });
 
 // Serve static assets from project root
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(__dirname, {
   extensions: ['html'],
   index: false
 }));
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads'))
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, file.originalname)
+  }
+});
+const upload = multer({ storage: storage });
+
+app.post('/api/upload', upload.array('images', 50), (req, res) => {
+  if (!req.files) return res.status(400).json({ success: false, message: 'No files uploaded.' });
+  const urls = req.files.map(f => '/uploads/' + f.filename);
+  res.json({ success: true, urls });
+});
 
 // Named route fallbacks
 const routes = ['place-order', '404', 
@@ -518,7 +619,7 @@ const routes = ['place-order', '404',
 ];
 
 routes.forEach((route) => {
-  app.get(`/${route}`, (req, res) => {
+  app.get([`/${route}`, `/${route}/`], (req, res) => {
     res.sendFile(path.join(__dirname, route, 'index.html'));
   });
 });
@@ -528,6 +629,224 @@ app.get(['/home', '/dashboard'], (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+
+
+
+
+// ==========================================
+// DEMO MANAGEMENT APIs
+// ==========================================
+
+app.get('/api/demos', async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const docRef = doc(db, 'settings', 'demos');
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists() && docSnap.data().list) {
+      // Hide the actual URLs from the public API
+      const safeDemos = docSnap.data().list.map(d => ({ id: d.id, name: d.name, category: d.category || "Others" }));
+      res.json({ success: true, demos: safeDemos });
+    } else {
+      res.json({ success: true, demos: [] });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.get('/api/admin/demos', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const docRef = doc(db, 'settings', 'demos');
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists() && docSnap.data().list) {
+      res.json({ success: true, demos: docSnap.data().list });
+    } else {
+      res.json({ success: true, demos: [] });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post('/api/admin/demos', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { demos } = req.body;
+    await setDoc(doc(db, 'settings', 'demos'), { list: demos });
+    res.json({ success: true, message: 'Demos updated successfully!' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.get('/api/demo/view/:id', async (req, res) => {
+  if (!db) return res.status(500).send('Database not initialized.');
+  try {
+    const docRef = doc(db, 'settings', 'demos');
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists() && docSnap.data().list) {
+      const demo = docSnap.data().list.find(d => d.id === req.params.id);
+      if (demo && demo.url) {
+        try {
+          const fetchRes = await fetch(demo.url);
+          let html = await fetchRes.text();
+          // Inject base tag to fix relative assets without directly exposing it in the address bar
+          const baseUrl = new URL('.', demo.url).href;
+          html = html.replace('<head>', `<head><base href="${baseUrl}">`);
+          
+          // Inject script to disable right click and selection
+          const protectionScript = `<script>
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            document.addEventListener('selectstart', event => event.preventDefault());
+            document.addEventListener('dragstart', event => event.preventDefault());
+            document.addEventListener('keydown', (e) => {
+              if(e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) e.preventDefault();
+              if(e.key === 'F12') e.preventDefault();
+            });
+          </script>`;
+          html = html.replace('</body>', protectionScript + '</body>');
+          
+          res.setHeader('Content-Type', 'text/html');
+          return res.send(html);
+        } catch(err) {
+          return res.status(500).send('Failed to load demo content.');
+        }
+      }
+    }
+    res.status(404).send('Demo not found.');
+  } catch (e) {
+    res.status(500).send('Server Error.');
+  }
+});
+
+app.get('/api/membership', async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const docRef = doc(db, 'settings', 'membership');
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()) {
+      res.json({ success: true, tiers: docSnap.data().tiers });
+    } else {
+      res.json({ success: true, tiers: [
+         { name: 'এলিট মেম্বার', threshold: 1000, discount: 4, icon: 'fa-solid fa-gem', bgColor: '#c084fc' },
+         { name: 'প্রিমিয়াম মেম্বার', threshold: 2000, discount: 8, icon: 'fa-solid fa-crown', bgColor: '#fbbf24' }
+      ] });
+    }
+  } catch(error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/membership', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { tiers } = req.body;
+    const docRef = doc(db, 'settings', 'membership');
+    await setDoc(docRef, { tiers }, { merge: true });
+    res.json({ success: true });
+  } catch(error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.get('/api/packages', async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const docRef = doc(db, 'settings', 'packages');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      res.json({ success: true, packages: docSnap.data() });
+    } else {
+      // Default packages
+      res.json({ success: true, packages: {
+        Regular: { order: 1, bnName: 'রেগুলার', icon: '', base: 349, original: 400, deliveryTime: 7, minPages: 3, maxPages: 4, features: ['১টি সিঙ্গেল পেজ', 'রেসপন্সিভ ডিজাইন', '১ দিনে ডেলিভারি'], tooltip: '১. সম্পূর্ণ কাস্টম ডিজাইন সাপোর্ট।<br>২. সর্বোচ্চ সিকিউরিটি ও প্রাইভেট লিঙ্ক।' },
+        Exclusive: { order: 2, bnName: 'এক্সক্লুসিভ', icon: 'fa-solid fa-gem', base: 649, original: 700, deliveryTime: 10, minPages: 5, maxPages: 7, features: ['২-৬টি পেজ', 'অ্যাডভান্সড ডিজাইন অ্যানিমেশন', '৩-৫ দিনে ডেলিভারি'], tooltip: '১. সম্পূর্ণ কাস্টম ডিজাইন সাপোর্ট।<br>২. সর্বোচ্চ সিকিউরিটি ও প্রাইভেট লিঙ্ক।' },
+        Premium: { order: 3, bnName: 'প্রিমিয়াম', icon: 'fa-solid fa-crown', base: 949, original: 1000, deliveryTime: 14, minPages: 7, maxPages: 11, features: ['৭-১১টি পেজ', 'কাস্টমাইজ চার্জ ফ্রি (১ বার)', 'কাস্টম ডোমেইন সাপোর্ট'], tooltip: '১. সম্পূর্ণ কাস্টম ডিজাইন সাপোর্ট।<br>২. সর্বোচ্চ সিকিউরিটি ও প্রাইভেট লিঙ্ক।' }
+      }});
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/packages/reorder', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { orderData } = req.body; // { "Regular": 1, "Exclusive": 2, ... }
+    const docRef = doc(db, 'settings', 'packages');
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return res.json({ success: true });
+    
+    let pkgs = docSnap.data();
+    for (const [pkgName, order] of Object.entries(orderData)) {
+       if (pkgs[pkgName]) {
+          pkgs[pkgName].order = Number(order);
+       }
+    }
+    await setDoc(docRef, pkgs, { merge: true });
+    res.json({ success: true, message: 'Packages reordered successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/packages/delete/:pkg', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const pkgName = req.params.pkg;
+    const docRef = doc(db, 'settings', 'packages');
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()) {
+      let pkgs = docSnap.data();
+      if (pkgs[pkgName]) {
+        delete pkgs[pkgName];
+        await setDoc(docRef, pkgs); // Save without the deleted package
+      }
+    }
+    res.json({ success: true, message: 'Package deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/admin/packages/:pkg', verifyAdmin, async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const pkgName = req.params.pkg;
+    const { bnName, icon, headColor, base, advance, order, original, features, tooltip, deliveryTime, minPages, maxPages, maxImagesPerDesc, maxTotalImages } = req.body;
+    
+    // get existing
+    const docRef = doc(db, 'settings', 'packages');
+    let pkgs = {};
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()) {
+      pkgs = docSnap.data();
+    }
+    
+    pkgs[pkgName] = { 
+      bnName: bnName || '',
+      icon: icon || '',
+      headColor: headColor || '',
+      base: Number(base),
+      advance: Number(advance),
+      order: Number(order) || 0,
+      original: Number(original), 
+      features, 
+      tooltip,
+      deliveryTime: Number(deliveryTime) || 7,
+      minPages: Number(minPages) || 3,
+      maxPages: Number(maxPages) || 4,
+      maxImagesPerDesc: maxImagesPerDesc !== undefined ? Number(maxImagesPerDesc) : 5,
+      maxTotalImages: maxTotalImages !== undefined ? Number(maxTotalImages) : 15
+    };
+    await setDoc(docRef, pkgs, { merge: true });
+    
+    res.json({ success: true, message: 'Package updated' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // ====================
 // SETTINGS & COUPON APIs
@@ -595,7 +914,7 @@ app.post('/api/admin/coupons/delete', verifyAdmin, async (req, res) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Code required' });
-    const { deleteDoc } = await import('firebase/firestore');
+    
     await deleteDoc(doc(db, 'coupons', code));
     res.json({ success: true, message: 'Coupon deleted' });
   } catch (error) {
@@ -681,7 +1000,11 @@ app.post('/api/admin/login', async (req, res) => {
 app.post('/api/admin/change-password', verifyAdmin, async (req, res) => {
   if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const { newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
+    const creds = await getAdminCredentials();
+    if (oldPassword !== creds.pass) {
+      return res.status(400).json({ success: false, message: 'Incorrect old password.' });
+    }
     if (!newPassword || newPassword.length < 6) {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
     }
@@ -730,6 +1053,8 @@ app.post('/api/admin/orders/payment', verifyAdmin, async (req, res) => {
       }
     } else if (value === 'পেমেন্ট বাতিল') {
        updates.status = 'অর্ডার বাতিল'; // Auto reject
+    } else if (value === 'ভেরিফাইড') {
+       updates.status = 'অর্ডার কনফার্ম'; // Auto confirm order
     }
     
     await updateDoc(orderRef, updates);
@@ -745,6 +1070,50 @@ app.post('/api/admin/orders/status', verifyAdmin, async (req, res) => {
   try {
     const { id, value } = req.body;
     const orderRef = doc(db, 'orders', id);
+    
+    // Auto delete images when order is delivered
+    if (value === 'ডেলিভারড' || value === 'Delivered') {
+       try {
+          const snap = await getDoc(orderRef);
+          if (snap.exists()) {
+             const orderData = snap.data();
+             let imagesToDelete = [];
+             
+             if (orderData.paymentScreenshot) {
+                imagesToDelete.push(orderData.paymentScreenshot);
+             }
+             if (orderData.pages && Array.isArray(orderData.pages)) {
+                orderData.pages.forEach(p => {
+                   if (p.images && Array.isArray(p.images)) {
+                      imagesToDelete.push(...p.images);
+                   }
+                });
+             }
+             
+             imagesToDelete.forEach(imgUrl => {
+                if (imgUrl.startsWith('/uploads/')) {
+                   const filename = imgUrl.split('/').pop();
+                   const filepath = path.join(__dirname, 'uploads', filename);
+                   if (fs.existsSync(filepath)) {
+                      fs.unlinkSync(filepath);
+                   }
+                }
+             });
+             
+             
+             // Remove image paths from the database to avoid showing broken images
+             let updatedPages = [];
+             if (orderData.pages && Array.isArray(orderData.pages)) {
+                 updatedPages = orderData.pages.map(p => ({ ...p, images: [] }));
+             }
+             await updateDoc(orderRef, { paymentScreenshot: null, pages: updatedPages });
+
+          }
+       } catch(e) {
+          console.error('Error auto-deleting images:', e);
+       }
+    }
+
     await updateDoc(orderRef, { status: value });
     res.json({ success: true });
   } catch (error) {
@@ -762,10 +1131,13 @@ async function checkOrderStatus(args) {
     if (!identifier) return { status: 'error', message: 'No identifier provided.' }
     
     // Check by phone
-    let snapshot = await db.collection('orders').where('phone', '==', identifier).get();
+    let q = query(collection(db, 'orders'), where('userPhone', '==', identifier));
+    let snapshot = await getDocs(q);
+    
     if (snapshot.empty) {
       // Check by username
-      snapshot = await db.collection('orders').where('username', '==', identifier).get();
+      q = query(collection(db, 'orders'), where('username', '==', identifier));
+      snapshot = await getDocs(q);
     }
     
     if (snapshot.empty) {
@@ -777,7 +1149,7 @@ async function checkOrderStatus(args) {
       const data = doc.data();
       orders.push({
         orderId: doc.id,
-        packageType: data.packageType || 'Unknown',
+        packageType: data.package || 'Unknown',
         status: data.status || 'পেন্ডিং',
         advancePaymentStatus: data.advancePaymentStatus || 'অপেক্ষমান'
       });
@@ -794,18 +1166,18 @@ async function placeNewOrder(args) {
     const newOrder = {
        orderId: 'LWEB' + Date.now().toString().slice(-6),
        username: args.contactPhone,
-       phone: args.contactPhone,
+       userPhone: args.contactPhone,
        websiteType: args.websiteType || 'Anniversary',
-       packageType: args.packageType || 'Regular',
+       package: args.packageType || 'Regular',
        description: args.description || '',
        contactPhone: args.contactPhone,
        advancePaymentPhone: args.advancePaymentPhone,
        status: 'পেন্ডিং',
        advancePaymentStatus: 'অপেক্ষমান',
-       totalPrice: args.packageType === 'Premium' ? '1000' : (args.packageType === 'Exclusive' ? '700' : '400'),
-       createdAt: admin.firestore.FieldValue.serverTimestamp()
+       totalPrice: args.packageType === 'Premium' ? 1000 : (args.packageType === 'Exclusive' ? 700 : 400),
+       createdAt: new Date().toISOString()
     }
-    await db.collection('orders').add(newOrder);
+    await addDoc(collection(db, 'orders'), newOrder);
     return { status: 'success', orderId: newOrder.orderId, message: 'আপনার অর্ডারটি সফলভাবে প্লেস করা হয়েছে। অ্যাডমিন প্যানেল থেকে খুব শীঘ্রই যোগাযোগ করা হবে।' }
   } catch (error) {
     console.error('Error placing new order:', error);
@@ -850,12 +1222,24 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Message is required.' });
     }
 
+    let membershipString = "- Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).";
+    try {
+        const docRef = doc(db, 'settings', 'membership');
+        const docSnap = await getDoc(docRef);
+        if(docSnap.exists() && docSnap.data().tiers) {
+            const tiers = docSnap.data().tiers.sort((a,b) => a.threshold - b.threshold);
+            membershipString = "- Memberships: " + tiers.map(t => `${t.name} (spent ${t.threshold}+ tk, gets ${t.discount}% discount)`).join(", ") + ".";
+        }
+    } catch(e) {}
+    
     const systemInstruction = `You are the official chat and voice assistant for LoveWeb, a platform for creating relationship and anniversary wishing websites. You must answer questions in Bengali (বাংলা).
 IMPORTANT KNOWLEDGE BASE:
 - Packages & Delivery Time: Regular Package (1 to 3 days delivery), Exclusive Package (3 to 5 days delivery), Premium Package (5 to 7 days delivery). NEVER say delivery is done in 24 hours.
 - How to order: Users can place an order by going to the 'Place Order' page, selecting a package, choosing add-ons (Custom Domain, Background Music, Fast Delivery), and submitting their info.
-- Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).
+${membershipString}
 - Website Types (IMPORTANT): Automatically suggest "Auto Queue Theme", "Normal", and "Wishing Website" as default categories when taking an order. LoveWeb builds ONLY wishing/relationship single-page sites. These do NOT have standard pages like "Home Page", "About Us", or "Contact Us". NEVER suggest or generate descriptions for professional portfolios, corporate sites, or standard personal websites.
+- Password & OTP: If a user forgets their password, guide them to the Reset Password page. A 6-digit OTP will be sent. IMPORTANT: Tell them to check their Spam folder if they don't see the OTP in their inbox.
+- Privacy & Coupons: Official coupons are available only on our verified Facebook page. We protect user media (photos/videos) strictly for their wishing website.
 You have tools to check order status or place a new order. Always provide helpful, complete, and polite answers.`;
 
     let formattedHistory = [];
@@ -882,17 +1266,11 @@ You have tools to check order status or place a new order. Always provide helpfu
     if (response.functionCalls && response.functionCalls.length > 0) {
        const call = response.functionCalls[0];
        let result = {}
-       if (call.name === 'check_order_status') result = await checkOrderStatus(call.args);
-                else if (call.name === 'place_new_order') result = await placeNewOrder(call.args);
-                else if (call.name === 'navigate_to_page') {
-                    if (clientWs.readyState === 1) clientWs.send(JSON.stringify({ client_command: { action: 'navigate', url: call.args.url } }));
-                    result = { success: true, message: "Navigating user." }
-                }
-                else if (call.name === 'select_order_package') {
-                    if (clientWs.readyState === 1) clientWs.send(JSON.stringify({ client_command: { action: 'select_package', value: call.args.package } }));
-                    result = { success: true, message: "Package selected on screen." }
-                }
-       else if (call.name === 'navigate_to_page' || call.name === 'select_order_package') {
+       if (call.name === 'check_order_status') {
+           result = await checkOrderStatus(call.args);
+       } else if (call.name === 'place_new_order') {
+           result = await placeNewOrder(call.args);
+       } else {
            result = { success: true, message: "Tell the user to click the link or select manually in text chat." }
        }
        
@@ -922,6 +1300,26 @@ const wss = new WebSocketServer({ server, path: '/live' });
 
 wss.on("connection", async (clientWs) => {
   try {
+    let membershipString = "- Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).";
+    try {
+        const docRef = doc(db, 'settings', 'membership');
+        const docSnap = await getDoc(docRef);
+        if(docSnap.exists() && docSnap.data().tiers) {
+            const tiers = docSnap.data().tiers.sort((a,b) => a.threshold - b.threshold);
+            membershipString = "- Memberships: " + tiers.map(t => `${t.name} (spent ${t.threshold}+ tk, gets ${t.discount}% discount)`).join(", ") + ".";
+        }
+    } catch(e) {}
+    
+    const systemInstruction = `You are the official chat and voice assistant for LoveWeb, a platform for creating relationship and anniversary wishing websites. You must answer questions in Bengali (বাংলা).
+IMPORTANT KNOWLEDGE BASE:
+- Packages & Delivery Time: Regular Package (1 to 3 days delivery), Exclusive Package (3 to 5 days delivery), Premium Package (5 to 7 days delivery). NEVER say delivery is done in 24 hours.
+- How to order: Users can place an order by going to the 'Place Order' page, selecting a package, choosing add-ons (Custom Domain, Background Music, Fast Delivery), and submitting their info.
+${membershipString}
+- Website Types (IMPORTANT): Automatically suggest "Auto Queue Theme", "Normal", and "Wishing Website" as default categories when taking an order. LoveWeb builds ONLY wishing/relationship single-page sites. These do NOT have standard pages like "Home Page", "About Us", or "Contact Us". NEVER suggest or generate descriptions for professional portfolios, corporate sites, or standard personal websites.
+- Password & OTP: If a user forgets their password, guide them to the Reset Password page. A 6-digit OTP will be sent. IMPORTANT: Tell them to check their Spam folder if they don't see the OTP in their inbox.
+- Privacy & Coupons: Official coupons are available only on our verified Facebook page. We protect user media (photos/videos) strictly for their wishing website.
+You have tools to check order status or place a new order. Always provide helpful, complete, and polite answers.`;
+
     const session = await ai.live.connect({
       model: "gemini-2.0-flash-exp",
       config: {
@@ -929,13 +1327,7 @@ wss.on("connection", async (clientWs) => {
         speechConfig: {
           voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } },
         },
-        systemInstruction: `You are the official chat and voice assistant for LoveWeb, a platform for creating relationship and anniversary wishing websites. You must answer questions in Bengali (বাংলা).
-IMPORTANT KNOWLEDGE BASE:
-- Packages & Delivery Time: Regular Package (1 to 3 days delivery), Exclusive Package (3 to 5 days delivery), Premium Package (5 to 7 days delivery). NEVER say delivery is done in 24 hours.
-- How to order: Users can place an order by going to the 'Place Order' page, selecting a package, choosing add-ons (Custom Domain, Background Music, Fast Delivery), and submitting their info.
-- Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).
-- Website Types (IMPORTANT): Automatically suggest "Auto Queue Theme", "Normal", and "Wishing Website" as default categories when taking an order. LoveWeb builds ONLY wishing/relationship single-page sites. These do NOT have standard pages like "Home Page", "About Us", or "Contact Us". NEVER suggest or generate descriptions for professional portfolios, corporate sites, or standard personal websites.
-You have tools to check order status or place a new order. Always provide helpful, complete, and polite answers.`,
+        systemInstruction: systemInstruction,
       },
       callbacks: {
         onmessage: async (message) => {
