@@ -304,56 +304,7 @@
     }
 
     function showLoggedOutState() {
-      const appRoot = document.getElementById('appRoot');
-      if (!appRoot) return;
-      
-      const currentTheme = (typeof window.getLoveWebTheme === 'function') ? window.getLoveWebTheme() : (localStorage.getItem('loveweb_theme') || 'dark');
-      const themeText = currentTheme === 'light' ? 'ডার্ক মোড' : 'লাইট মোড';
-      const themeIcon = currentTheme === 'light' ? 'fa-moon' : 'fa-sun';
-      
-      appRoot.innerHTML = `
-        <div class="auth-theme-corner-toggle" style="position: fixed; top: 16px; right: 18px; z-index: 999;">
-            <button type="button" class="top-bar-action-btn theme-toggle-btn" onclick="window.toggleLoveWebTheme(); setTimeout(() => location.reload(), 100)" title="থিম পরিবর্তন করুন">
-                <i class="fa-solid ${themeIcon}"></i>
-                <span class="theme-text" style="display:none;">${themeText}</span>
-            </button>
-        </div>
-        <div class="auth-card landing-card" style="margin-top: 20px;">
-          <img src="img/logo.png" alt="LoveWeb Logo" class="watermark-bg" onerror="this.style.display='none'">
-          <div class="brand-logo" style="margin-bottom: 12px;">
-            <img src="img/logo.png" alt="LoveWeb Logo" class="logo-img" style="height: 58px; width: auto;" onerror="this.src='https://via.placeholder.com/100/ff2a6d/ffffff?text=LoveWeb'">
-          </div>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px;">
-            <h1 class="title font-loveweb" style="font-size: 2.3rem; margin: 0; line-height: 1;">LoveWeb</h1>
-            <span class="top-bar-badge-bd" style="font-size: 0.72rem; padding: 2px 6px;">BD</span>
-          </div>
-          <p class="desc" style="font-size: 1.05rem; margin-bottom: 22px;">প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট প্ল্যাটফর্ম</p>
-
-          <div class="landing-features-box">
-            <div class="landing-feature-item">
-              <i class="fa-solid fa-cake-candles"></i>
-              <span>জন্মদিন ও বিবাহবার্ষিকীর আকর্ষণীয় উইশ পেজ</span>
-            </div>
-            <div class="landing-feature-item">
-              <i class="fa-solid fa-music"></i>
-              <span>কাস্টম ব্যাকগ্রাউন্ড মিউজিক ও রোমান্টিক অ্যানিমেশন</span>
-            </div>
-            <div class="landing-feature-item">
-              <i class="fa-solid fa-mobile-screen-button"></i>
-              <span>যেকোনো ডিভাইসে পারফেক্ট ও রেসপন্সিভ ডিসপ্লে</span>
-            </div>
-          </div>
-
-          <div class="action-buttons" style="margin-top: 20px;">
-            <a href="sign-in/index.html" class="btn-action btn-primary-action">
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> লগইন / সাইন আপ করুন
-            </a>
-            <a href="help/index.html" class="btn-action btn-secondary-action">
-              <i class="fa-solid fa-book-open-reader"></i> ওয়েবসাইট তৈরির নিয়মাবলী
-            </a>
-          </div>
-        </div>
-      `;
+      window.location.href = 'sign-in/index.html';
     }
 
     renderAuthState();
