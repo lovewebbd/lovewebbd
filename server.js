@@ -16,10 +16,29 @@ const __dirname = path.dirname(__filename);
 // Initialize Firebase Client SDK
 let firestoreDb;
 try {
+  let config;
+  let dbId;
   if (fs.existsSync(path.join(__dirname, 'firebase-applet-config.json'))) {
-    const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf8'));
+    const raw = JSON.parse(fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf8'));
+    config = raw;
+    dbId = raw.firestoreDatabaseId;
+  } else if (process.env.FIREBASE_API_KEY) {
+    config = {
+      apiKey: process.env.FIREBASE_API_KEY,
+      authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.FIREBASE_APP_ID
+    };
+    dbId = process.env.FIREBASE_DATABASE_ID;
+  }
+  
+  if (config) {
     const app = initializeApp(config);
-    firestoreDb = getFirestore(app, config.firestoreDatabaseId);
+    firestoreDb = getFirestore(app, dbId);
+  } else {
+    console.warn("⚠️ No Firebase config found. Database will not work until you add firebase-applet-config.json or set FIREBASE_API_KEY environment variable.");
   }
 } catch (e) {
   console.error("Firebase init error:", e);
