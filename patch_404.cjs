@@ -1,4 +1,14 @@
-<!DOCTYPE html>
+const fs = require('fs');
+let html = fs.readFileSync('404/index.html', 'utf8');
+
+// The user highlighted: `div:nth-of-type(2) > div:nth-of-type(1)` inside body.
+// Body has #particles-js as div 1, .error-container as div 2.
+// Inside .error-container, .error-card is div 1.
+// They probably meant the particle effect (#particles-js) or something specific. Wait, the user highlighted `div:nth-of-type(2) > div:nth-of-type(1)` which evaluates to:
+// `body > .error-container > .error-card`. Wait, remove the error card? Or do they mean something else? "eta remove koro 404 page e ebong balo kore customize koro theme onujayi" (remove this from 404 page and customize it nicely according to the theme).
+// Let's refine the 404 page.
+
+html = `<!DOCTYPE html>
 <html lang="bn" >
 <head>
   <meta charset="UTF-8">
@@ -23,7 +33,7 @@
       padding: 20px;
       position: relative;
       z-index: 10;
-      background: transparent;
+      background: radial-gradient(circle at center, rgba(255, 42, 109, 0.05) 0%, transparent 70%);
     }
     .error-content {
       animation: fadeIn 1s ease-out forwards;
@@ -39,19 +49,30 @@
     .error-code {
       font-size: 10rem;
       font-weight: 800;
-      background: var(--primary-pink);
+      background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       line-height: 1;
       font-family: 'Inter', sans-serif;
-      /* drop-shadow removed for visibility */
+      filter: drop-shadow(0 15px 25px rgba(255, 42, 109, 0.3));
       position: relative;
     }
-    .error-code::after { display: none; }
+    .error-code::after {
+      content: "404";
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: -1;
+      background: linear-gradient(135deg, var(--primary-pink) 0%, var(--secondary-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 0.3;
+      filter: blur(15px);
+    }
     .error-title {
       font-size: 2rem;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--text-main);
       font-family: 'Noto Sans Bengali', sans-serif;
     }
     .error-desc {
@@ -74,12 +95,12 @@
       font-size: 1.1rem;
       border: none;
       cursor: pointer;
-      /* shadow removed */
+      box-shadow: 0 4px 15px rgba(255, 42, 109, 0.2);
       margin-top: 10px;
     }
     .btn-home:hover {
       transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 4px 10px rgba(255, 42, 109, 0.3);
+      box-shadow: 0 10px 25px rgba(255, 42, 109, 0.4);
     }
     .btn-home i {
       font-size: 1.2rem;
@@ -91,7 +112,7 @@
       border-radius: 50%;
       filter: blur(80px);
       z-index: -1;
-      opacity: 0;
+      opacity: 0.15;
     }
     .shape-1 {
       width: 400px;
@@ -111,7 +132,6 @@
   <link rel="icon" type="image/png" href="../img/favicon.png">
 </head>
 <body>
-  <div id="particles-js" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 1;"></div>
   <div class="bg-shape shape-1"></div>
   <div class="bg-shape shape-2"></div>
   <div class="error-container">
@@ -124,26 +144,7 @@
   </div>
   <script src="../js/theme.js"></script>
   <script src="../js/messenger.js"></script>
-
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-  <script>
-    particlesJS('particles-js', {
-      particles: {
-        number: { value: 60, density: { enable: true, value_area: 800 } },
-        color: { value: '#ff2a6d' },
-        shape: { type: 'circle' },
-        opacity: { value: 0.5, random: false },
-        size: { value: 3, random: true },
-        line_linked: { enable: true, distance: 150, color: '#ff2a6d', opacity: 0.4, width: 1 },
-        move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
-      },
-      interactivity: {
-        detect_on: 'canvas',
-        events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' }, resize: true },
-        modes: { grab: { distance: 140, line_linked: { opacity: 1 } }, push: { particles_nb: 4 } }
-      },
-      retina_detect: true
-    });
-  </script>
 </body>
-</html>
+</html>`;
+
+fs.writeFileSync('404/index.html', html);

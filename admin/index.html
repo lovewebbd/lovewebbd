@@ -268,6 +268,54 @@
       .menu-item span { display: none; }
       .main-content { margin-left: 60px; max-width: calc(100vw - 60px); padding: 15px; }
     }
+  
+    @media (max-width: 768px) {
+      .table-wrapper table {
+        border: 0;
+      }
+      .table-wrapper table thead {
+        display: none;
+      }
+      .table-wrapper table tr {
+        display: block;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--admin-border);
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .table-wrapper table td {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 12px 5px;
+        font-size: 0.85rem;
+        text-align: right;
+      }
+      .table-wrapper table td:last-child {
+        border-bottom: 0;
+      }
+      .table-wrapper table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--admin-text-sub);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        margin-right: 15px;
+        text-align: left;
+      }
+      .action-select {
+        width: 140px;
+        text-align: right;
+      }
+      .action-btn-group {
+        justify-content: flex-end;
+      }
+    }
+
   </style>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script>
@@ -530,8 +578,8 @@
           data.coupons.forEach(c => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td><strong>${c.code}</strong></td>
-              <td>${c.discountPercent}%</td>
+              <td data-label="Code"><strong>${c.code}</strong></td>
+              <td data-label="Discount">${c.discountPercent}%</td>
               <td>${c.expiryDate || 'No Expiry'}</td>
               <td>${c.maxUsesPerUser || 'Unlimited'}</td>
               <td><button class="btn-action btn-pay-reject" onclick="deleteCoupon('${c.code}')">Delete</button></td>
@@ -729,6 +777,10 @@
             <div class="stat-title">Delivered Orders</div>
             <div class="stat-value" style="color: var(--admin-success);" id="statDelivered">0</div>
           </div>
+          <div class="stat-card" style="cursor: pointer;" onclick="switchTab('allOrders')">
+            <div class="stat-title">Rejected Orders</div>
+            <div class="stat-value" style="color: var(--admin-danger);" id="statRejected">0</div>
+          </div>
           <div class="stat-card">
             <div class="stat-title">Half Payments</div>
             <div class="stat-value" style="color: var(--admin-warning);" id="statHalfPay">0</div>
@@ -793,7 +845,7 @@
       
       <!-- Demos View -->
             <div id="view-demos" class="hidden">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; align-items: start;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: 20px; align-items: start;">
           <!-- Editor Side -->
           <div class="settings-panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -807,7 +859,7 @@
           </div>
           
           <!-- Preview Side -->
-          <div class="settings-panel" style="display: flex; flex-direction: column; height: 100%; min-height: 600px;">
+          <div class="settings-panel" style="display: flex; flex-direction: column; height: 100%; min-height: 600px; width: 100%; overflow: hidden;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap: wrap; gap: 10px;">
               <h2 style="margin:0;">Live Preview</h2>
               <div style="display:flex; gap: 10px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 8px;">
@@ -815,7 +867,7 @@
                 <button class="btn-admin" id="previewPcBtn" style="width: auto; padding: 6px 12px; background: transparent; margin: 0;" onclick="toggleDemoPreview('pc')"><i class="fa-solid fa-desktop"></i> Desktop</button>
               </div>
             </div>
-            <div style="flex: 1; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed var(--admin-border); overflow: hidden; padding: 20px;">
+            <div style="flex: 1; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed var(--admin-border); overflow: hidden; padding: 20px; max-width: 100%;">
               <div id="demoPreviewContainer" style="width: 375px; height: 667px; max-height: 100%; transition: all 0.3s ease; position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                 <iframe id="demoPreviewFrame" src="about:blank" style="width: 100%; height: 100%; border: none; background: #fff;"></iframe>
                 <div id="demoPreviewPlaceholder" style="position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: var(--admin-bg); color: var(--admin-text-sub); z-index: 10;">
@@ -884,7 +936,9 @@
                   <th>Action</th>
                 </tr>
               </thead>
-              <tbody id="couponsBody"></tbody>
+              <tbody id="couponsBody">
+                <!-- Rows -->
+              </tbody>
             </table>
           </div>
         </div>
@@ -1342,21 +1396,21 @@
         if (statusText === 'অর্ডার বাতিল' || statusText === 'বাতিল') statusBadge = 'badge-danger';
 
         tr.innerHTML = `
-          <td style="font-family: monospace; color: var(--admin-primary);">${o.orderId || ''}</td>
-          <td>
+          <td data-label="Order ID" style="font-family: monospace; color: var(--admin-primary);">${o.orderId || ''}</td>
+          <td data-label="Date & Time">
             <div style="font-weight: 600; font-size: 0.85rem;">${(()=>{
                if(!o.createdAt) return '-';
                const d = new Date(o.createdAt);
                return d.toLocaleDateString('en-GB') + ' <br><span style="color:var(--admin-text-sub)">' + d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) + '</span>';
             })()}</div>
           </td>
-          <td>
+          <td data-label="Customer">
             <div style="font-weight: 600;">${o.username || ''}</div>
             <div style="font-size: 0.75rem; color: var(--admin-text-sub); margin-bottom: 4px;">${o.userPhone || ''}</div>
             ${o.couponCode ? `<div style="font-size:0.75rem; color:#10b981; font-weight:600; margin-bottom: 4px;">Coupon: ${o.couponCode} (-${o.couponDiscountPercent || 0}%)</div>` : ''}
             <button class="btn-action" style="background:var(--admin-primary); padding:2px 6px; font-size:0.7rem;" onclick="viewCustomerProfile('${o.userPhone || ''}', '${o.username || ''}')">View Profile</button>
           </td>
-          <td>
+          <td data-label="Package & Price">
             <div style="font-weight: 600;">${o.package || ''}</div>
             <div style="font-size:0.75rem; color:var(--admin-text-sub); margin-top:2px;">
               ${(()=>{
@@ -1369,12 +1423,12 @@
         })()}
             </div>
           </td>
-          <td><span class="badge ${payBadge}">${payText}</span></td>
-          <td><span class="badge ${statusBadge}">${statusText}</span></td>
-          <td>
+          <td data-label="Payment Status"><span class="badge ${payBadge}">${payText}</span></td>
+          <td data-label="Order Status"><span class="badge ${statusBadge}">${statusText}</span></td>
+          <td data-label="Details">
             <button class="btn-action" style="background:var(--admin-primary); padding:4px 8px; font-size:0.75rem;" onclick="viewOrderDetails('${o.id}')"><i class="fa-solid fa-file-lines"></i> Details</button>
           </td>
-          <td>
+          <td data-label="Update Payment">
             <div class="action-btn-group">
               ${payText === 'পেন্ডিং' ? `
                 <button class="btn-action btn-pay-adv" onclick="updateOrder(event, '${o.id}', 'payment', 'ভেরিফাইড')">কনফার্ম অ্যাডভান্স</button>
@@ -1991,14 +2045,31 @@
     }
     
     function addDemoRow() {
+      syncDemosFromDOM();
       currentDemos.push({ id: 'demo_'+Date.now(), name: '', url: '' });
       renderDemosAdmin();
     }
     
-        function deleteDemoRow(idx) {
+        function syncDemosFromDOM() {
+      const container = document.getElementById('demosContainer');
+      const boxes = container.querySelectorAll('.tier-box');
+      const updatedDemos = [];
+      boxes.forEach(box => {
+        const name = box.querySelector('.demo-name').value;
+        const url = box.querySelector('.demo-url').value;
+        const category = box.querySelector('.demo-category').value;
+        const id = box.querySelector('.demo-id').value;
+        updatedDemos.push({ id, name, url, category });
+      });
+      currentDemos = updatedDemos;
+    }
+    
+    function deleteDemoRow(idx) {
       if(confirm('Are you sure you want to remove this demo?')) {
+        syncDemosFromDOM();
         currentDemos.splice(idx, 1);
         renderDemosAdmin();
+        setTimeout(saveDemos, 100);
       }
     }
     
