@@ -8,7 +8,7 @@ import http from 'http';
 import fs from 'fs';
 import multer from 'multer';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, addDoc, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, doc, addDoc, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, getDocs, deleteField } from 'firebase/firestore';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -558,6 +558,7 @@ app.post('/api/place-order', async (req, res) => {
       contactPhone,
       advancePaymentPhone,
       couponCode: couponDiscountPercent > 0 ? couponCode : null,
+      paymentScreenshot,
       couponDiscountPercent: couponDiscountPercent > 0 ? couponDiscountPercent : null,
       status: 'প্রক্রিয়াকরণ চলছে',
       basePrice,
@@ -838,17 +839,16 @@ app.post('/api/admin/packages/delete/:pkg', verifyAdmin, async (req, res) => {
   try {
     const pkgName = req.params.pkg;
     const docRef = doc(db, 'settings', 'packages');
-    const docSnap = await getDoc(docRef);
-    if(docSnap.exists()) {
-      let pkgs = docSnap.data();
-      if (pkgs[pkgName]) {
-        delete pkgs[pkgName];
-        await setDoc(docRef, pkgs); // Save without the deleted package
-      }
-    }
+    await updateDoc(docRef, {
+      [pkgName]: deleteField()
+    });
     res.json({ success: true, message: 'Package deleted' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    if (error.code === 'not-found') {
+      res.json({ success: true, message: 'Package deleted' });
+    } else {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
 });
 
