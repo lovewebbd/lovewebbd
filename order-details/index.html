@@ -498,10 +498,16 @@
       }
       document.getElementById('tdTotal').innerHTML = totalText;
       
-      if (order.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত') {
+      if (order.advancePaymentStatus === 'সম্পূর্ণ পরিশোধিত' || order.duePayment === 0) {
          document.getElementById('tdDue').innerHTML = '৳ ০ <span style="font-size:0.8rem; color:#00d46a;">(পরিশোধিত)</span>';
       } else {
-         document.getElementById('tdDue').innerText = '৳ ' + convertToBanglaNumber(order.duePayment);
+         let dueHtml = '৳ ' + convertToBanglaNumber(order.duePayment);
+         if(order.duePaymentStatus === 'পেন্ডিং') {
+             dueHtml += '<br><span style="font-size:0.8rem; color:#ff9800;"><i class="fa-solid fa-spinner fa-spin"></i> পেমেন্ট ভেরিফাই করা হচ্ছে</span>';
+         } else {
+             dueHtml += '<br><button onclick="location.href=\'/due-payment?orderId='+order.id+'&amount='+order.duePayment+'\'" style="margin-top:5px; background:var(--primary-pink, #FF2A6D); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;"><i class="fa-solid fa-credit-card"></i> বাকি পেমেন্ট করুন</button>';
+         }
+         document.getElementById('tdDue').innerHTML = dueHtml;
       }
 
       document.getElementById('tdAdvance').innerText = '৳ ' + convertToBanglaNumber(order.advancePayment);
@@ -538,7 +544,7 @@
         document.getElementById('tdConfirmation').style.color = '#00d46a';
         document.getElementById('tdDue').innerText = '৳ ০ (পরিশোধিত)';
         document.getElementById('tdDue').style.color = '#00d46a';
-        document.getElementById('tdAccessCode').innerHTML = '<span class="access-code">' + (order.accessCode || 'LWX9A2B4C5D6') + '</span>';
+        document.getElementById('tdAccessCode').innerHTML = '<span class="access-code">' + (order.accessCode || order.id.substring(0, 10).toUpperCase()) + '</span>';
         
         const trCustom = document.getElementById('trCustomizeAction');
         if (trCustom) trCustom.style.display = 'table-row';

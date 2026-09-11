@@ -546,9 +546,11 @@ app.post('/api/place-order', async (req, res) => {
     const duePayment = totalPrice - advancePayment;
 
     const orderId = '#LW-' + Math.floor(10000000 + Math.random() * 90000000);
+    const accessCode = Math.random().toString(36).substring(2, 12).toUpperCase();
     
     const newOrder = {
       orderId,
+      accessCode,
       username: username || phone,
       userPhone: phone,
       websiteType,
@@ -582,6 +584,29 @@ app.post('/api/place-order', async (req, res) => {
 
 // API to submit feedback
 
+
+app.post('/api/pay-due', async (req, res) => {
+  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { orderId, duePaymentPhone, duePaymentScreenshot } = req.body;
+    if (!orderId || !duePaymentPhone || !duePaymentScreenshot) {
+      return res.status(400).json({ success: false, message: 'Bad request.' });
+    }
+    
+    const orderRef = doc(db, 'orders', orderId);
+    await updateDoc(orderRef, {
+      duePaymentPhone,
+      duePaymentScreenshot,
+      duePaymentStatus: 'পেন্ডিং',
+      duePaymentDate: new Date().toISOString()
+    });
+    
+    res.json({ success: true, message: 'Due payment submitted successfully' });
+  } catch (error) {
+    console.error('Error submitting due payment:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
 
 app.post('/api/submit-feedback', async (req, res) => {
   if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
@@ -649,7 +674,7 @@ app.post('/api/upload', upload.array('images', 50), (req, res) => {
 });
 
 // Named route fallbacks
-const routes = ['place-order', '404', 
+const routes = ['place-order', '404', 'due-payment',
   'sign-in',
   'reset-password',
   'order-details',
@@ -1096,6 +1121,7 @@ app.post('/api/admin/orders/payment', verifyAdmin, async (req, res) => {
       if (snap.exists()) {
         const o = snap.data();
         updates.duePayment = 0;
+        updates.duePaymentStatus = 'ভেরিফাইড';
         updates.advancePayment = o.totalPrice !== undefined ? Number(o.totalPrice) : (o.package === 'Premium' ? 949 : (o.package === 'Exclusive' ? 649 : 349));
         updates.status = 'ডেলিভারড'; // Auto delivery
       }

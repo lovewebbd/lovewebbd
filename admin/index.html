@@ -850,6 +850,7 @@
                   <th>Customer</th>
                   <th>Package &amp; Price</th>
                   <th>Payment Status</th>
+                  <th>Due Payment</th>
                   <th>Order Status</th>
                   <th>Details</th>
                   <th>Update Payment</th>
@@ -1449,6 +1450,14 @@
             </div>
           </td>
           <td data-label="Payment Status"><span class="badge ${payBadge}">${payText}</span></td>
+          <td data-label="Due Payment">
+            ${o.duePaymentStatus ? `
+              <div style="font-size:0.75rem; font-weight:bold; color:${o.duePaymentStatus==='পেন্ডিং'?'#ff9800':'#00d46a'};">${o.duePaymentStatus}</div>
+              ${o.duePaymentPhone ? `<div style="font-size:0.7rem; color:var(--admin-text-sub);">Num: ${o.duePaymentPhone}</div>` : ''}
+              ${o.duePaymentScreenshot ? `<div style="margin-top:2px;"><a href="${o.duePaymentScreenshot}" target="_blank" style="font-size:0.7rem; color:#3b82f6;"><i class="fa-solid fa-image"></i> SS View</a></div>` : ''}
+              ${o.duePaymentStatus==='পেন্ডিং' ? `<div style="margin-top:4px;"><button class="btn-action" style="background:#10b981; padding:2px 4px; font-size:0.7rem;" onclick="updateOrder(event, '${o.id}', 'payment', 'সম্পূর্ণ পরিশোধিত')">Verify Due</button></div>` : ''}
+            ` : `<span style="color:var(--admin-text-sub); font-size:0.8rem;">-</span>`}
+          </td>
           <td data-label="Order Status"><span class="badge ${statusBadge}">${statusText}</span></td>
           <td data-label="Details">
             <button class="btn-action" style="background:var(--admin-primary); padding:4px 8px; font-size:0.75rem;" onclick="viewOrderDetails('${o.id}')"><i class="fa-solid fa-file-lines"></i> Details</button>

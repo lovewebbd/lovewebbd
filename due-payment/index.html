@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>বাকি পেমেন্ট | LoveWeb</title>
+  
+  <script>
+    function e2b(str) {
+       if(!str && str !== 0) return '';
+       const bengaliDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+       return str.toString().replace(/[0-9]/g, w => bengaliDigits[w]);
+    }
+    if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/index.html";
+  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  
+  <style>
+    .order-card {
+      width: 700px;
+      max-width: 96%;
+      background: var(--card-bg);
+      backdrop-filter: blur(25px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 40px;
+      margin: 40px auto;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+    .order-form-group {
+      margin-bottom: 24px;
+    }
+    .order-form-group > label {
+      display: block;
+      font-size: 1rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255, 42, 109, 0.15);
+      padding-bottom: 8px;
+    }
+    .order-form-group input {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: var(--transition-smooth);
+    }
+    .order-form-group input:focus {
+      outline: none;
+      border-color: var(--primary-pink);
+      box-shadow: 0 0 0 3px var(--glow-pink);
+    }
+    
+    .info-box {
+      background: rgba(255, 42, 109, 0.08);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 42, 109, 0.2);
+      margin-bottom: 30px;
+      color: var(--text-main);
+    }
+    
+    .info-box p {
+      margin: 8px 0;
+      font-size: 1.05rem;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--primary-pink);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .submit-btn:hover { background: var(--hover-pink); }
+    .submit-btn:disabled { background: #666; cursor: not-allowed; }
+
+    /* Image Upload Styles */
+    .image-upload-section {
+       margin-top: 10px;
+       display: flex;
+       flex-direction: column;
+       gap: 10px;
+    }
+    .image-preview-container {
+       display: flex;
+       flex-wrap: wrap;
+       gap: 10px;
+    }
+    .image-preview-box {
+       width: 80px;
+       height: 80px;
+       border-radius: 8px;
+       background-size: cover;
+       background-position: center;
+       border: 1px solid rgba(255, 42, 109, 0.3);
+       position: relative;
+    }
+    .image-preview-box .remove-img-btn {
+       position: absolute;
+       top: -5px;
+       right: -5px;
+       background: #ff2a6d;
+       color: white;
+       border: none;
+       border-radius: 50%;
+       width: 20px;
+       height: 20px;
+       font-size: 10px;
+       cursor: pointer;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+    }
+    .btn-add-image {
+       background: rgba(255, 42, 109, 0.1);
+       color: var(--primary-pink);
+       border: 1px dashed var(--primary-pink);
+       padding: 10px 15px;
+       border-radius: 8px;
+       cursor: pointer;
+       font-size: 0.95rem;
+       font-weight: 600;
+       transition: 0.3s;
+       width: fit-content;
+    }
+    .btn-add-image:hover {
+       background: rgba(255, 42, 109, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+      .order-card { padding: 25px 20px; }
+    }
+  </style>
+  <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+</head>
+<body>
+
+  <div style="padding-top: 30px; text-align: center; margin-bottom: -10px;">
+    <h1 style="color: var(--text-main); font-size: 1.8rem; margin: 0;"><i class="fa-solid fa-credit-card" style="color: var(--primary-pink);"></i> বাকি পেমেন্ট সম্পন্ন করুন</h1>
+  </div>
+
+  <div class="order-card">
+    <div style="text-align: center; margin-bottom: 25px;">
+      <p style="color: var(--text-sub); font-size: 0.95rem;">আপনার অর্ডারের বাকি পেমেন্ট সম্পন্ন করে ডেলিভারি বুঝে নিন</p>
+    </div>
+    
+    <div class="info-box">
+        <p><i class="fa-solid fa-mobile-screen-button" style="color:var(--primary-pink); width:20px;"></i> <strong>বিকাশ বা নগদ নম্বর:</strong> <span id="paymentNumber">...</span> (সেন্ড মানি)</p>
+        <p><i class="fa-solid fa-hashtag" style="color:var(--primary-pink); width:20px;"></i> <strong>অর্ডার আইডি:</strong> <span id="orderIdDisplay">...</span></p>
+        <p><i class="fa-solid fa-money-bill-wave" style="color:var(--primary-pink); width:20px;"></i> <strong>বাকি পেমেন্ট পরিমাণ:</strong> <span id="dueAmountDisplay">...</span></p>
+    </div>
+
+    <div class="order-form-group">
+      <label><i class="fa-solid fa-hand-holding-dollar"></i> যে নম্বর থেকে পেমেন্ট করেছেন</label>
+      <input type="tel" id="senderNumber" placeholder="যেমন: 017XXXXXXXX" required>
+    </div>
+
+    <div class="order-form-group">
+       <label><i class="fa-solid fa-image"></i> পেমেন্টের স্ক্রিনশট (Payment SS) - Required</label>
+       <div class="image-upload-section" id="imageUploadSectionPayment">
+          <div class="image-preview-container" id="imagePreviewContainerPayment"></div>
+          <button type="button" class="btn-add-image" onclick="triggerImageUpload()"><i class="fa-solid fa-plus"></i> স্ক্রিনশট আপলোড করুন</button>
+          <input type="file" id="paymentScreenshot" style="display:none;" accept="image/*" onchange="handleImageUpload(event)">
+       </div>
+    </div>
+
+    <div style="margin-top: 35px;">
+      <button class="submit-btn" id="submitBtn" onclick="submitDuePayment()"><i class="fa-solid fa-paper-plane"></i> সাবমিট করুন</button>
+    </div>
+  </div>
+  
+  <div id="notification" class="notification-toast"><span id="notifMessage"></span></div>
+  
+  <script src="../js/messenger.js"></script>
+  <script src="../js/official-nav.js"></script>
+  
+  <script>
+    function showToast(msg, type='info') {
+      const el = document.getElementById('notification');
+      document.getElementById('notifMessage').innerText = msg;
+      el.style.backgroundColor = type==='error' ? '#f44336' : (type==='success' ? '#4CAF50' : '#333');
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('orderId');
+    const dueAmount = urlParams.get('amount') || 0;
+    
+    if(!orderId) {
+        alert("কোনো অর্ডার আইডি পাওয়া যায়নি!");
+        window.location.href = "/profile";
+    }
+    
+    document.getElementById('orderIdDisplay').innerText = orderId;
+    document.getElementById('dueAmountDisplay').innerText = '৳ ' + e2b(dueAmount);
+    
+    fetch('/api/settings').then(r=>r.json()).then(data=>{
+        if(data.success && data.data && data.data.paymentNumber) {
+            document.getElementById('paymentNumber').innerText = e2b(data.data.paymentNumber);
+        }
+    });
+
+    const sessionRaw = localStorage.getItem('loveweb_session');
+    let sessionUsername = 'user';
+    if(sessionRaw) {
+        try {
+            const user = JSON.parse(sessionRaw);
+            if(user.username) sessionUsername = user.username;
+        } catch(e){}
+    }
+
+    let selectedImageFile = null;
+
+    function triggerImageUpload() {
+       document.getElementById('paymentScreenshot').click();
+    }
+
+    function handleImageUpload(event) {
+       const files = Array.from(event.target.files);
+       if (files.length === 0) return;
+       
+       if (files.length > 1) {
+           showToast('শুধুমাত্র ১টি ছবি নির্বাচন করুন।', 'error');
+           return;
+       }
+       
+       selectedImageFile = files[0];
+       renderImagePreview();
+       event.target.value = ''; // reset
+    }
+
+    function removeImage() {
+       selectedImageFile = null;
+       renderImagePreview();
+    }
+
+    function renderImagePreview() {
+       const container = document.getElementById('imagePreviewContainerPayment');
+       container.innerHTML = '';
+       
+       if (selectedImageFile) {
+           const url = URL.createObjectURL(selectedImageFile);
+           const div = document.createElement('div');
+           div.className = 'image-preview-box';
+           div.style.backgroundImage = 'url(' + url + ')';
+           
+           const btn = document.createElement('button');
+           btn.className = 'remove-img-btn';
+           btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+           btn.onclick = removeImage;
+           
+           div.appendChild(btn);
+           container.appendChild(div);
+       }
+    }
+
+    async function submitDuePayment() {
+        const senderNumber = document.getElementById('senderNumber').value;
+        
+        if(!senderNumber) return showToast('যে নম্বর থেকে পেমেন্ট করেছেন তা দিন', 'error');
+        if(!selectedImageFile) return showToast('দয়া করে পেমেন্টের স্ক্রিনশট দিন', 'error');
+        
+        const btn = document.getElementById('submitBtn');
+        const originalBtnText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> আপলোড হচ্ছে...';
+        
+        try {
+            const formData = new FormData();
+            const ext = selectedImageFile.name.split('.').pop();
+            const safeUser = sessionUsername.replace(/[^a-zA-Z0-9]/g, '');
+            const newName = `${safeUser}_DuePayment_${Date.now()}.${ext}`;
+            formData.append('images', new File([selectedImageFile], newName, { type: selectedImageFile.type }));
+            
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+            const uploadData = await uploadRes.json();
+            
+            if(!uploadData.success) throw new Error("Image upload failed");
+            
+            const screenshotUrl = uploadData.urls[0];
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> সাবমিট করা হচ্ছে...';
+            
+            const res = await fetch('/api/pay-due', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    orderId,
+                    duePaymentPhone: senderNumber,
+                    duePaymentScreenshot: screenshotUrl
+                })
+            });
+            const data = await res.json();
+            
+            if(data.success) {
+                showToast('সফলভাবে সাবমিট হয়েছে!', 'success');
+                setTimeout(() => { window.location.href = '/order-details'; }, 1500);
+            } else {
+                showToast('সমস্যা: ' + data.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
+        } catch(e) {
+            console.error(e);
+            showToast('নেটওয়ার্ক সমস্যা। আবার চেষ্টা করুন।', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalBtnText;
+        }
+    }
+  </script>
+</body>
+</html>
