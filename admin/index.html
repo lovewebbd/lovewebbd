@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
+<!DOCTYPE html><html lang="bn"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LoveWeb Admin Panel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -690,7 +688,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link rel="icon" type="image/png" sizes="32x32" href="/img/logo.png">
   <link rel="apple-touch-icon" href="/img/logo.png">
-</head>
+<title>LoveWeb Admin Panel</title><meta name="robots" content="noindex, nofollow"></head>
 <body>
 
   <!-- Loading -->
@@ -706,11 +704,11 @@
       <form id="adminLoginForm">
         <div class="input-group">
           <label>Username</label>
-          <input type="text" id="adminUser" required autocomplete="off">
+          <input type="text" id="adminUser" required="" autocomplete="off">
         </div>
         <div class="input-group">
           <label>Password</label>
-          <input type="password" id="adminPass" required>
+          <input type="password" id="adminPass" required="">
         </div>
         <button type="submit" class="btn-admin" id="loginBtn">
           <i class="fa-solid fa-right-to-bracket"></i> Login
@@ -848,9 +846,9 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
-                  <th>Date & Time</th>
+                  <th>Date &amp; Time</th>
                   <th>Customer</th>
-                  <th>Package & Price</th>
+                  <th>Package &amp; Price</th>
                   <th>Payment Status</th>
                   <th>Order Status</th>
                   <th>Details</th>
@@ -936,11 +934,11 @@
           <form id="couponForm" style="margin-bottom: 20px; display: grid; gap: 15px; grid-template-columns: 1fr 1fr;">
             <div class="input-group">
               <label>Coupon Code (e.g. LOVE50)</label>
-              <input type="text" id="cpnCode" required>
+              <input type="text" id="cpnCode" required="">
             </div>
             <div class="input-group">
               <label>Discount Percent (%)</label>
-              <input type="number" id="cpnDiscount" required min="1" max="100">
+              <input type="number" id="cpnDiscount" required="" min="1" max="100">
             </div>
             <div class="input-group">
               <label>Expiry Date</label>
@@ -1011,11 +1009,11 @@
             <form id="changePasswordForm">
               <div class="input-group">
                 <label>Old Password</label>
-                <input type="password" id="oldPass" required>
+                <input type="password" id="oldPass" required="">
               </div>
               <div class="input-group">
                 <label>New Password</label>
-                <input type="password" id="newPass" required minlength="6">
+                <input type="password" id="newPass" required="" minlength="6">
               </div>
               <button type="submit" class="btn-admin">Update Password</button>
               <div class="error-msg" id="passMsg" style="margin-top:10px;"></div>
@@ -2177,5 +2175,6 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div><script>function showToast(message) { let type = "success"; let icon = "<i class=\"fa-solid fa-circle-check\" style=\"color: #10b981;\"></i>"; const lowerMsg = String(message).toLowerCase(); if (lowerMsg.includes("error") || lowerMsg.includes("fail") || lowerMsg.includes("please")) { type = "error"; icon = "<i class=\"fa-solid fa-circle-exclamation\" style=\"color: #ef4444;\"></i>"; } let toastContainer = document.getElementById("toast-container"); const toast = document.createElement("div"); toast.style.cssText = "background: var(--admin-card); color: var(--admin-text); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--admin-border); border-left: 4px solid " + (type === "success" ? "#10b981" : "#ef4444") + "; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; font-size: 0.9rem; font-weight: 500;"; toast.innerHTML = icon + " <span>" + message + "</span>"; toastContainer.appendChild(toast); requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.transform = "translateY(0)"; toast.style.opacity = "1"; }); }); setTimeout(() => { toast.style.transform = "translateY(100px)"; toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000); }</script></body>
-</html>
+<div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div><script>function showToast(message) { let type = "success"; let icon = "<i class=\"fa-solid fa-circle-check\" style=\"color: #10b981;\"></i>"; const lowerMsg = String(message).toLowerCase(); if (lowerMsg.includes("error") || lowerMsg.includes("fail") || lowerMsg.includes("please")) { type = "error"; icon = "<i class=\"fa-solid fa-circle-exclamation\" style=\"color: #ef4444;\"></i>"; } let toastContainer = document.getElementById("toast-container"); const toast = document.createElement("div"); toast.style.cssText = "background: var(--admin-card); color: var(--admin-text); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--admin-border); border-left: 4px solid " + (type === "success" ? "#10b981" : "#ef4444") + "; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; font-size: 0.9rem; font-weight: 500;"; toast.innerHTML = icon + " <span>" + message + "</span>"; toastContainer.appendChild(toast); requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.transform = "translateY(0)"; toast.style.opacity = "1"; }); }); setTimeout(() => { toast.style.transform = "translateY(100px)"; toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000); }</script>
+
+</body></html>

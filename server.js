@@ -162,7 +162,7 @@ const db = firestoreDb;
 
 // Gmail App Password configuration for Love Web OTP
 const GMAIL_USER = process.env.GMAIL_USER || 'lovewebbd@gmail.com';
-const GMAIL_APP_PASSWORD = 'jvwnyzuqfjdhhfjl'; // Hardcoded from user
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || 'jvwnyzuqfjdhhfjl'; // Fallback if missing
 
 // Reusable Gmail Nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -1440,7 +1440,13 @@ wss.on('error', (err) => {
   console.error("WebSocket Server Error:", err);
 });
 
-server.listen(PORT, HOST, () => {
-  console.log(`LoveWeb application listening at http://${HOST}:${PORT}`);
-});
+// Local development / Standard Node.js hosting
+if (!process.env.VERCEL) {
+  server.listen(PORT, HOST, () => {
+    console.log(`LoveWeb application listening at http://${HOST}:${PORT}`);
+  });
+}
+
+// Export the Express app for Vercel Serverless Functions
+export default app;
 

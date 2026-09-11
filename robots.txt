@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /order-details/
+Disallow: /place-order/
+Disallow: /reset-password/
+
+Sitemap: https://lovewebbd.com/sitemap.xml

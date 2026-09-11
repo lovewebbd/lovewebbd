@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="bn" data-theme="dark">
-<head>
+<!DOCTYPE html><html lang="bn" data-theme="dark"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>
@@ -10,8 +8,8 @@
        return str.toString().replace(/[0-9]/g, w => bengaliDigits[w]);
     }
 if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/index.html";</script>
-  <title>নতুন অর্ডার করুন | LoveWeb</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../css/style.css">
   <style>
@@ -383,7 +381,7 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
 </style>
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon.png">
   <link rel="apple-touch-icon" href="/img/favicon.png">
-</head>
+<title>নতুন অর্ডার করুন | LoveWeb</title><meta name="robots" content="noindex, nofollow"></head>
 <body>
 
   <div style="padding-top: 10px; text-align: center; margin-bottom: -10px;">
@@ -407,35 +405,35 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
         <label><i class="fa-solid fa-gift"></i> ওয়েবসাইটের ধরন নির্বাচন করুন</label>
         <div class="type-grid">
           
-          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Birthday')">
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&amp;fit=crop&amp;w=500&amp;q=80');" onclick="selectType(this, 'Birthday')">
             <div class="type-card-content">
               <div class="type-title">জন্মদিনের শুভেচ্ছা</div>
               <div class="type-subtitle">Birthday Wish</div>
             </div>
           </div>
           
-          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Relationship Anniversary')">
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&amp;fit=crop&amp;w=500&amp;q=80');" onclick="selectType(this, 'Relationship Anniversary')">
             <div class="type-card-content">
               <div class="type-title">সম্পর্কের বর্ষপূর্তি</div>
               <div class="type-subtitle">Relationship Anniversary</div>
             </div>
           </div>
           
-          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Marriage Anniversary')">
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&amp;fit=crop&amp;w=500&amp;q=80');" onclick="selectType(this, 'Marriage Anniversary')">
             <div class="type-card-content">
               <div class="type-title">বিবাহবার্ষিকী</div>
               <div class="type-subtitle">Marriage Anniversary</div>
             </div>
           </div>
           
-          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Friendship Wish')">
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&amp;fit=crop&amp;w=500&amp;q=80');" onclick="selectType(this, 'Friendship Wish')">
             <div class="type-card-content">
               <div class="type-title">বন্ধুত্বের উদযাপন</div>
               <div class="type-subtitle">Friendship Wish</div>
             </div>
           </div>
           
-          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=500&q=80');" onclick="selectType(this, 'Other Wish')">
+          <div class="type-card" style="background-image: url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&amp;fit=crop&amp;w=500&amp;q=80');" onclick="selectType(this, 'Other Wish')">
             <div class="type-card-content">
               <div class="type-title">অন্যান্য স্পেশাল দিন</div>
               <div class="type-subtitle">Other Events / Wishes</div>
@@ -443,7 +441,7 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
           </div>
           
         </div>
-        <input type="hidden" id="selectedWebsiteType" required>
+        <input type="hidden" id="selectedWebsiteType" required="">
       </div>
 
       <!-- Package Selection (Grid) -->
@@ -454,7 +452,7 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
           
           
         </div>
-        <input type="hidden" id="selectedPackage" required>
+        <input type="hidden" id="selectedPackage" required="">
       </div>
 
       
@@ -595,7 +593,7 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
 
       <div class="order-form-group">
         <label><i class="fa-solid fa-mobile-screen"></i> আপনার কন্টাক্ট নম্বর</label>
-        <input type="tel" placeholder="01XXXXXXXXX" id="orderContactPhone" required>
+        <input type="tel" placeholder="01XXXXXXXXX" id="orderContactPhone" required="">
       </div>
 
       <div class="order-form-group">
@@ -618,7 +616,7 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
         </div>
         
         <label><i class="fa-solid fa-hand-holding-dollar"></i> যে নম্বর থেকে পেমেন্ট করেছেন</label>
-        <input type="tel" id="orderAdvancePhone" placeholder="01XXXXXXXXX" required>
+        <input type="tel" id="orderAdvancePhone" placeholder="01XXXXXXXXX" required="">
       </div>
       
       <div class="order-form-group">
@@ -1302,5 +1300,6 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
   <script src="../js/messenger.js"></script>
   <!-- Official Navigation & Theme Controller -->
   <script src="../js/official-nav.js"></script>
-</body>
-</html>
+
+
+</body></html>
