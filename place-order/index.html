@@ -704,10 +704,6 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
           showToast('দুঃখিত, কোনো একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
         }
       } catch (err) {
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.disabled = false;
         console.error(err);
         showToast('পেজ জেনারেট করতে সমস্যা হয়েছে।', 'error');
       } finally {
@@ -1209,8 +1205,15 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
         showToast('অনুগ্রহ করে ওয়েবসাইট প্যাকেজ নির্বাচন করুন।', 'error');
         return;
       }
+      if(!contactPhone || !advancePaymentPhone) {
+        showToast('অনুগ্রহ করে ফর্মের সকল তথ্য সঠিকভাবে পূরণ করুন।', 'error');
+        return;
+      }
+      if(!selectedImages['Payment'] || selectedImages['Payment'].length === 0) {
+        showToast('অনুগ্রহ করে পেমেন্টের স্ক্রিনশট আপলোড করুন।', 'error');
+        return;
+      }
       
-      showLoading(true);
       const submitBtn = document.querySelector('.submit-btn');
       const originalBtnText = submitBtn.innerHTML;
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> প্রসেস হচ্ছে...';
@@ -1246,19 +1249,6 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
       
       const paymentScreenshot = (urlMap.Payment && urlMap.Payment.length > 0) ? urlMap.Payment[0] : null;
 
-      if(!contactPhone || !advancePaymentPhone) {
-        showToast('অনুগ্রহ করে ফর্মের সকল তথ্য সঠিকভাবে পূরণ করুন।', 'error');
-        return;
-      }
-      if(!selectedImages['Payment'] || selectedImages['Payment'].length === 0) {
-        showToast('অনুগ্রহ করে পেমেন্টের স্ক্রিনশট আপলোড করুন।', 'error');
-        return;
-      }
-
-
-      
-      
-      
       try {
         const response = await fetch('/api/place-order', {
           method: 'POST',
@@ -1283,10 +1273,14 @@ if(!localStorage.getItem("loveweb_session")) window.location.href="../sign-in/in
           window.location.href = '/order-details';
         } else {
           showToast('সমস্যা: ' + data.message, 'error');
+          submitBtn.innerHTML = originalBtnText;
+          submitBtn.disabled = false;
         }
       } catch (err) {
         console.error(err);
         showToast('নেটওয়ার্ক সমস্যা। দয়া করে আবার চেষ্টা করুন।', 'error');
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
       }
     }
   </script>
