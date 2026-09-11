@@ -1454,14 +1454,14 @@
             ${o.duePaymentStatus ? `
               <div style="font-size:0.75rem; font-weight:bold; color:${o.duePaymentStatus==='পেন্ডিং'?'#ff9800':'#00d46a'};">${o.duePaymentStatus}</div>
               ${o.duePaymentPhone ? `<div style="font-size:0.7rem; color:var(--admin-text-sub);">Num: ${o.duePaymentPhone}</div>` : ''}
-              ${o.duePaymentScreenshot ? `<div style="margin-top:2px;"><a href="${o.duePaymentScreenshot}" target="_blank" style="font-size:0.7rem; color:#3b82f6;"><i class="fa-solid fa-image"></i> SS View</a></div>` : ''}
+              ${o.duePaymentScreenshot ? `<div style="margin-top:2px;"><a href="#" onclick="openImageModal('${o.duePaymentScreenshot}', event)" style="font-size:0.7rem; color:#3b82f6;"><i class="fa-solid fa-image"></i> SS View</a></div>` : ''}
               ${o.duePaymentStatus==='পেন্ডিং' ? `<div style="margin-top:4px;"><button class="btn-action" style="background:#10b981; padding:2px 4px; font-size:0.7rem;" onclick="updateOrder(event, '${o.id}', 'payment', 'সম্পূর্ণ পরিশোধিত')">Verify Due</button></div>` : ''}
             ` : `<span style="color:var(--admin-text-sub); font-size:0.8rem;">-</span>`}
           </td>
           <td data-label="Order Status"><span class="badge ${statusBadge}">${statusText}</span></td>
           <td data-label="Details">
             <button class="btn-action" style="background:var(--admin-primary); padding:4px 8px; font-size:0.75rem;" onclick="viewOrderDetails('${o.id}')"><i class="fa-solid fa-file-lines"></i> Details</button>
-            ${o.paymentScreenshot ? `<div style="margin-top: 4px;"><a href="${o.paymentScreenshot}" target="_blank" class="btn-action" style="background:#10b981; padding:4px 8px; font-size:0.75rem; text-decoration:none; display:inline-block; width:100%; box-sizing:border-box;"><i class="fa-solid fa-image"></i> Payment SS</a></div>` : ''}
+            ${o.paymentScreenshot ? `<div style="margin-top: 4px;"><a href="#" onclick="openImageModal('${o.paymentScreenshot}', event)" class="btn-action" style="background:#10b981; padding:4px 8px; font-size:0.75rem; text-decoration:none; display:inline-block; width:100%; box-sizing:border-box; text-align:center;"><i class="fa-solid fa-image"></i> Payment SS</a></div>` : ''}
           </td>
           <td data-label="Update Payment">
             <div class="action-btn-group">
@@ -1563,8 +1563,12 @@
          }
       }
       
+      
+      if (order.duePaymentScreenshot) {
+         content += `<div style="margin-bottom:15px;"><strong>Due Payment Screenshot:</strong><br><div style="margin-top:5px;"><a href="#" onclick="openImageModal('${order.duePaymentScreenshot}', event)"><img src="${order.duePaymentScreenshot}" style="max-width: 100%; max-height: 300px; border-radius:6px; border:1px solid var(--admin-border);" alt="Due Payment Screenshot"></a></div></div>`;
+      }
       if (order.paymentScreenshot) {
-         content += `<div style="margin-bottom:15px;"><strong>Payment Screenshot:</strong><br><div style="margin-top:5px;"><a href="${order.paymentScreenshot}" target="_blank"><img src="${order.paymentScreenshot}" style="max-width: 100%; max-height: 300px; border-radius:6px; border:1px solid var(--admin-border);" alt="Payment Screenshot"></a></div></div>`;
+         content += `<div style="margin-bottom:15px;"><strong>Payment Screenshot:</strong><br><div style="margin-top:5px;"><a href="#" onclick="openImageModal('${order.paymentScreenshot}', event)"><img src="${order.paymentScreenshot}" style="max-width: 100%; max-height: 300px; border-radius:6px; border:1px solid var(--admin-border);" alt="Payment Screenshot"></a></div></div>`;
       }
 
       if(!content) {
@@ -2190,5 +2194,29 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div><script>function showToast(message) { let type = "success"; let icon = "<i class=\"fa-solid fa-circle-check\" style=\"color: #10b981;\"></i>"; const lowerMsg = String(message).toLowerCase(); if (lowerMsg.includes("error") || lowerMsg.includes("fail") || lowerMsg.includes("please")) { type = "error"; icon = "<i class=\"fa-solid fa-circle-exclamation\" style=\"color: #ef4444;\"></i>"; } let toastContainer = document.getElementById("toast-container"); const toast = document.createElement("div"); toast.style.cssText = "background: var(--admin-card); color: var(--admin-text); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--admin-border); border-left: 4px solid " + (type === "success" ? "#10b981" : "#ef4444") + "; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 10px; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; font-size: 0.9rem; font-weight: 500;"; toast.innerHTML = icon + " <span>" + message + "</span>"; toastContainer.appendChild(toast); requestAnimationFrame(() => { requestAnimationFrame(() => { toast.style.transform = "translateY(0)"; toast.style.opacity = "1"; }); }); setTimeout(() => { toast.style.transform = "translateY(100px)"; toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000); }</script>
+
+
+  <!-- Image Viewer Modal -->
+  <div class="confirm-modal-overlay" id="imageViewerModal" style="display:none; z-index:10000; padding:20px;">
+    <div style="background:var(--admin-card); padding:10px; border-radius:12px; max-width:800px; width:100%; max-height:90vh; display:flex; flex-direction:column; position:relative; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: modalFadeIn 0.3s ease;">
+      <button style="position:absolute; top:15px; right:15px; background:var(--admin-danger); color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);" onclick="closeImageModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div style="flex:1; overflow:hidden; display:flex; align-items:center; justify-content:center; padding-top:25px;">
+         <img id="imageViewerImg" src="" style="max-width:100%; max-height:calc(90vh - 50px); object-fit:contain; border-radius:8px;">
+      </div>
+    </div>
+  </div>
+  <script>
+    function openImageModal(imgUrl, e) {
+       if(e) e.preventDefault();
+       document.getElementById('imageViewerImg').src = imgUrl;
+       document.getElementById('imageViewerModal').style.display = 'flex';
+    }
+    function closeImageModal() {
+       document.getElementById('imageViewerModal').style.display = 'none';
+       document.getElementById('imageViewerImg').src = '';
+    }
+  </script>
 
 </body></html>

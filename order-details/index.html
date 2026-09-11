@@ -353,10 +353,6 @@
               <td id="tdAdvance">৳ ৩২০</td>
             </tr>
             <tr>
-              <th><i class="fa-solid fa-mobile-screen"></i> অগ্রিম পেমেন্ট নম্বর</th>
-              <td id="tdAdvancePhone">01XXXXXXXXX (bKash)</td>
-            </tr>
-            <tr>
               <th><i class="fa-regular fa-clock"></i> অগ্রিম পেমেন্টের সময়</th>
               <td id="tdAdvanceTime">০৪ সেপ্টেম্বর ২০২৬, বিকাল ৩:৩০</td>
             </tr>
@@ -511,7 +507,6 @@
       }
 
       document.getElementById('tdAdvance').innerText = '৳ ' + convertToBanglaNumber(order.advancePayment);
-      document.getElementById('tdAdvancePhone').innerText = order.advancePaymentPhone;
       document.getElementById('tdAdvanceTime').innerText = new Date(order.createdAt).toLocaleString('bn-BD');
       
       const paymentStatusTd = document.getElementById('tdPaymentStatus');
