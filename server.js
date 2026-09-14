@@ -644,14 +644,16 @@ app.get('/api/orders/:username', async (req, res) => {
 });
 
 // Serve static assets from project root
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_URL;
+const uploadDir = isVercel ? '/tmp/uploads' : path.join(__dirname, 'uploads');
+
+app.use('/uploads', express.static(uploadDir));
 app.use(express.static(__dirname, {
   extensions: ['html'],
   index: false
 }));
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
