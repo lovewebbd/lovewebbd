@@ -1363,6 +1363,11 @@ You have tools to check order status or place a new order. Always provide helpfu
   }
 });
 
+// Explicitly handle favicon to prevent 500 errors on Vercel
+app.get(['/favicon.ico', '/favicon.png'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'img', 'favicon.png'));
+});
+
 // Fallback to sign-in for unspecified requests
 app.get('*', (req, res) => {
   res.status(404).sendFile(path.join(__dirname, '404', 'index.html'));
