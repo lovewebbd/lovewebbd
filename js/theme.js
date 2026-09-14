@@ -29,12 +29,17 @@
   function getPreferredTheme() {
     const saved = localStorage.getItem(THEME_KEY);
     if (saved === 'light' || saved === 'dark') return saved;
+    
+    // Check system/browser preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
     return 'dark'; // ডিফল্ট ডার্ক রোমান্টিক থিম
   }
 
-  function applyTheme(theme, notify = false) {
+  function applyTheme(theme, notify = false, save = true) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(THEME_KEY, theme);
+    if (save) localStorage.setItem(THEME_KEY, theme);
 
     // সব থিম টগল বাটনের আইকন ও টেক্সট আপডেট
     document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
@@ -60,8 +65,18 @@
   }
 
   // স্ক্রিপ্ট লোড হওয়ার সাথে সাথে থিম সেট করা (যাতে কোনো ফ্লিকার না হয়)
+  // Auto switch when system theme changes
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+      if (!localStorage.getItem(THEME_KEY)) {
+        applyTheme(event.matches ? 'dark' : 'light', false, false);
+      }
+    });
+  }
+
   const initialTheme = getPreferredTheme();
-  applyTheme(initialTheme, false);
+  // Don't save on initial load if it was not already saved
+  applyTheme(initialTheme, false, !!localStorage.getItem(THEME_KEY));
 
   window.toggleLoveWebTheme = function () {
     const current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -81,7 +96,7 @@
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    applyTheme(getPreferredTheme(), false);
+    applyTheme(getPreferredTheme(), false, !!localStorage.getItem(THEME_KEY));
   });
 })();
 

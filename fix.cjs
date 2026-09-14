@@ -1,8 +1,4 @@
 const fs = require('fs');
-let html = fs.readFileSync('demos/index.html', 'utf8');
-
-const regex = /onclick="openDemo\('\$\\{demo\.id\\}', '\$\\{demo\.name\.replace\(\/'\/g, \\"\\'\\"\)\}'\)"/g;
-html = html.replace(/<div class="demo-item" onclick="openDemo\('\$\\{demo\.id\\}', '\$\\{demo\.name\.replace\(\/'\/g, \\"\\'\\"\)\}'\)">/g, 
-  `<div class="demo-item" onclick="openDemo('\${demo.id}', '\${demo.name.replace(/'/g, "&apos;")}')">`);
-
-fs.writeFileSync('demos/index.html', html);
+let c = fs.readFileSync('server.js', 'utf8');
+c = c.replace(/  const urls = req\.files\.map\(f => '\/uploads\/' \+ f\.filename\);\n  res\.json\(\{ success: true, urls \}\);\n\}\);\n/g, '');
+fs.writeFileSync('server.js', c);

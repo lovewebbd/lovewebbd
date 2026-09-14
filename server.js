@@ -8,6 +8,7 @@ import http from 'http';
 import fs from 'fs';
 import multer from 'multer';
 import { initializeApp } from 'firebase/app';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirestore, collection, doc, addDoc, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, getDocs, deleteField } from 'firebase/firestore';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,6 +16,7 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Firebase Client SDK
 let firestoreDb;
+let firebaseApp;
 try {
   let config;
   let dbId;
@@ -36,6 +38,7 @@ try {
   
   if (config) {
     const app = initializeApp(config);
+    firebaseApp = app;
     firestoreDb = getFirestore(app, dbId);
   } else {
     console.warn("⚠️ No Firebase config found. Database will not work until you add firebase-applet-config.json or set FIREBASE_API_KEY environment variable.");
@@ -658,21 +661,35 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir)
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, file.originalname)
-  }
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.post('/api/upload', upload.array('images', 50), (req, res) => {
-  if (!req.files) return res.status(400).json({ success: false, message: 'No files uploaded.' });
-  const urls = req.files.map(f => '/uploads/' + f.filename);
-  res.json({ success: true, urls });
+app.post('/api/upload', upload.array('images', 50), async (req, res) => {
+  if (!req.files || req.files.length === 0) return res.status(400).json({ success: false, message: 'No files uploaded.' });
+  if (!firebaseApp) return res.status(500).json({ success: false, message: 'Firebase not initialized.' });
+  
+  try {
+    const fbStorage = getStorage(firebaseApp);
+    const urls = [];
+    
+    for (const file of req.files) {
+      const ext = path.extname(file.originalname);
+      // Clean filename for safety
+      const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + '-' + safeName;
+      
+      const storageRef = ref(fbStorage, 'uploads/' + uniqueName);
+      
+      await uploadBytes(storageRef, file.buffer, { contentType: file.mimetype });
+      const downloadUrl = await getDownloadURL(storageRef);
+      urls.push(downloadUrl);
+    }
+    
+    res.json({ success: true, urls });
+  } catch (error) {
+    console.error('Firebase Storage Upload Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 });
 
 // Named route fallbacks

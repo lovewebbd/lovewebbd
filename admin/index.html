@@ -629,6 +629,7 @@
       } catch(e) {}
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('couponForm')?.addEventListener('submit', async(e) => {
       e.preventDefault();
       const payload = {
@@ -654,6 +655,7 @@
     document.getElementById('paymentSettingsForm')?.addEventListener('submit', async(e) => {
       e.preventDefault();
       saveSettings();
+    });
     });
 
     async function loadSettings() {
