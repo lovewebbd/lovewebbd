@@ -21,10 +21,13 @@ const firebaseDB = (() => {
                 const builder = {
                     eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return builder; },
                     single: () => { query.single = true; return builder; },
-                    then: (res) => runQuery(query).then(r => {
-                        if (query.single) return res({ data: (r.data && r.data[0]) || null, error: r.error });
-                        return res(r);
-                    })
+                    then: (resolve, reject) => {
+                        const p = runQuery(query).then(r => {
+                            if (query.single) return { data: (r.data && r.data[0]) || null, error: r.error };
+                            return r;
+                        });
+                        return resolve ? p.then(resolve, reject) : p;
+                    }
                 };
                 return builder;
             },
@@ -32,7 +35,10 @@ const firebaseDB = (() => {
                 const query = { action: 'insert', table, data: arr };
                 const builder = {
                     select: () => builder,
-                    then: (res) => runQuery(query).then(res)
+                    then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    }
                 };
                 return builder;
             }
@@ -134,10 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const newUser = insertRes.data[0];
         newUser.created_at = createdAt;
         
-        localStorage.setItem('userEmail', newUser.email);
-        localStorage.setItem('userFullName', newUser.full_name);
-        localStorage.setItem('userPhone', newUser.phone || "");
-        localStorage.setItem('userUsername', newUser.username);
+        localStorage.setItem('loveweb_session', JSON.stringify(newUser));
         
         sessionStorage.removeItem('pendingGoogleSignUp');
         
@@ -149,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.removeItem('redirectAfterLogin');
                 window.location.href = storedRedirect;
             } else {
-                window.location.href = '../dashboard/index.html';
+                window.location.href = '../index.html';
             }
         }, 1500);
     });

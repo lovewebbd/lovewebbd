@@ -1228,7 +1228,7 @@ async function initFirebaseAuth() {
         const res = await fetch('/api/firebase-config');
         const data = await res.json();
         
-        if (data.success && data.config) {
+        if (data.success && data.config && data.config.apiKey) {
             const app = initializeApp(data.config);
             firebaseAuth = getAuth(app);
             googleProvider = new GoogleAuthProvider();
@@ -1289,10 +1289,7 @@ async function handleGoogleSignIn() {
         }
         
         // Login success
-        localStorage.setItem('userEmail', finalUser.email);
-        localStorage.setItem('userFullName', finalUser.full_name);
-        localStorage.setItem('userPhone', finalUser.phone || "");
-        localStorage.setItem('userUsername', finalUser.username);
+        localStorage.setItem('loveweb_session', JSON.stringify(finalUser));
         
         showNotification('লগইন সফল হয়েছে!', 'success');
         
@@ -1302,7 +1299,7 @@ async function handleGoogleSignIn() {
             localStorage.removeItem('redirectAfterLogin');
             window.location.href = storedRedirect;
         } else {
-            window.location.href = '../dashboard/index.html';
+            window.location.href = '../index.html';
         }
         
     } catch (error) {
@@ -1311,7 +1308,7 @@ async function handleGoogleSignIn() {
             showNotification('গুগল লগইন পপ-আপ ব্লক করা হয়েছে। দয়া করে সাইটটি "New Tab"-এ ওপেন করে আবার চেষ্টা করুন।', 'error');
             return;
         }
-        showNotification('গুগল লগইন ব্যর্থ হয়েছে।', 'error');
+        showNotification('গুগল লগইন ব্যর্থ হয়েছে: ' + (error.message || 'Unknown Error'), 'error');
     }
 }
 
