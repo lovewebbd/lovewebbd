@@ -1258,32 +1258,19 @@ async function handleGoogleSignIn() {
         let finalUser = null;
         
         if (existingUserRes.data) {
-            // User exists
+            // User exists, login success
             finalUser = existingUserRes.data;
         } else {
-            // Register new user
-            const username = email.split('@')[0] + Math.floor(Math.random() * 1000);
+            // New user - redirect to complete profile
+            sessionStorage.setItem('pendingGoogleSignUp', JSON.stringify({
+                email: email,
+                fullName: fullName,
+                uid: uid,
+                phone: user.phoneNumber || ""
+            }));
             
-            const insertRes = await firebaseDB
-                .from('User_Information')
-                .insert([
-                    { 
-                        full_name: fullName, 
-                        username: username, 
-                        email: email, 
-                        phone: "", 
-                        password: window.LoveWebCrypto.encrypt(uid), // use uid as a dummy password
-                        created_at: new Date().toISOString() 
-                    }
-                ])
-                .select()
-                .then();
-                
-            if (insertRes.error) {
-                showNotification("অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে: " + insertRes.error.message, "error");
-                return;
-            }
-            finalUser = insertRes.data[0];
+            window.location.href = '../sign-up-google/index.html';
+            return; // Stop here
         }
         
         // Login success
