@@ -612,6 +612,7 @@ if (signUpForm) {
         const email = document.getElementById('signUpEmail').value.trim();
         const phone = document.getElementById('signUpPhone').value.trim();
         const password = document.getElementById('signUpPassword').value.trim();
+        const confirmPasswordInput = document.getElementById('signUpConfirmPassword');
         const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : '';
         const usernameErrEl = document.getElementById('usernameError');
 
