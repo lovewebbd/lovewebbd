@@ -695,6 +695,7 @@ app.post('/api/upload', upload.array('images', 50), async (req, res) => {
 // Named route fallbacks
 const routes = ['place-order', '404', 'due-payment',
   'sign-in',
+  'sign-up-google',
   'reset-password',
   'order-details',
   'profile',
@@ -1389,6 +1390,11 @@ app.get(['/favicon.ico', '/favicon.png'], (req, res) => {
 
 // Fallback to sign-in for unspecified requests
 app.get('*', (req, res) => {
+  // If it's an API route that fell through, return 404 JSON
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, message: 'API Route Not Found' });
+  }
+  // Otherwise, serve the 404 HTML page
   res.status(404).sendFile(path.join(__dirname, '404', 'index.html'));
 });
 
