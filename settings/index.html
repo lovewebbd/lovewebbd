@@ -559,7 +559,7 @@
           <div style="color: #ff4d4d; font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
             <i class="fa-solid fa-radiation"></i> অপরিবর্তনীয় নিরাপত্তা সতর্কতা!
           </div>
-          <p style="font-size: 0.8rem; color: #e0e0e0; margin: 0; line-height: 1.5;">
+          <p style="font-size: 0.8rem; color: var(--text-sub); margin: 0; line-height: 1.5;">
             অ্যাকাউন্ট ডিলিট করলে আপনার নাম, ফোন নম্বর, ইমেইল এবং প্রোফাইলের সম্পূর্ণ তথ্য চিরতরে মুছে যাবে। এটি আর কখনো পুনরুদ্ধার করা সম্ভব হবে না।
           </p>
         </div>
@@ -574,7 +574,7 @@
           </div>
         </div>
 
-        <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: #cfd3dc; margin-bottom: 20px; text-align: left; cursor: pointer; user-select: none;">
+        <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 0.82rem; color: var(--text-sub); margin-bottom: 20px; text-align: left; cursor: pointer; user-select: none;">
           <input type="checkbox" id="checkConfirmDeleteConsent" style="margin-top: 3px; accent-color: #ff4d4d; width: 16px; height: 16px;">
           <span>আমি নিশ্চিত করছি যে আমি আমার অ্যাকাউন্ট এবং সমস্ত ব্যক্তিগত তথ্য স্থায়ীভাবে মুছে ফেলতে চাই।</span>
         </label>
@@ -665,10 +665,27 @@
                         gte: (col, val) => { query.filters.push({ type: 'gte', col, val }); return builder; },
                         or: (cond) => { query.filters.push({ type: 'or', cond }); return builder; },
                         single: () => { query.single = true; return builder; },
-                        then: (res) => runQuery(query).then(r => {
-                            if (query.single) return res({ data: (r.data && r.data[0]) || null, error: r.error });
-                            return res(r);
-                        })
+                        order: (col, opts) => { query.order = { col, opts }; return builder; },
+                        limit: (num) => { query.limitNum = num; return builder; },
+                        then: (resolve, reject) => {
+                        const p = runQuery(query).then(r => {
+                            if (r.data && query.order) {
+                                r.data.sort((a,b) => {
+                                    const valA = a[query.order.col];
+                                    const valB = b[query.order.col];
+                                    if (valA < valB) return query.order.opts?.ascending === false ? 1 : -1;
+                                    if (valA > valB) return query.order.opts?.ascending === false ? -1 : 1;
+                                    return 0;
+                                });
+                            }
+                            if (r.data && query.limitNum) {
+                                r.data = r.data.slice(0, query.limitNum);
+                            }
+                            if (query.single) return { data: (r.data && r.data[0]) || null, error: r.error };
+                            return r;
+                        });
+                        return resolve ? p.then(resolve, reject) : p;
+                    }
                     };
                     return builder;
                 },
@@ -676,21 +693,33 @@
                     const query = { action: 'insert', table, data: arr };
                     const builder = {
                         select: () => builder,
-                        then: (res) => runQuery(query).then(res)
+                        then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    }
                     };
                     return builder;
                 },
                 update: (obj) => ({
                     eq: (col, val) => {
                         const query = { action: 'update', table, data: obj, filters: [{ type: 'eq', col, val }] };
-                        return { then: (res) => runQuery(query).then(res) };
+                        return { then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    } };
                     }
                 }),
                 delete: () => {
                     const query = { action: 'delete', table, filters: [] };
                     const builder = {
-                        eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return { then: (res) => runQuery(query).then(res) }; },
-                        in: (col, vals) => { query.filters.push({ type: 'in', col, vals }); return { then: (res) => runQuery(query).then(res) }; }
+                        eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return { then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    } }; },
+                        in: (col, vals) => { query.filters.push({ type: 'in', col, vals }); return { then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    } }; }
                     };
                     return builder;
                 }
@@ -1470,6 +1499,7 @@
     // =======================================================
     let deleteOtpExpiryTimestamp = 0;
     let deleteOtpTimerInterval = null;
+    let lastDeleteOtpSentTime = 0;
 
     function resetDeleteModalState() {
       const step1 = document.getElementById('deleteStep1Container');
@@ -1517,13 +1547,47 @@
       }
 
       const targetEmail = currentUser.email.toLowerCase().trim();
-      showNotification('নিরাপত্তা কোড তৈরি ও ইমেইল করা হচ্ছে...', 'success');
-
+      
       const now = Date.now();
-      const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
-      deleteOtpExpiryTimestamp = now + 10 * 60 * 1000;
+      
+      // ৫ মিনিটের কুলডাউন চেক
+      if (now - lastDeleteOtpSentTime < 5 * 60 * 1000) {
+        const remainingSecs = Math.ceil((5 * 60 * 1000 - (now - lastDeleteOtpSentTime)) / 1000);
+        const mins = Math.floor(remainingSecs / 60);
+        const secs = remainingSecs % 60;
+        return showNotification(`অনুগ্রহ করে পুনরায় কোড পাঠানোর জন্য ${mins} মিনিট ${secs} সেকেন্ড অপেক্ষা করুন।`, 'error');
+      }
+      
+      showNotification('নিরাপত্তা কোড প্রসেস করা হচ্ছে...', 'success');
+      lastDeleteOtpSentTime = now;
 
-      const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      // ডাটাবেজ থেকে আগের কোড চেক করা (১০ মিনিটের ভেতর আছে কিনা)
+      const { data: existingOtpData } = await firebaseDB
+          .from('Password_Resets')
+          .select('*')
+          .eq('email', targetEmail)
+          .order('expires_at', { ascending: false })
+          .limit(1);
+
+      let generatedOtp = null;
+      let expiresAt;
+      
+      if (existingOtpData && existingOtpData.length > 0) {
+         const latest = existingOtpData[0];
+         if (new Date() < new Date(latest.expires_at)) {
+             // 10 মিনিটের ভেতর থাকলে আগের কোডটাই ব্যবহার করা হবে
+             generatedOtp = latest.otp_code;
+             // আগের এক্সপায়ারি টাইমটাই রাখবো (বা নতুন করে ১০ মিনিট সেট করা যায়, আমি নতুন করে ১০ মিনিট দিচ্ছি)
+         }
+      }
+      
+      if (!generatedOtp) {
+          // ১০ মিনিট পার হয়ে গেলে নতুন কোড
+          generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      }
+      
+      expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
+      deleteOtpExpiryTimestamp = now + 10 * 60 * 1000;
 
       // Password_Resets টেবিলে ডিলিট ওটিপি সেভ করা
       const { error: dbError } = await firebaseDB

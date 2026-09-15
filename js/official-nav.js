@@ -111,7 +111,7 @@
           </button>
 
           <!-- ব্যবহারকারী প্রোফাইল পিল -->
-          <a href="${isUserLoggedIn ? rootPrefix + 'profile/index.html' : rootPrefix + 'sign-in/index.html'}" class="top-bar-user-pill" id="topBarUserPill" title="${isUserLoggedIn ? 'প্রোফাইল দেখুন' : 'সাইন-ইন করুন'}">
+          <a href="${isUserLoggedIn ? rootPrefix + 'profile/index.html' : rootPrefix + 'sign-in'}" class="top-bar-user-pill" id="topBarUserPill" title="${isUserLoggedIn ? 'প্রোফাইল দেখুন' : 'সাইন-ইন করুন'}">
             <div class="top-bar-avatar-wrap ${avatarFrameClass}">
               ${crownBadge}
               <div class="top-bar-avatar">
@@ -277,7 +277,7 @@
               <span>লগআউট করুন</span>
             </button>
           ` : `
-            <a href="${rootPrefix}sign-in/index.html" class="drawer-login-btn">
+            <a href="${rootPrefix}sign-in" class="drawer-login-btn">
               <i class="fa-solid fa-arrow-right-to-bracket"></i>
               <span>লগইন / সাইন আপ</span>
             </a>
@@ -501,7 +501,7 @@
         showNotification('সফলভাবে লগআউট করা হয়েছে।', 'success');
       }
       setTimeout(() => {
-        window.location.href = `${rootPrefix}sign-in/index.html`;
+        window.location.href = `${rootPrefix}sign-in`;
       }, 150);
     }
 
@@ -598,23 +598,23 @@
         });
       } else {
         if (helpBtn) {
-          helpBtn.href = `${rootPrefix}sign-in/index.html`;
+          helpBtn.href = `${rootPrefix}sign-in`;
           helpBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
         }
         if (policyBtn) {
-          policyBtn.href = `${rootPrefix}sign-in/index.html`;
+          policyBtn.href = `${rootPrefix}sign-in`;
           policyBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
         }
         if (resetBtn) {
-          resetBtn.href = `${rootPrefix}sign-in/index.html`;
+          resetBtn.href = `${rootPrefix}sign-in`;
           resetBtn.innerHTML = '<i class="fa-solid fa-arrow-left"></i> সাইন-ইন পেজে ফিরে যান';
         }
         if (footerAuthHelp) {
-          footerAuthHelp.href = `${rootPrefix}sign-in/index.html`;
+          footerAuthHelp.href = `${rootPrefix}sign-in`;
           footerAuthHelp.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> সাইন ইন';
         }
         if (footerAuthPolicy) {
-          footerAuthPolicy.href = `${rootPrefix}sign-in/index.html`;
+          footerAuthPolicy.href = `${rootPrefix}sign-in`;
           footerAuthPolicy.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> সাইন ইন';
         }
       }

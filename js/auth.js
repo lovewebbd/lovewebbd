@@ -26,8 +26,22 @@ const firebaseDB = (() => {
                     gte: (col, val) => { query.filters.push({ type: 'gte', col, val }); return builder; },
                     or: (cond) => { query.filters.push({ type: 'or', cond }); return builder; },
                     single: () => { query.single = true; return builder; },
+                        order: (col, opts) => { query.order = { col, opts }; return builder; },
+                        limit: (num) => { query.limitNum = num; return builder; },
                     then: (resolve, reject) => {
                         const p = runQuery(query).then(r => {
+                            if (r.data && query.order) {
+                                r.data.sort((a,b) => {
+                                    const valA = a[query.order.col];
+                                    const valB = b[query.order.col];
+                                    if (valA < valB) return query.order.opts?.ascending === false ? 1 : -1;
+                                    if (valA > valB) return query.order.opts?.ascending === false ? -1 : 1;
+                                    return 0;
+                                });
+                            }
+                            if (r.data && query.limitNum) {
+                                r.data = r.data.slice(0, query.limitNum);
+                            }
                             if (query.single) return { data: (r.data && r.data[0]) || null, error: r.error };
                             return r;
                         });
@@ -171,7 +185,7 @@ function showNotification(msg, type = 'error') {
 window.addEventListener('DOMContentLoaded', () => {
     const activeSession = localStorage.getItem('loveweb_session');
     if (activeSession && !window.location.pathname.includes('reset-password')) {
-        window.location.href = '../index.html';
+        window.location.href = '/';
     }
 
     // পাসওয়ার্ড রিসেট পেজে অটো-ফিল ইমেইল লজিক
@@ -680,7 +694,7 @@ if (signUpForm) {
             showNotification("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!", "success");
             localStorage.setItem('loveweb_session', JSON.stringify(newUser));
             setTimeout(() => {
-                window.location.href = '../index.html';
+                window.location.href = '/';
             }, 1200);
         } else {
             showNotification("অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!", "success");
@@ -688,7 +702,7 @@ if (signUpForm) {
             if (!savedUser.created_at) savedUser.created_at = createdAt;
             localStorage.setItem('loveweb_session', JSON.stringify(savedUser));
             setTimeout(() => {
-                window.location.href = '../index.html';
+                window.location.href = '/';
             }, 1200);
         }
     });
@@ -738,7 +752,7 @@ if (signInForm) {
             showNotification("লগইন সফল হয়েছে। অপেক্ষা করুন...", "success");
             localStorage.setItem('loveweb_session', JSON.stringify(matchedUser));
             setTimeout(() => {
-                window.location.href = '../index.html';
+                window.location.href = '/';
             }, 1000);
         }
     });
@@ -831,7 +845,7 @@ if (window.location.pathname.includes('verification.html')) {
 
     if (!emailParam || !isValidReferrer || currentStep !== 'verification') {
         showNotification('অবৈধ প্রবেশ চেষ্টা! সঠিক উপায়ে চেষ্টা করুন।', 'error');
-        setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
+        setTimeout(() => { window.location.href = '/sign-in'; }, 1500);
     }
 
     const otpInputs = document.querySelectorAll('.otp-input');
@@ -1108,7 +1122,7 @@ if (window.location.pathname.includes('new-password.html')) {
 
     if (!emailParam || !isValidReferrer || currentStep !== 'new_password') {
         showNotification('অবৈধ এক্সেস! আপনি এই পেজে সরাসরি প্রবেশ করতে পারবেন না।', 'error');
-        setTimeout(() => { window.location.href = '../sign-in/index.html'; }, 1500);
+        setTimeout(() => { window.location.href = '/sign-in'; }, 1500);
     }
 
     setupPasswordToggle('newPassword', 'toggleNewPassword');
@@ -1204,12 +1218,12 @@ if (window.location.pathname.includes('new-password.html')) {
                 if (hasActiveSession) {
                     showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! মূল পেজে নিয়ে যাওয়া হচ্ছে...', 'success');
                     setTimeout(() => { 
-                        window.location.href = '../index.html'; 
+                        window.location.href = '/'; 
                     }, 1500);
                 } else {
                     showNotification('পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে! সাইন-ইন পেজে নিয়ে যাওয়া হচ্ছে...', 'success');
                     setTimeout(() => { 
-                        window.location.href = '../sign-in/index.html'; 
+                        window.location.href = '/sign-in'; 
                     }, 1500);
                 }
             }
@@ -1263,36 +1277,37 @@ async function handleGoogleSignIn() {
         const fullName = user.displayName || "Google User";
         const uid = user.uid;
         
-        // 1. Check if user exists in our DB
-        const existingUserRes = await firebaseDB
-            .from('User_Information')
-            .select()
-            .eq('email', email)
-            .single()
-            .then();
-            
-        let finalUser = null;
-        
-        if (existingUserRes.data) {
-            // User exists, login success
-            finalUser = existingUserRes.data;
-        } else {
-            // New user - redirect to complete profile
-            sessionStorage.setItem('pendingGoogleSignUp', JSON.stringify({
+        showNotification('অ্যাকাউন্ট সিঙ্ক করা হচ্ছে...', 'info');
+
+        // Background server sync to check and auto-create user in Firestore
+        const syncRes = await fetch('/api/auth/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 email: email,
                 fullName: fullName,
                 uid: uid,
-                phone: user.phoneNumber || ""
-            }));
-            
-            window.location.href = '../sign-up-google/index.html';
-            return; // Stop here
+                phone: user.phoneNumber || ''
+            })
+        });
+
+        const syncData = await syncRes.json();
+        
+        if (!syncData.success) {
+            showNotification('লগইন ব্যর্থ হয়েছে: ' + syncData.message, 'error');
+            return;
         }
+        
+        const finalUser = syncData.user;
         
         // Login success
         localStorage.setItem('loveweb_session', JSON.stringify(finalUser));
         
-        showNotification('লগইন সফল হয়েছে!', 'success');
+        if (syncData.isNew) {
+             showNotification('নতুন অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে!', 'success');
+        } else {
+             showNotification('লগইন সফল হয়েছে!', 'success');
+        }
         
         // Redirect
         const storedRedirect = localStorage.getItem('redirectAfterLogin');
@@ -1300,7 +1315,7 @@ async function handleGoogleSignIn() {
             localStorage.removeItem('redirectAfterLogin');
             window.location.href = storedRedirect;
         } else {
-            window.location.href = '../index.html';
+            window.location.href = '/';
         }
         
     } catch (error) {

@@ -565,6 +565,16 @@ p.desc {
         transform: none;
     }
 
+    h2.title {
+        margin-bottom: 4px !important;
+        font-size: 1.6rem !important;
+    }
+
+    p.desc {
+        margin-bottom: 10px !important;
+        font-size: 0.85rem !important;
+    }
+
     .mobile-toggle {
         display: block;
     }

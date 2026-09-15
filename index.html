@@ -64,7 +64,17 @@
   </style>
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon.png">
   <link rel="apple-touch-icon" href="/img/favicon.png">
-<title>LoveWeb - হোম | কাস্টম উইশিং ওয়েবসাইট</title><meta name="robots" content="index, follow"><meta name="description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট। জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ দিনে আকর্ষণীয় ওয়েবসাইট উপহার দিন।"><meta name="keywords" content="LoveWeb, Wishing Website, Gift, Anniversary, Birthday, Romantic Website, Custom Wishing Website, লাভওয়েব, কাস্টম উইশিং ওয়েবসাইট, উপহার, বিবাহবার্ষিকী, জন্মদিন"><meta name="author" content="LoveWeb"><meta property="og:type" content="website"><meta property="og:url" content="https://lovewebbd.com/"><meta property="og:title" content="LoveWeb - হোম | কাস্টম উইশিং ওয়েবসাইট"><meta property="og:description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট। জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ দিনে আকর্ষণীয় ওয়েবসাইট উপহার দিন।"><meta property="og:image" content="https://lovewebbd.netlify.app/img/logo.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:url" content="https://lovewebbd.com/"><meta name="twitter:title" content="LoveWeb - হোম | কাস্টম উইশিং ওয়েবসাইট"><meta name="twitter:description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট। জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ দিনে আকর্ষণীয় ওয়েবসাইট উপহার দিন।"><meta name="twitter:image" content="https://lovewebbd.netlify.app/img/logo.png"></head>
+<title>LoveWeb - হোম | কাস্টম উইশিং ওয়েবসাইট</title><meta name="robots" content="index, follow"><meta name="description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট। জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ দিনে আকর্ষণীয় ওয়েবসাইট উপহার দিন।"><meta name="keywords" content="LoveWeb, Wishing Website, Gift, Anniversary, Birthday, Romantic Website, Custom Wishing Website, লাভওয়েব, কাস্টম উইশিং ওয়েবসাইট, উপহার, বিবাহবার্ষিকী, জন্মদিন"><meta name="author" content="LoveWeb"><meta property="og:type" content="website"><meta property="og:url" content="https://lovewebbd.com/"><meta property="og:title" content="LoveWeb - হোম | কাস্টম উইশিং ওয়েবসাইট"><meta property="og:description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট। জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ দিনে আকর্ষণীয় ওয়েবসাইট উপহার দিন।"><meta property="og:image" content="https://lovewebbd.netlify.app/img/logo.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:url" content="https://lovewebbd.com/"><meta name="twitter:title" content="LoveWeb - হোম | কাস্টম উইশিং ওয়েবসাইট"><meta name="twitter:description" content="LoveWeb - প্রিয়জনের জন্য কাস্টম উইশিং ওয়েবসাইট। জন্মদিন, বিবাহবার্ষিকী কিংবা বিশেষ দিনে আকর্ষণীয় ওয়েবসাইট উপহার দিন।"><meta name="twitter:image" content="https://lovewebbd.netlify.app/img/logo.png">
+<style>
+  #missingPhoneInput:focus {
+    border-color: var(--primary-pink) !important;
+    box-shadow: 0 0 12px var(--glow-pink) !important;
+  }
+  [data-theme="light"] #missingPhoneInput:focus {
+    box-shadow: 0 0 0 3px rgba(255, 42, 109, 0.16) !important;
+  }
+</style>
+</head>
 
 <body>
   <!-- Dynamic Notification Toast -->
@@ -103,6 +113,14 @@
           const user = JSON.parse(sessionRaw);
           const userName = user.full_name || user.username || 'ইউজার';
           const userInitial = userName.charAt(0).toUpperCase();
+          
+          if (!user.phone || user.phone.trim() === '') {
+             setTimeout(() => {
+                 if(typeof showPhoneUpdateModal === 'function') {
+                     showPhoneUpdateModal(user);
+                 }
+             }, 500);
+          }
 
           // Fetch real membership and total spent
           let totalSpent = 0;
@@ -301,7 +319,7 @@
     }
 
     function showLoggedOutState() {
-      window.location.href = 'sign-in/index.html';
+      window.location.href = '/sign-in';
     }
 
     renderAuthState();
@@ -313,4 +331,72 @@
   <script src="js/messenger.js"></script>
 
 
+
+  <!-- Phone Update Modal -->
+  <div id="phoneUpdateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: var(--card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <div style="font-size: 2.5rem; color: var(--primary-pink); margin-bottom: 15px;"><i class="fa-solid fa-mobile-screen-button"></i></div>
+      <h2 style="color: var(--text-main); margin-bottom: 10px; font-size: 1.5rem; font-weight: 600;">আপনার ফোন নাম্বার সংযুক্ত করুন</h2>
+      <p style="color: var(--text-sub); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">আপনার অ্যাকাউন্টটি সুরক্ষিত রাখতে এবং ডেলিভারি সংক্রান্ত আপডেটের জন্য সঠিক ফোন নাম্বার দেওয়া জরুরি।</p>
+      
+      <form id="phoneUpdateForm" style="text-align: left;">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; color: var(--text-main); margin-bottom: 8px; font-size: 0.9rem;">ফোন নাম্বার (01XXXXXXXXX)</label>
+          <input type="tel" id="missingPhoneInput" placeholder="01XXXXXXXXX" maxlength="11" required style="width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 1rem; outline: none;">
+        </div>
+        <button type="submit" id="phoneUpdateBtn" style="width: 100%; background: var(--primary-pink); color: #fff; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <i class="fa-solid fa-cloud-arrow-up"></i> সেভ করুন
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showPhoneUpdateModal(user) {
+      const modal = document.getElementById('phoneUpdateModal');
+      modal.style.display = 'flex';
+      
+      const form = document.getElementById('phoneUpdateForm');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const phone = document.getElementById('missingPhoneInput').value.trim();
+        const btn = document.getElementById('phoneUpdateBtn');
+        
+        if (!phone.startsWith('01') || phone.length !== 11) {
+          showNotification('সঠিক ফোন নাম্বার প্রদান করুন (01XXXXXXXXX)।', 'error');
+          return;
+        }
+        
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> সেভ হচ্ছে...';
+        btn.disabled = true;
+        
+        try {
+          const res = await fetch('/api/db-query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'update',
+              table: 'User_Information',
+              filters: [{ type: 'eq', col: 'email', val: user.email }],
+              data: { phone: phone }
+            })
+          });
+          const result = await res.json();
+          
+          if (result.error) throw new Error(result.error);
+          
+          user.phone = phone;
+          localStorage.setItem('loveweb_session', JSON.stringify(user));
+          
+          showNotification('ফোন নাম্বার সফলভাবে সংযুক্ত হয়েছে!', 'success');
+          modal.style.display = 'none';
+          
+        } catch (err) {
+          showNotification('ত্রুটি: ' + err.message, 'error');
+          btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> সেভ করুন';
+          btn.disabled = false;
+        }
+      });
+    }
+  </script>
 </body></html>

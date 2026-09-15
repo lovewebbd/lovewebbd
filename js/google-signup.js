@@ -21,8 +21,22 @@ const firebaseDB = (() => {
                 const builder = {
                     eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return builder; },
                     single: () => { query.single = true; return builder; },
+                        order: (col, opts) => { query.order = { col, opts }; return builder; },
+                        limit: (num) => { query.limitNum = num; return builder; },
                     then: (resolve, reject) => {
                         const p = runQuery(query).then(r => {
+                            if (r.data && query.order) {
+                                r.data.sort((a,b) => {
+                                    const valA = a[query.order.col];
+                                    const valB = b[query.order.col];
+                                    if (valA < valB) return query.order.opts?.ascending === false ? 1 : -1;
+                                    if (valA > valB) return query.order.opts?.ascending === false ? -1 : 1;
+                                    return 0;
+                                });
+                            }
+                            if (r.data && query.limitNum) {
+                                r.data = r.data.slice(0, query.limitNum);
+                            }
                             if (query.single) return { data: (r.data && r.data[0]) || null, error: r.error };
                             return r;
                         });
@@ -63,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pendingDataStr = sessionStorage.getItem('pendingGoogleSignUp');
     if (!pendingDataStr) {
         // Not accessed properly
-        window.location.href = '../sign-in/index.html';
+        window.location.href = '/sign-in';
         return;
     }
     
@@ -81,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     document.getElementById('cancelGoogleSignUp').addEventListener('click', async () => {
         sessionStorage.removeItem('pendingGoogleSignUp');
-        window.location.href = '../sign-in/index.html';
+        window.location.href = '/sign-in';
     });
     
     document.getElementById('googleCompleteForm').addEventListener('submit', async (e) => {
@@ -152,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.removeItem('redirectAfterLogin');
                 window.location.href = storedRedirect;
             } else {
-                window.location.href = '../index.html';
+                window.location.href = '/';
             }
         }, 1500);
     });

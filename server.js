@@ -65,6 +65,48 @@ const ai = new GoogleGenAI({
 });
 
 const app = express();
+app.use(express.json());
+
+
+app.post('/api/auth/sync', async (req, res) => {
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  try {
+    const { email, fullName, uid, phone } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+    const usersRef = collection(firestoreDb, 'User_Information');
+    const q = query(usersRef, where('email', '==', email));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      // User already exists
+      const userData = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+      return res.json({ success: true, isNew: false, user: userData });
+    } else {
+      // New user, create them with defaults
+      let defaultUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+      defaultUsername += Math.floor(Math.random() * 1000);
+
+      const newUser = {
+        email: email,
+        full_name: fullName || 'Google User',
+        username: defaultUsername,
+        phone: phone || '',
+        referral: '',
+        password: uid, // using uid as placeholder
+        created_at: new Date().toISOString()
+      };
+
+      const docRef = await addDoc(usersRef, newUser);
+      newUser.id = docRef.id;
+
+      return res.json({ success: true, isNew: true, user: newUser });
+    }
+  } catch (e) {
+    console.error('Sync Error:', e);
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
 
 app.get('/api/firebase-config', (req, res) => {
   let config = {};
@@ -706,7 +748,7 @@ const routes = ['place-order', '404', 'due-payment',
 ];
 
 routes.forEach((route) => {
-  app.get([`/${route}`, `/${route}/`], (req, res) => {
+  app.get([`/${route}`, `/${route}/`, `/${route}/index.html`], (req, res) => {
     res.sendFile(path.join(__dirname, route, 'index.html'));
   });
 });
