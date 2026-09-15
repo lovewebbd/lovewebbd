@@ -26,10 +26,13 @@ const firebaseDB = (() => {
                     gte: (col, val) => { query.filters.push({ type: 'gte', col, val }); return builder; },
                     or: (cond) => { query.filters.push({ type: 'or', cond }); return builder; },
                     single: () => { query.single = true; return builder; },
-                    then: (res) => runQuery(query).then(r => {
-                        if (query.single) return res({ data: (r.data && r.data[0]) || null, error: r.error });
-                        return res(r);
-                    })
+                    then: (resolve, reject) => {
+                        const p = runQuery(query).then(r => {
+                            if (query.single) return { data: (r.data && r.data[0]) || null, error: r.error };
+                            return r;
+                        });
+                        return resolve ? p.then(resolve, reject) : p;
+                    }
                 };
                 return builder;
             },
@@ -37,21 +40,33 @@ const firebaseDB = (() => {
                 const query = { action: 'insert', table, data: arr };
                 const builder = {
                     select: () => builder,
-                    then: (res) => runQuery(query).then(res)
+                    then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    }
                 };
                 return builder;
             },
             update: (obj) => ({
                 eq: (col, val) => {
                     const query = { action: 'update', table, data: obj, filters: [{ type: 'eq', col, val }] };
-                    return { then: (res) => runQuery(query).then(res) };
+                    return { then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    } };
                 }
             }),
             delete: () => {
                 const query = { action: 'delete', table, filters: [] };
                 const builder = {
-                    eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return { then: (res) => runQuery(query).then(res) }; },
-                    in: (col, vals) => { query.filters.push({ type: 'in', col, vals }); return { then: (res) => runQuery(query).then(res) }; }
+                    eq: (col, val) => { query.filters.push({ type: 'eq', col, val }); return { then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    } }; },
+                    in: (col, vals) => { query.filters.push({ type: 'in', col, vals }); return { then: (resolve, reject) => {
+                        const p = runQuery(query);
+                        return resolve ? p.then(resolve, reject) : p;
+                    } }; }
                 };
                 return builder;
             }
@@ -1292,6 +1307,10 @@ async function handleGoogleSignIn() {
         
     } catch (error) {
         console.error("Google Sign In Error:", error);
+        if (error.code === 'auth/network-request-failed' || error.message.includes('network-request-failed') || error.code === 'auth/popup-closed-by-user') {
+            showNotification('গুগল লগইন পপ-আপ ব্লক করা হয়েছে। দয়া করে সাইটটি "New Tab"-এ ওপেন করে আবার চেষ্টা করুন।', 'error');
+            return;
+        }
         showNotification('গুগল লগইন ব্যর্থ হয়েছে।', 'error');
     }
 }

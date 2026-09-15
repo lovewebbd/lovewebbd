@@ -653,7 +653,7 @@ const uploadDir = isVercel ? '/tmp/uploads' : path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadDir));
 app.use(express.static(__dirname, {
   extensions: ['html'],
-  index: false
+  index: ['index.html']
 }));
 
 // Ensure uploads directory exists
