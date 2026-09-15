@@ -18,6 +18,47 @@
     
     <!-- Theme Manager -->
     <script src="../js/theme.js"></script>
+    
+    <style>
+    .custom-google-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: transparent;
+        border: 1px solid var(--border-color, rgba(255, 42, 109, 0.3));
+        color: var(--text-color, #fff);
+        padding: 12px;
+        border-radius: 8px;
+        font-family: 'Hind Siliguri', sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    
+    .custom-google-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--primary-color, #ff2a6d);
+    }
+    
+    .custom-google-btn .google-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    html[data-theme="light"] .custom-google-btn {
+        color: #333;
+        border-color: #ddd;
+    }
+    
+    html[data-theme="light"] .custom-google-btn:hover {
+        background: #f9f9f9;
+        border-color: var(--primary-color, #ff2a6d);
+    }
+</style>
 
     <style>
         .auth-theme-corner-toggle {
@@ -29,8 +70,7 @@
     </style>
 
     <!-- Supabase JS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon.png">
+      <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon.png">
   <link rel="apple-touch-icon" href="/img/favicon.png">
 <title>LoveWeb - লগইন ও সাইন আপ | উইশিং ওয়েবসাইট তৈরি করুন</title><meta name="robots" content="index, follow"><meta name="description" content="আপনার প্রিয়জনের উইশিং সাইট তৈরি করতে আজই যুক্ত হন LoveWeb-এ।"><meta name="keywords" content="LoveWeb, Wishing Website, Gift, Anniversary, Birthday, Romantic Website, Custom Wishing Website, লাভওয়েব, কাস্টম উইশিং ওয়েবসাইট, উপহার, বিবাহবার্ষিকী, জন্মদিন"><meta name="author" content="LoveWeb"><meta property="og:type" content="website"><meta property="og:url" content="https://lovewebbd.com/sign-in/"><meta property="og:title" content="LoveWeb - লগইন ও সাইন আপ | উইশিং ওয়েবসাইট তৈরি করুন"><meta property="og:description" content="আপনার প্রিয়জনের উইশিং সাইট তৈরি করতে আজই যুক্ত হন LoveWeb-এ।"><meta property="og:image" content="https://lovewebbd.netlify.app/img/logo.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:url" content="https://lovewebbd.com/sign-in/"><meta name="twitter:title" content="LoveWeb - লগইন ও সাইন আপ | উইশিং ওয়েবসাইট তৈরি করুন"><meta name="twitter:description" content="আপনার প্রিয়জনের উইশিং সাইট তৈরি করতে আজই যুক্ত হন LoveWeb-এ।"><meta name="twitter:image" content="https://lovewebbd.netlify.app/img/logo.png"></head>
 <body>
@@ -64,7 +104,7 @@
                 <h2 class="title">লগইন করুন</h2>
                 <p class="desc">প্রিয়জনের মুখে হাসি ফোটাতে আপনার অ্যাকাউন্টে সাইন ইন করুন।</p>
                 
-                <form id="signInForm">
+        <form id="signInForm">
                     <div class="input-group">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         <input type="text" id="signInIdentifier" placeholder="ইউজারনেম অথবা ইমেল" required="">
@@ -76,12 +116,34 @@
                         <i class="fa-solid fa-eye toggle-password" id="toggleSignInPassword" style="position: absolute; right: 15px; cursor: pointer; color: #888;"></i>
                     </div>
 
+                    
+        
+        
+        
+
                     <!-- পাসওয়ার্ড ভুলে গেছেন? লিঙ্ক -->
                     <div class="forgot-pass-wrap">
                         <a href="../reset-password/index.html" id="forgotPasswordLink">পাসওয়ার্ড ভুলে গেছেন?</a>
                     </div>
 
-                    <button type="submit" class="btn-submit">প্রবেশ করুন</button>
+                    
+                    <div style="display: flex; align-items: center; text-align: center; margin: 15px 0; color: var(--text-muted, #888);">
+                        <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color, #333);">
+                        <span style="padding: 0 10px; font-size: 14px;">অথবা</span>
+                        <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color, #333);">
+                    </div>
+                    
+                    <button class="custom-google-btn" id="googleSignInBtn" type="button">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="google-icon">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                            <path fill="none" d="M0 0h48v48H0z"></path>
+                        </svg>
+                        <span>Google দিয়ে সাইন ইন করুন</span>
+                    </button>
+<button type="submit" class="btn-submit">প্রবেশ করুন</button>
                     <div class="mobile-toggle">অ্যাকাউন্ট নেই? <span id="mobileToSignUp">নতুন তৈরি করুন</span></div>
                 </form>
             </div>
@@ -94,7 +156,7 @@
                 <h2 class="title">নতুন অ্যাকাউন্ট</h2>
                 <p class="desc">আপনার প্রিয়জনের উইশিং সাইট তৈরি করতে আজই যুক্ত হন!</p>
                 
-                <form id="signUpForm">
+        <form id="signUpForm">
                     <div class="input-group">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         <input type="text" id="signUpFullName" placeholder="আপনার পুরো নাম" required="">
@@ -159,7 +221,29 @@
                         <i class="fa-solid fa-eye toggle-password" id="toggleConfirmPassword" style="position: absolute; right: 15px; cursor: pointer; color: #888;"></i>
                     </div>
 
-                    <button type="submit" class="btn-submit">অ্যাকাউন্ট খুলুন</button>
+                    
+        
+        
+        
+
+                    
+                    <div style="display: flex; align-items: center; text-align: center; margin: 15px 0; color: var(--text-muted, #888);">
+                        <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color, #333);">
+                        <span style="padding: 0 10px; font-size: 14px;">অথবা</span>
+                        <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color, #333);">
+                    </div>
+                    
+                    <button class="custom-google-btn google-signup-btn" type="button">
+                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="google-icon">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                            <path fill="none" d="M0 0h48v48H0z"></path>
+                        </svg>
+                        <span>Google দিয়ে সাইন আপ করুন</span>
+                    </button>
+<button type="submit" class="btn-submit">অ্যাকাউন্ট খুলুন</button>
                     <div class="mobile-toggle">ইতিমধ্যে অ্যাকাউন্ট আছে? <span id="mobileToSignIn">লগইন করুন</span></div>
                 </form>
             </div>
@@ -196,7 +280,7 @@
     </footer>
 
     <!-- External JavaScript Logic -->
-    <script src="../js/auth.js"></script>
+    <script type="module" src="../js/auth.js"></script>
     <script src="../js/messenger.js"></script>
 
 

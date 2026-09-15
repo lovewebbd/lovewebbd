@@ -1,5 +1,8 @@
-// Firebase-backed Supabase Mock API
-const _supabase = (() => {
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+
+// Firebase-backed Firebase API Builder
+const firebaseDB = (() => {
     async function runQuery(payload) {
         try {
             const res = await fetch('/api/db-query', {
@@ -60,7 +63,7 @@ const _supabase = (() => {
 // আপনার Google Script Deploy করার পর পাওয়া Web App URL টি এখানে দিন অথবা localStorage এ 'google_script_webapp_url' কি-তে সেট করতে পারেন
 const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";
 
-// সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Supabase fallback)
+// সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Firebase fallback)
 async function sendOtpEmailDirect(email, otp, options = {}) {
     // ১. সার্ভার-সাইড জিমেইল এসএমটিপি ও অ্যাপ পাসওয়ার্ড দিয়ে সরাসরি ইমেইল পাঠানো (/api/send-otp)
     try {
@@ -99,18 +102,18 @@ async function sendOtpEmailDirect(email, otp, options = {}) {
             console.log('OTP dispatched via Google Apps Script POST to:', email);
             return { success: true };
         } catch (fetchErr) {
-            console.warn('Google Apps Script fetch failed, attempting Supabase fallback:', fetchErr);
+            console.warn('Google Apps Script fetch failed, attempting Firebase fallback:', fetchErr);
         }
     }
 
-    // ৩. ফলব্যাক হিসেবে Supabase Edge Function কল
+    // ৩. ফলব্যাক হিসেবে Firebase Edge Function কল
     try {
-        const { error } = await _supabase.functions.invoke('send-otp-email', {
+        const { error } = await firebaseDB.functions.invoke('send-otp-email', {
             body: { email: email, otp: otp, ...options }
         });
-        if (error) console.warn('Supabase invoke warning:', error);
+        if (error) console.warn('Firebase invoke warning:', error);
     } catch (sbErr) {
-        console.warn('Supabase edge function fallback error:', sbErr);
+        console.warn('Firebase edge function fallback error:', sbErr);
     }
 
     return { success: true };
@@ -564,7 +567,7 @@ if (btnGenerateUsername) {
 
 // ইউজারনেমের পূর্ব অস্তিত্ব পরীক্ষা
 async function checkUsernameExists(username) {
-    const { data } = await _supabase
+    const { data } = await firebaseDB
         .from('User_Information')
         .select('username')
         .eq('username', username);
@@ -572,9 +575,9 @@ async function checkUsernameExists(username) {
     return data && data.length > 0;
 }
 
-// ইমেইলের পূর্ব অস্তিত্ব পরীক্ষা (Supabase)
+// ইমেইলের পূর্ব অস্তিত্ব পরীক্ষা (Firebase)
 async function checkEmailExists(email) {
-    const { data, error } = await _supabase
+    const { data, error } = await firebaseDB
         .from('User_Information')
         .select('email')
         .eq('email', email);
@@ -636,7 +639,7 @@ if (signUpForm) {
         if (usernameErrEl) usernameErrEl.style.display = "none";
 
         const createdAt = new Date().toISOString();
-        const { data, error } = await _supabase
+        const { data, error } = await firebaseDB
             .from('User_Information')
             .insert([
                 { full_name: fullName, username: username, email: email, phone: phone, password: window.LoveWebCrypto.encrypt(password), created_at: createdAt }
@@ -645,7 +648,7 @@ if (signUpForm) {
 
         if (error) {
             // যদি created_at কলাম স্কিমাতে না থাকে, সাধারণ ইনসার্ট দিয়ে ফলব্যাক
-            const fallbackInsert = await _supabase
+            const fallbackInsert = await firebaseDB
                 .from('User_Information')
                 .insert([
                     { full_name: fullName, username: username, email: email, phone: phone, password: window.LoveWebCrypto.encrypt(password) }
@@ -691,7 +694,7 @@ if (signInForm) {
             return;
         }
 
-        const { data: userCheck, error: userError } = await _supabase
+        const { data: userCheck, error: userError } = await firebaseDB
             .from('User_Information')
             .select('*')
             .or(`email.eq.${identifier},username.eq.${identifier}`);
@@ -777,7 +780,7 @@ if (resetRequestForm) {
         const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
 
         // Database-এ সেভ করা
-        const { error: dbError } = await _supabase
+        const { error: dbError } = await firebaseDB
             .from('Password_Resets')
             .insert([{ email: emailValue, otp_code: generatedOTP, expires_at: expiresAt }]);
 
@@ -785,7 +788,7 @@ if (resetRequestForm) {
             return showNotification('কোড পাঠাতে সমস্যা হয়েছে: ' + dbError.message, 'error');
         }
 
-        // Google Apps Script / Supabase-এ POST মেথডে জিমেইলে ওটিপি ডেসপ্যাচ
+        // Google Apps Script / Firebase-এ POST মেথডে জিমেইলে ওটিপি ডেসপ্যাচ
         showNotification('ইমেইলে ওটিপি পাঠানো হচ্ছে...', 'success');
         await sendOtpEmailDirect(emailValue, generatedOTP);
 
@@ -979,7 +982,7 @@ if (window.location.pathname.includes('verification.html')) {
             showNotification('কোড যাচাই করা হচ্ছে...', 'success');
 
             // ডেটাবেজে নিরাপদ কুয়েরি (created_at নির্ভরতা মুক্ত)
-            const { data, error } = await _supabase
+            const { data, error } = await firebaseDB
                 .from('Password_Resets')
                 .select('*')
                 .eq('email', emailParam)
@@ -1001,7 +1004,7 @@ if (window.location.pathname.includes('verification.html')) {
                 if (failResult.blocked) {
                     // ডেটাবেজ থেকে এই ইমেইলের কোড পরিষ্কার করা
                     try {
-                        await _supabase.from('Password_Resets').delete().eq('email', emailParam);
+                        await firebaseDB.from('Password_Resets').delete().eq('email', emailParam);
                     } catch (delErr) {
                         console.error('Failed to cleanup OTP on block:', delErr);
                     }
@@ -1018,7 +1021,7 @@ if (window.location.pathname.includes('verification.html')) {
 
             // ব্যবহৃত ওটিপি মুছে ফেলা
             try {
-                await _supabase.from('Password_Resets').delete().eq('email', emailParam);
+                await firebaseDB.from('Password_Resets').delete().eq('email', emailParam);
             } catch (delErr) {
                 console.error('Failed to delete used OTP:', delErr);
             }
@@ -1055,7 +1058,7 @@ if (window.location.pathname.includes('verification.html')) {
             const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
             const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
 
-            const { error: dbError } = await _supabase
+            const { error: dbError } = await firebaseDB
                 .from('Password_Resets')
                 .insert([{ email: emailParam, otp_code: generatedOTP, expires_at: expiresAt }]);
 
@@ -1063,7 +1066,7 @@ if (window.location.pathname.includes('verification.html')) {
                 return showNotification('নতুন কোড তৈরি করতে সমস্যা হয়েছে: ' + dbError.message, 'error');
             }
 
-            // Google Apps Script / Supabase-এ POST মেথডে পুনরায় ইমেইল প্রেরণ
+            // Google Apps Script / Firebase-এ POST মেথডে পুনরায় ইমেইল প্রেরণ
             showNotification('নতুন ওটিপি ইমেইলে পাঠানো হচ্ছে...', 'success');
             await sendOtpEmailDirect(emailParam, generatedOTP);
 
@@ -1143,7 +1146,7 @@ if (window.location.pathname.includes('new-password.html')) {
             showNotification('নিরাপত্তা যাচাই ও পাসওয়ার্ড আপডেট করা হচ্ছে...', 'success');
 
             // পূর্বের পাসওয়ার্ডের সাথে মেলানো (পূর্বের পাসওয়ার্ড পুনর্ব্যবহার রোধ)
-            const { data: currentUserData } = await _supabase
+            const { data: currentUserData } = await firebaseDB
                 .from('User_Information')
                 .select('password')
                 .eq('email', emailParam)
@@ -1153,8 +1156,8 @@ if (window.location.pathname.includes('new-password.html')) {
                 return showNotification('নতুন পাসওয়ার্ডটি আপনার পূর্বের পাসওয়ার্ডের মতো হতে পারবে না। ভিন্ন পাসওয়ার্ড দিন।', 'error');
             }
 
-            // Supabase Database-এ নতুন পাসওয়ার্ড আপডেট
-            const { error } = await _supabase
+            // Firebase Database-এ নতুন পাসওয়ার্ড আপডেট
+            const { error } = await firebaseDB
                 .from('User_Information')
                 .update({ password: window.LoveWebCrypto.encrypt(newPassword) })
                 .eq('email', emailParam);
@@ -1163,7 +1166,7 @@ if (window.location.pathname.includes('new-password.html')) {
                 showNotification('পাসওয়ার্ড আপডেট করতে ব্যর্থ: ' + error.message, 'error');
             } else {
                 // ব্যবহৃত ওটিপি কোড ডিলিট করে রি-প্লে আক্রমণ রোধ
-                await _supabase.from('Password_Resets').delete().eq('email', emailParam);
+                await firebaseDB.from('Password_Resets').delete().eq('email', emailParam);
 
                 // সক্রিয় লোকাল সেশন থাকলে তা আপডেট
                 const rawSession = localStorage.getItem('loveweb_session');
@@ -1197,3 +1200,125 @@ if (window.location.pathname.includes('new-password.html')) {
         });
     }
 }
+
+
+
+
+// Fetch firebase config and setup Google Auth
+let firebaseAuth = null;
+let googleProvider = null;
+
+async function initFirebaseAuth() {
+    try {
+        const res = await fetch('/api/firebase-config');
+        const data = await res.json();
+        
+        if (data.success && data.config) {
+            const app = initializeApp(data.config);
+            firebaseAuth = getAuth(app);
+            googleProvider = new GoogleAuthProvider();
+            googleProvider.addScope('email');
+            googleProvider.addScope('profile');
+            googleProvider.addScope('openid');
+            
+            console.log("Firebase Auth initialized for Google Sign In");
+        } else {
+            console.warn("Could not load Firebase config for Google Auth.");
+        }
+    } catch (e) {
+        console.error("Failed to initialize Firebase Auth:", e);
+    }
+}
+
+// Call init on load
+initFirebaseAuth();
+
+async function handleGoogleSignIn() {
+    if (!firebaseAuth || !googleProvider) {
+        showNotification('গুগল লগইন সিস্টেম এখনো লোড হয়নি। দয়া করে অপেক্ষা করুন।', 'error');
+        return;
+    }
+    
+    try {
+        const result = await signInWithPopup(firebaseAuth, googleProvider);
+        const user = result.user;
+        
+        const email = user.email;
+        const fullName = user.displayName || "Google User";
+        const uid = user.uid;
+        
+        // 1. Check if user exists in our DB
+        const existingUserRes = await firebaseDB
+            .from('User_Information')
+            .select()
+            .eq('email', email)
+            .single()
+            .then();
+            
+        let finalUser = null;
+        
+        if (existingUserRes.data) {
+            // User exists
+            finalUser = existingUserRes.data;
+        } else {
+            // Register new user
+            const username = email.split('@')[0] + Math.floor(Math.random() * 1000);
+            
+            const insertRes = await firebaseDB
+                .from('User_Information')
+                .insert([
+                    { 
+                        full_name: fullName, 
+                        username: username, 
+                        email: email, 
+                        phone: "", 
+                        password: window.LoveWebCrypto.encrypt(uid), // use uid as a dummy password
+                        created_at: new Date().toISOString() 
+                    }
+                ])
+                .select()
+                .then();
+                
+            if (insertRes.error) {
+                showNotification("অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে: " + insertRes.error.message, "error");
+                return;
+            }
+            finalUser = insertRes.data[0];
+        }
+        
+        // Login success
+        localStorage.setItem('userEmail', finalUser.email);
+        localStorage.setItem('userFullName', finalUser.full_name);
+        localStorage.setItem('userPhone', finalUser.phone || "");
+        localStorage.setItem('userUsername', finalUser.username);
+        
+        showNotification('লগইন সফল হয়েছে!', 'success');
+        
+        // Redirect
+        const storedRedirect = localStorage.getItem('redirectAfterLogin');
+        if (storedRedirect) {
+            localStorage.removeItem('redirectAfterLogin');
+            window.location.href = storedRedirect;
+        } else {
+            window.location.href = '../dashboard/index.html';
+        }
+        
+    } catch (error) {
+        console.error("Google Sign In Error:", error);
+        showNotification('গুগল লগইন ব্যর্থ হয়েছে।', 'error');
+    }
+}
+
+// Attach listeners on load
+document.addEventListener('DOMContentLoaded', () => {
+    const signInBtn = document.getElementById('googleSignInBtn');
+    if (signInBtn) {
+        signInBtn.addEventListener('click', handleGoogleSignIn);
+    }
+    
+    const signUpBtn = document.querySelector('.google-signup-btn');
+    if (signUpBtn) {
+        signUpBtn.addEventListener('click', handleGoogleSignIn);
+    }
+});
+

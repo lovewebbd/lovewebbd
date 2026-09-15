@@ -158,7 +158,7 @@ app.post('/api/db-query', async (req, res) => {
   }
 });
 
-const db = firestoreDb;
+// Replaced const db with getter to avoid initial null assignment
 
 
 
@@ -481,14 +481,14 @@ Return a JSON array of strings, where each string is the detailed description of
 });
 
 app.post('/api/place-order', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { username, phone, websiteType, packageType, description, pages, contactPhone, advancePaymentPhone, couponCode, paymentScreenshot } = req.body;
     let couponDiscountPercent = 0;
     
     // Validate coupon
     if (couponCode) {
-      const docRef = doc(db, 'coupons', couponCode.toUpperCase());
+      const docRef = doc(firestoreDb, 'coupons', couponCode.toUpperCase());
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -507,7 +507,7 @@ app.post('/api/place-order', async (req, res) => {
     // Calculate User's Total Spent for Discount Policy
     let totalSpent = 0;
     try {
-      const q = query(collection(db, 'orders'), where('userPhone', '==', phone));
+      const q = query(collection(firestoreDb, 'orders'), where('userPhone', '==', phone));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((docSnap) => {
         const o = docSnap.data();
@@ -528,7 +528,7 @@ app.post('/api/place-order', async (req, res) => {
     let advancePayment = 200; // fallback
     let basePrice = 649; // fallback
     try {
-      const pkgRef = doc(db, 'settings', 'packages');
+      const pkgRef = doc(firestoreDb, 'settings', 'packages');
       const pkgSnap = await getDoc(pkgRef);
       if (pkgSnap.exists()) {
         const pkgs = pkgSnap.data();
@@ -577,7 +577,7 @@ app.post('/api/place-order', async (req, res) => {
       createdAt: new Date().toISOString()
     }
     
-    await addDoc(collection(db, 'orders'), newOrder);
+    await addDoc(collection(firestoreDb, 'orders'), newOrder);
     res.json({ success: true, orderId, message: 'Order placed successfully!' });
   } catch (error) {
     console.error('Error placing order:', error);
@@ -589,14 +589,14 @@ app.post('/api/place-order', async (req, res) => {
 
 
 app.post('/api/pay-due', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { orderId, duePaymentPhone, duePaymentScreenshot } = req.body;
     if (!orderId || !duePaymentPhone || !duePaymentScreenshot) {
       return res.status(400).json({ success: false, message: 'Bad request.' });
     }
     
-    const orderRef = doc(db, 'orders', orderId);
+    const orderRef = doc(firestoreDb, 'orders', orderId);
     await updateDoc(orderRef, {
       duePaymentPhone,
       duePaymentScreenshot,
@@ -612,12 +612,12 @@ app.post('/api/pay-due', async (req, res) => {
 });
 
 app.post('/api/submit-feedback', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { orderId, feedback } = req.body;
     if (!orderId || !feedback) return res.status(400).json({ success: false, message: 'Bad request.' });
     
-    const orderRef = doc(db, 'orders', orderId);
+    const orderRef = doc(firestoreDb, 'orders', orderId);
     await updateDoc(orderRef, { feedback, feedbackTime: new Date().toISOString() });
     
     res.json({ success: true, message: 'Feedback submitted successfully' });
@@ -629,10 +629,10 @@ app.post('/api/submit-feedback', async (req, res) => {
 
 // API to get user orders
 app.get('/api/orders/:username', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { username } = req.params;
-    const q = query(collection(db, 'orders'), where('username', '==', username));
+    const q = query(collection(firestoreDb, 'orders'), where('username', '==', username));
     const snapshot = await getDocs(q);
     const orders = [];
     snapshot.forEach((doc) => {
@@ -724,9 +724,9 @@ app.get(['/home', '/dashboard'], (req, res) => {
 // ==========================================
 
 app.get('/api/demos', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const docRef = doc(db, 'settings', 'demos');
+    const docRef = doc(firestoreDb, 'settings', 'demos');
     const docSnap = await getDoc(docRef);
     if(docSnap.exists() && docSnap.data().list) {
       // Hide the actual URLs from the public API
@@ -741,9 +741,9 @@ app.get('/api/demos', async (req, res) => {
 });
 
 app.get('/api/admin/demos', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const docRef = doc(db, 'settings', 'demos');
+    const docRef = doc(firestoreDb, 'settings', 'demos');
     const docSnap = await getDoc(docRef);
     if(docSnap.exists() && docSnap.data().list) {
       res.json({ success: true, demos: docSnap.data().list });
@@ -756,10 +756,10 @@ app.get('/api/admin/demos', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/demos', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { demos } = req.body;
-    await setDoc(doc(db, 'settings', 'demos'), { list: demos });
+    await setDoc(doc(firestoreDb, 'settings', 'demos'), { list: demos });
     res.json({ success: true, message: 'Demos updated successfully!' });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
@@ -767,9 +767,9 @@ app.post('/api/admin/demos', verifyAdmin, async (req, res) => {
 });
 
 app.get('/api/demo/view/:id', async (req, res) => {
-  if (!db) return res.status(500).send('Database not initialized.');
+  if (!firestoreDb) return res.status(500).send('Database not initialized.');
   try {
-    const docRef = doc(db, 'settings', 'demos');
+    const docRef = doc(firestoreDb, 'settings', 'demos');
     const docSnap = await getDoc(docRef);
     if(docSnap.exists() && docSnap.data().list) {
       const demo = docSnap.data().list.find(d => d.id === req.params.id);
@@ -814,9 +814,9 @@ app.get('/api/demo/view/:id', async (req, res) => {
 });
 
 app.get('/api/membership', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const docRef = doc(db, 'settings', 'membership');
+    const docRef = doc(firestoreDb, 'settings', 'membership');
     const docSnap = await getDoc(docRef);
     if(docSnap.exists()) {
       res.json({ success: true, tiers: docSnap.data().tiers });
@@ -832,10 +832,10 @@ app.get('/api/membership', async (req, res) => {
 });
 
 app.post('/api/admin/membership', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { tiers } = req.body;
-    const docRef = doc(db, 'settings', 'membership');
+    const docRef = doc(firestoreDb, 'settings', 'membership');
     await setDoc(docRef, { tiers }, { merge: true });
     res.json({ success: true });
   } catch(error) {
@@ -844,9 +844,9 @@ app.post('/api/admin/membership', verifyAdmin, async (req, res) => {
 });
 
 app.get('/api/packages', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const docRef = doc(db, 'settings', 'packages');
+    const docRef = doc(firestoreDb, 'settings', 'packages');
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       res.json({ success: true, packages: docSnap.data() });
@@ -864,10 +864,10 @@ app.get('/api/packages', async (req, res) => {
 });
 
 app.post('/api/admin/packages/reorder', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { orderData } = req.body; // { "Regular": 1, "Exclusive": 2, ... }
-    const docRef = doc(db, 'settings', 'packages');
+    const docRef = doc(firestoreDb, 'settings', 'packages');
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return res.json({ success: true });
     
@@ -885,10 +885,10 @@ app.post('/api/admin/packages/reorder', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/packages/delete/:pkg', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const pkgName = req.params.pkg;
-    const docRef = doc(db, 'settings', 'packages');
+    const docRef = doc(firestoreDb, 'settings', 'packages');
     await updateDoc(docRef, {
       [pkgName]: deleteField()
     });
@@ -903,13 +903,13 @@ app.post('/api/admin/packages/delete/:pkg', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/packages/:pkg', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const pkgName = req.params.pkg;
     const { bnName, icon, headColor, base, advance, order, original, features, tooltip, deliveryTime, minPages, maxPages, maxImagesPerDesc, maxTotalImages } = req.body;
     
     // get existing
-    const docRef = doc(db, 'settings', 'packages');
+    const docRef = doc(firestoreDb, 'settings', 'packages');
     let pkgs = {};
     const docSnap = await getDoc(docRef);
     if(docSnap.exists()) {
@@ -945,9 +945,9 @@ app.post('/api/admin/packages/:pkg', verifyAdmin, async (req, res) => {
 // ====================
 
 app.get('/api/settings', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const docRef = doc(db, 'settings', 'general');
+    const docRef = doc(firestoreDb, 'settings', 'general');
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       res.json({ success: true, settings: docSnap.data() });
@@ -960,10 +960,10 @@ app.get('/api/settings', async (req, res) => {
 });
 
 app.post('/api/admin/settings', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { bkashNumber, nagadNumber } = req.body;
-    const docRef = doc(db, 'settings', 'general');
+    const docRef = doc(firestoreDb, 'settings', 'general');
     await setDoc(docRef, { bkashNumber, nagadNumber }, { merge: true });
     res.json({ success: true, message: 'Settings updated successfully' });
   } catch (error) {
@@ -972,9 +972,9 @@ app.post('/api/admin/settings', verifyAdmin, async (req, res) => {
 });
 
 app.get('/api/admin/coupons', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const snapshot = await getDocs(collection(db, 'coupons'));
+    const snapshot = await getDocs(collection(firestoreDb, 'coupons'));
     const coupons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json({ success: true, coupons });
   } catch (error) {
@@ -983,11 +983,11 @@ app.get('/api/admin/coupons', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/coupons', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { code, discountPercent, expiryDate, maxUsesPerUser } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Coupon code is required' });
-    const docRef = doc(db, 'coupons', code.toUpperCase());
+    const docRef = doc(firestoreDb, 'coupons', code.toUpperCase());
     await setDoc(docRef, { 
       code: code.toUpperCase(), 
       discountPercent: Number(discountPercent), 
@@ -1002,12 +1002,12 @@ app.post('/api/admin/coupons', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/coupons/delete', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Code required' });
     
-    await deleteDoc(doc(db, 'coupons', code));
+    await deleteDoc(doc(firestoreDb, 'coupons', code));
     res.json({ success: true, message: 'Coupon deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -1015,12 +1015,12 @@ app.post('/api/admin/coupons/delete', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/validate-coupon', async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { code, username } = req.body;
     if (!code || !username) return res.status(400).json({ success: false, message: 'Code and username required' });
     
-    const docRef = doc(db, 'coupons', code.toUpperCase());
+    const docRef = doc(firestoreDb, 'coupons', code.toUpperCase());
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) return res.json({ success: false, message: 'Invalid coupon code.' });
     
@@ -1056,7 +1056,7 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || 'loveweb-super-secret-key-12345
 async function getAdminCredentials() {
   if (db) {
     try {
-      const docSnap = await getDoc(doc(db, 'settings', 'admin'));
+      const docSnap = await getDoc(doc(firestoreDb, 'settings', 'admin'));
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.username) ADMIN_USERNAME = data.username;
@@ -1090,7 +1090,7 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 app.post('/api/admin/change-password', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { oldPassword, newPassword } = req.body;
     const creds = await getAdminCredentials();
@@ -1100,7 +1100,7 @@ app.post('/api/admin/change-password', verifyAdmin, async (req, res) => {
     if (!newPassword || newPassword.length < 6) {
       return res.status(400).json({ success: false, message: 'Password must be at least 6 characters.' });
     }
-    await setDoc(doc(db, 'settings', 'admin'), { password: newPassword }, { merge: true });
+    await setDoc(doc(firestoreDb, 'settings', 'admin'), { password: newPassword }, { merge: true });
     ADMIN_PASSWORD = newPassword;
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
@@ -1112,9 +1112,9 @@ app.post('/api/admin/change-password', verifyAdmin, async (req, res) => {
 
 
 app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
-    const ordersRef = collection(db, 'orders');
+    const ordersRef = collection(firestoreDb, 'orders');
     const q = query(ordersRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     const orders = [];
@@ -1129,10 +1129,10 @@ app.get('/api/admin/orders', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/orders/payment', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { id, value } = req.body;
-    const orderRef = doc(db, 'orders', id);
+    const orderRef = doc(firestoreDb, 'orders', id);
     const updates = { advancePaymentStatus: value }
     
     if (value === 'সম্পূর্ণ পরিশোধিত') {
@@ -1159,10 +1159,10 @@ app.post('/api/admin/orders/payment', verifyAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/orders/status', verifyAdmin, async (req, res) => {
-  if (!db) return res.status(500).json({ success: false, message: 'Database not initialized.' });
+  if (!firestoreDb) return res.status(500).json({ success: false, message: 'Database not initialized.' });
   try {
     const { id, value } = req.body;
-    const orderRef = doc(db, 'orders', id);
+    const orderRef = doc(firestoreDb, 'orders', id);
     
     // Auto delete images when order is delivered
     if (value === 'ডেলিভারড' || value === 'Delivered') {
@@ -1224,12 +1224,12 @@ async function checkOrderStatus(args) {
     if (!identifier) return { status: 'error', message: 'No identifier provided.' }
     
     // Check by phone
-    let q = query(collection(db, 'orders'), where('userPhone', '==', identifier));
+    let q = query(collection(firestoreDb, 'orders'), where('userPhone', '==', identifier));
     let snapshot = await getDocs(q);
     
     if (snapshot.empty) {
       // Check by username
-      q = query(collection(db, 'orders'), where('username', '==', identifier));
+      q = query(collection(firestoreDb, 'orders'), where('username', '==', identifier));
       snapshot = await getDocs(q);
     }
     
@@ -1270,7 +1270,7 @@ async function placeNewOrder(args) {
        totalPrice: args.packageType === 'Premium' ? 1000 : (args.packageType === 'Exclusive' ? 700 : 400),
        createdAt: new Date().toISOString()
     }
-    await addDoc(collection(db, 'orders'), newOrder);
+    await addDoc(collection(firestoreDb, 'orders'), newOrder);
     return { status: 'success', orderId: newOrder.orderId, message: 'আপনার অর্ডারটি সফলভাবে প্লেস করা হয়েছে। অ্যাডমিন প্যানেল থেকে খুব শীঘ্রই যোগাযোগ করা হবে।' }
   } catch (error) {
     console.error('Error placing new order:', error);
@@ -1317,7 +1317,7 @@ app.post('/api/chat', async (req, res) => {
 
     let membershipString = "- Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).";
     try {
-        const docRef = doc(db, 'settings', 'membership');
+        const docRef = doc(firestoreDb, 'settings', 'membership');
         const docSnap = await getDoc(docRef);
         if(docSnap.exists() && docSnap.data().tiers) {
             const tiers = docSnap.data().tiers.sort((a,b) => a.threshold - b.threshold);
@@ -1400,7 +1400,7 @@ wss.on("connection", async (clientWs) => {
   try {
     let membershipString = "- Memberships: Elite Member (spent 1000+ tk, gets 4% discount), Premium Member (spent 2000+ tk, gets 8% discount).";
     try {
-        const docRef = doc(db, 'settings', 'membership');
+        const docRef = doc(firestoreDb, 'settings', 'membership');
         const docSnap = await getDoc(docRef);
         if(docSnap.exists() && docSnap.data().tiers) {
             const tiers = docSnap.data().tiers.sort((a,b) => a.threshold - b.threshold);

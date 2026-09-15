@@ -637,11 +637,11 @@
     <a href="../privacy-and-rules/index.html" class="footer-link"><i class="fa-solid fa-shield-halved"></i> গোপনীয়তা ও শর্তাবলী</a>
   </footer>
 
-  <!-- Supabase & Logic -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Firebase & Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/@firebase/firebase-js@2"></script>
   <script>
-    // Firebase-backed Supabase Mock API
-    const _supabase = (() => {
+    // Firebase-backed Firebase API Builder
+    const firebaseDB = (() => {
         async function runQuery(payload) {
             try {
                 const res = await fetch('/api/db-query', {
@@ -701,7 +701,7 @@
     // Google Apps Script Web App URL (Gmail দিয়ে সরাসরি ওটিপি পাঠানোর জন্য)
     const GOOGLE_SCRIPT_WEBAPP_URL = localStorage.getItem('google_script_webapp_url') || "";
 
-    // সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Supabase fallback)
+    // সব পেজে ওটিপি প্রেরণের কেন্দ্রীয় POST ফাংশন (Gmail App Password /api/send-otp, Google Apps Script & Firebase fallback)
     async function sendOtpEmailDirect(email, otp, options = {}) {
       // ১. সার্ভার-সাইড জিমেইল এসএমটিপি ও অ্যাপ পাসওয়ার্ড দিয়ে সরাসরি ইমেইল পাঠানো (/api/send-otp)
       try {
@@ -740,17 +740,17 @@
           console.log('OTP dispatched via Google Apps Script POST to:', email);
           return { success: true };
         } catch (fetchErr) {
-          console.warn('Google Apps Script fetch failed, fallback to Supabase:', fetchErr);
+          console.warn('Google Apps Script fetch failed, fallback to Firebase:', fetchErr);
         }
       }
 
-      // ৩. ফলব্যাক হিসেবে Supabase Edge Function
+      // ৩. ফলব্যাক হিসেবে Firebase Edge Function
       try {
-        await _supabase.functions.invoke('send-otp-email', {
+        await firebaseDB.functions.invoke('send-otp-email', {
           body: { email: email, otp: otp, ...options }
         });
       } catch (sbErr) {
-        console.warn('Supabase edge function error:', sbErr);
+        console.warn('Firebase edge function error:', sbErr);
       }
       return { success: true };
     }
@@ -816,7 +816,7 @@
     async function syncUserWithDatabase() {
       if (!currentUser) return;
       try {
-        let query = _supabase.from('User_Information').select('*');
+        let query = firebaseDB.from('User_Information').select('*');
         if (currentUser.id) {
           query = query.eq('id', currentUser.id);
         } else if (currentUser.email) {
@@ -917,7 +917,7 @@
 
         showNotification('নাম আপডেট করা হচ্ছে...', 'success');
 
-        const { error } = await _supabase
+        const { error } = await firebaseDB
           .from('User_Information')
           .update({ full_name: newName })
           .eq('email', currentUser.email);
@@ -957,7 +957,7 @@
 
         showNotification('ফোন নম্বর আপডেট করা হচ্ছে...', 'success');
 
-        const { error } = await _supabase
+        const { error } = await firebaseDB
           .from('User_Information')
           .update({ phone: newPhone })
           .eq('email', currentUser.email);
@@ -1031,7 +1031,7 @@
         showNotification('ইমেইলের সক্রিয়তা ও নিরাপত্তা যাচাই করা হচ্ছে...', 'success');
 
         // নতুন ইমেইলটি অন্য কারও অ্যাকাউন্টে ব্যবহৃত হয়েছে কি না পরীক্ষা
-        const { data: existingUsers, error: checkErr } = await _supabase
+        const { data: existingUsers, error: checkErr } = await firebaseDB
           .from('User_Information')
           .select('id')
           .eq('email', newEmail);
@@ -1077,8 +1077,8 @@
           otpForNew = Math.floor(100000 + Math.random() * 900000).toString();
         }
 
-        // Supabase Password_Resets টেবিলে সেভ
-        const { error: dbError } = await _supabase
+        // Firebase Password_Resets টেবিলে সেভ
+        const { error: dbError } = await firebaseDB
           .from('Password_Resets')
           .insert([
             { email: currentEmail, otp_code: otpForCurrent, expires_at: expiresAt },
@@ -1206,7 +1206,7 @@
           const newEmail = pendingNewEmail;
 
           // ১. বর্তমান ইমেইলের কোড যাচাই
-          const { data: curCheck, error: curErr } = await _supabase
+          const { data: curCheck, error: curErr } = await firebaseDB
             .from('Password_Resets')
             .select('*')
             .eq('email', currentEmail)
@@ -1225,7 +1225,7 @@
           }
 
           // ২. নতুন ইমেইলের কোড যাচাই
-          const { data: newCheck, error: newErr } = await _supabase
+          const { data: newCheck, error: newErr } = await firebaseDB
             .from('Password_Resets')
             .select('*')
             .eq('email', newEmail)
@@ -1244,7 +1244,7 @@
           }
 
           // ৩. উভয় কোড সঠিক হলে ডাটাবেজে ইমেইল পরিবর্তন
-          let updateQuery = _supabase.from('User_Information').update({ email: newEmail });
+          let updateQuery = firebaseDB.from('User_Information').update({ email: newEmail });
           if (currentUser.id) {
             updateQuery = updateQuery.eq('id', currentUser.id);
           } else {
@@ -1258,7 +1258,7 @@
           }
 
           // ব্যবহৃত ওটিপি কোড ডিলিট করা
-          await _supabase.from('Password_Resets').delete().in('email', [currentEmail, newEmail]);
+          await firebaseDB.from('Password_Resets').delete().in('email', [currentEmail, newEmail]);
 
           // সেশন আপডেট
           currentUser.email = newEmail;
@@ -1435,7 +1435,7 @@
 
         showNotification('নিরাপত্তা তথ্য যাচাই করা হচ্ছে...', 'success');
 
-        const { data: dbUser, error: fetchErr } = await _supabase
+        const { data: dbUser, error: fetchErr } = await firebaseDB
           .from('User_Information')
           .select('*')
           .eq('email', currentUser.email)
@@ -1449,7 +1449,7 @@
           return showNotification('আপনার বর্তমান পাসওয়ার্ডটি সঠিক নয়। অনুগ্রহ করে সঠিক পাসওয়ার্ড দিন।', 'error');
         }
 
-        const { error: updateErr } = await _supabase
+        const { error: updateErr } = await firebaseDB
           .from('User_Information')
           .update({ password: window.LoveWebCrypto.encrypt(newPassword) })
           .eq('email', currentUser.email);
@@ -1526,7 +1526,7 @@
       const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
       // Password_Resets টেবিলে ডিলিট ওটিপি সেভ করা
-      const { error: dbError } = await _supabase
+      const { error: dbError } = await firebaseDB
         .from('Password_Resets')
         .insert([{ email: targetEmail, otp_code: generatedOtp, expires_at: expiresAt }]);
 
@@ -1612,7 +1612,7 @@
         const targetEmail = currentUser.email.toLowerCase().trim();
 
         // ১. ওটিপি যাচাই
-        const { data: otpRecords, error: otpError } = await _supabase
+        const { data: otpRecords, error: otpError } = await firebaseDB
           .from('Password_Resets')
           .select('*')
           .eq('email', targetEmail)
@@ -1634,7 +1634,7 @@
         }
 
         // ২. User_Information ডাটাবেস থেকে স্থায়ীভাবে ব্যবহারকারীর রেকর্ড ডিলিট
-        const { error: deleteError } = await _supabase
+        const { error: deleteError } = await firebaseDB
           .from('User_Information')
           .delete()
           .eq('email', targetEmail);
@@ -1645,7 +1645,7 @@
 
         // ৩. Password_Resets থেকে সমস্ত সংশ্লিষ্ট ওটিপি রেকর্ড মুছে ফেলা
         try {
-          await _supabase
+          await firebaseDB
             .from('Password_Resets')
             .delete()
             .eq('email', targetEmail);
