@@ -34,11 +34,15 @@
     </style>
   <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon.png">
   <link rel="apple-touch-icon" href="/img/favicon.png">
-<title>পাসওয়ার্ড রিসেট - অ্যাকাউন্ট পুনরুদ্ধার</title><meta name="robots" content="noindex, nofollow"></head>
+<title>পাসওয়ার্ড রিসেট - অ্যাকাউন্ট পুনরুদ্ধার</title><meta name="robots" content="noindex, nofollow"><script src="/js/language.js"></script>
+</head>
 <body>
 
     <!-- থিম টগল বাটন -->
     <div class="auth-theme-corner-toggle">
+        <button type="button" class="top-bar-action-btn lang-toggle-btn" onclick="window.toggleAppLanguage()" title="ভাষা পরিবর্তন করুন" style="margin-right: 8px;">
+            <span id="langBtnText">ENG</span>
+        </button>
         <button type="button" class="top-bar-action-btn theme-toggle-btn" onclick="window.toggleLoveWebTheme()" title="থিম পরিবর্তন করুন (লাইট / ডার্ক)">
             <i class="fa-solid fa-sun"></i>
             <span class="theme-text">লাইট মোড</span>
@@ -135,7 +139,7 @@
     </script>
 
     <!-- HTML এর একদম শেষে লিংকযুক্ত করুন -->
-        <script src="../js/auth.js"></script>
+        <script type="module" src="../js/auth.js"></script>
     <script src="../js/messenger.js"></script>
 
 

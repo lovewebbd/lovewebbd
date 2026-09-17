@@ -5,15 +5,16 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["css/**", "js/**", "img/**", "sign-up-google/**", "sign-in/**", "dashboard/**", "**/*.html", "uploads/**", "404/**"]
+        "includeFiles": ["firebase-applet-config.json", "firebase_applet_config.xml"]
       }
     }
   ],
-  "routes": [
-    { "handle": "filesystem" },
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
-    }
-  ]
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/server.js" },
+    { "source": "/home", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/404/index.html" }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }

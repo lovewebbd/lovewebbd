@@ -545,7 +545,7 @@ p.desc {
         width: 100%;
         position: relative;
         left: 0 !important;
-        padding: 35px 16px 30px 16px;
+        padding: 30px 8px 30px 8px;
         overflow-y: visible !important;
         height: auto !important;
     }
@@ -3807,4 +3807,27 @@ img,
 }
 .premium-tag {
   border: none !important;
+}
+@media (min-width: 769px) {
+    .drawer-lang-box {
+        display: none !important;
+    }
+}
+
+/* Hide top bar lang button on mobile */
+@media (max-width: 768px) {
+    .hide-on-mobile {
+        display: none !important;
+    }
+}
+
+.top-bar-action-btn.lang-toggle-btn {
+    min-width: 65px;
+    padding: 0 12px;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
