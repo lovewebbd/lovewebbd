@@ -7,6 +7,10 @@
       "config": {
         "includeFiles": ["firebase-applet-config.json", "firebase_applet_config.xml"]
       }
+    },
+    {
+      "src": "**",
+      "use": "@vercel/static"
     }
   ],
   "rewrites": [
