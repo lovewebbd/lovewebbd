@@ -171,33 +171,7 @@ let notifTimeout;
 function showNotification(msg, type = 'error') {
     if (!notification) return;
     const msgElement = notifMessage || notification.querySelector('span');
-    
-    let finalMsg = msg;
-    if (typeof window.getAppLanguage === 'function' && window.getAppLanguage() === 'en' && window.enTranslations) {
-       // Exact match first
-       if (window.enTranslations[msg]) {
-           finalMsg = window.enTranslations[msg];
-       } else {
-           // Brute force substring match for concatenated strings or strings with slight punctuation differences
-           for (const [bn, en] of Object.entries(window.enTranslations)) {
-               if (finalMsg.includes(bn)) {
-                   finalMsg = finalMsg.replace(bn, en);
-               }
-           }
-           // Handle common dynamic patterns specifically
-           if (finalMsg.includes('১১ ডিজিটের সঠিক ফোন নম্বর প্রদান করুন (01XXXXXXXXX)।')) {
-               finalMsg = "Please enter a valid 11-digit phone number.";
-           }
-           if (finalMsg.includes('ইউজারনেম অন্তত ৬ অক্ষরের হওয়া আবশ্যক।')) {
-               finalMsg = "Username must be at least 6 characters long.";
-           }
-           if (finalMsg.includes('পুনরায় কোড পাঠাতে আরও')) {
-               finalMsg = finalMsg.replace('পুনরায় কোড পাঠাতে আরও', 'Please wait').replace('মিনিট অপেক্ষা করুন।', 'minutes to resend the code.');
-           }
-       }
-    }
-    
-    if (msgElement) msgElement.innerText = finalMsg;
+    if (msgElement) msgElement.innerText = msg;
     
     notification.className = `notification-toast show ${type}`;
     
@@ -311,7 +285,7 @@ if (usernameInput) {
         if (val.length === 0) return;
 
         if (val.length < 6) {
-            showNotification(window.getAppLanguage() === 'en' ? `Username must be at least 6 characters (needs ${6 - val.length} more)` : `ইউজারনেম অন্তত ৬ অক্ষরের হতে হবে (আরও ${6 - val.length} টি অক্ষর প্রয়োজন)`, 'error');
+            showNotification(`ইউজারনেম অন্তত ৬ অক্ষরের হতে হবে (আরও ${6 - val.length} টি অক্ষর প্রয়োজন)`, 'error');
         } else {
             showNotification('ইউজারনেমের দৈর্ঘ্য সঠিক রয়েছে।', 'success');
         }
@@ -329,7 +303,7 @@ if (phoneInput) {
         if (!val.startsWith('01')) {
             showNotification('ফোন নম্বরটি অবশ্যই 01 দিয়ে শুরু হতে হবে।', 'error');
         } else if (val.length < 11) {
-            showNotification(window.getAppLanguage() === 'en' ? `Need ${11 - val.length} more digits to complete 11 digits` : `১১ ডিজিট পূর্ণ হতে আরও ${11 - val.length} টি সংখ্যা প্রয়োজন`, 'error');
+            showNotification(`১১ ডিজিট পূর্ণ হতে আরও ${11 - val.length} টি সংখ্যা প্রয়োজন`, 'error');
         } else if (val.length === 11) {
             showNotification('ফোন নম্বরটি সঠিকভাবে প্রদান করা হয়েছে।', 'success');
         }
@@ -616,7 +590,7 @@ if (btnGenerateUsername) {
         if (usernameInput) usernameInput.value = generatedUsername;
         const usernameErrEl = document.getElementById('usernameError');
         if (usernameErrEl) usernameErrEl.style.display = 'none';
-        showNotification(window.getAppLanguage() === 'en' ? `New username generated: ${generatedUsername}` : `নতুন ইউজারনেম তৈরি হয়েছে: ${generatedUsername}`, 'success');
+        showNotification(`নতুন ইউজারনেম তৈরি হয়েছে: ${generatedUsername}`, 'success');
     });
 }
 
@@ -712,7 +686,7 @@ if (signUpForm) {
                 .select();
 
             if (fallbackInsert.error) {
-                showNotification(window.getAppLanguage() === "en" ? "Registration failed: " + fallbackInsert.error.message : "নিবন্ধন ব্যর্থ হয়েছে: " + fallbackInsert.error.message, "error");
+                showNotification("নিবন্ধন ব্যর্থ হয়েছে: " + fallbackInsert.error.message, "error");
                 return;
             }
             const newUser = fallbackInsert.data[0];
@@ -841,7 +815,7 @@ if (resetRequestForm) {
             .insert([{ email: emailValue, otp_code: generatedOTP, expires_at: expiresAt }]);
 
         if (dbError) {
-            return showNotification(window.getAppLanguage() === "en" ? "Failed to send code: " + dbError.message : "কোড পাঠাতে সমস্যা হয়েছে: " + dbError.message, "error");
+            return showNotification('কোড পাঠাতে সমস্যা হয়েছে: ' + dbError.message, 'error');
         }
 
         // Google Apps Script / Firebase-এ POST মেথডে জিমেইলে ওটিপি ডেসপ্যাচ
@@ -1107,7 +1081,7 @@ if (window.location.pathname.includes('verification.html')) {
                 const timeDiffMinutes = (now - parseInt(lastSentTime)) / (1000 * 60);
                 if (timeDiffMinutes < 5) {
                     const waitTime = Math.ceil(5 - timeDiffMinutes);
-                    return showNotification(window.getAppLanguage() === 'en' ? `Please wait ${waitTime} minutes to resend the code.` : `পুনরায় কোড পাঠাতে আরও ${waitTime} মিনিট অপেক্ষা করুন।`, 'error');
+                    return showNotification(`পুনরায় কোড পাঠাতে আরও ${waitTime} মিনিট অপেক্ষা করুন।`, 'error');
                 }
             }
 
@@ -1119,7 +1093,7 @@ if (window.location.pathname.includes('verification.html')) {
                 .insert([{ email: emailParam, otp_code: generatedOTP, expires_at: expiresAt }]);
 
             if (dbError) {
-                return showNotification(window.getAppLanguage() === "en" ? "Failed to generate new code: " + dbError.message : "নতুন কোড তৈরি করতে সমস্যা হয়েছে: " + dbError.message, "error");
+                return showNotification('নতুন কোড তৈরি করতে সমস্যা হয়েছে: ' + dbError.message, 'error');
             }
 
             // Google Apps Script / Firebase-এ POST মেথডে পুনরায় ইমেইল প্রেরণ
@@ -1219,7 +1193,7 @@ if (window.location.pathname.includes('new-password.html')) {
                 .eq('email', emailParam);
 
             if (error) {
-                showNotification(window.getAppLanguage() === "en" ? "Failed to update password: " + error.message : "পাসওয়ার্ড আপডেট করতে ব্যর্থ: " + error.message, "error");
+                showNotification('পাসওয়ার্ড আপডেট করতে ব্যর্থ: ' + error.message, 'error');
             } else {
                 // ব্যবহৃত ওটিপি কোড ডিলিট করে রি-প্লে আক্রমণ রোধ
                 await firebaseDB.from('Password_Resets').delete().eq('email', emailParam);
@@ -1320,7 +1294,7 @@ async function handleGoogleSignIn() {
         const syncData = await syncRes.json();
         
         if (!syncData.success) {
-            showNotification(window.getAppLanguage() === "en" ? "Login failed: " + syncData.message : "লগইন ব্যর্থ হয়েছে: " + syncData.message, "error");
+            showNotification('লগইন ব্যর্থ হয়েছে: ' + syncData.message, 'error');
             return;
         }
         

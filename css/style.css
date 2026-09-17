@@ -3808,35 +3808,3 @@ img,
 .premium-tag {
   border: none !important;
 }
-@media (min-width: 769px) {
-    .drawer-lang-box {
-        display: none !important;
-    }
-}
-
-/* Hide top bar lang button on mobile */
-@media (max-width: 768px) {
-    .hide-on-mobile {
-        display: none !important;
-    }
-}
-
-.top-bar-action-btn.lang-toggle-btn {
-    min-width: 65px;
-    padding: 0 12px;
-    font-weight: 600;
-    font-size: 14px;
-    letter-spacing: 0.5px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.auth-theme-corner-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.auth-theme-corner-toggle .top-bar-action-btn {
-    margin-right: 0 !important; /* override inline styles */
-}

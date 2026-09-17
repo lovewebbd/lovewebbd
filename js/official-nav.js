@@ -105,9 +105,6 @@
 
         <div class="top-bar-right">
           <!-- থিম চেঞ্জার বাটন (লাইট / ডার্ক) -->
-          <button class="top-bar-action-btn lang-toggle-btn hide-on-mobile" type="button" title="ভাষা পরিবর্তন করুন" >
-            <span id="langBtnText">ENG</span>
-          </button>
           <button class="top-bar-action-btn theme-toggle-btn" id="topBarThemeToggle" type="button" title="থিম পরিবর্তন করুন (লাইট / ডার্ক)">
             <i class="${themeIcon}"></i>
             <span class="theme-text-pill theme-text">${themeText}</span>
@@ -181,27 +178,6 @@
               <span class="theme-track-icon track-moon"><i class="fa-solid fa-moon"></i></span>
               <span class="theme-switch-thumb">
                 <i class="fa-solid ${currentTheme === 'dark' ? 'fa-moon' : 'fa-sun'}" id="drawerThumbIcon"></i>
-              </span>
-            </span>
-          </label>
-        </div>
-
-        <!-- ভাষা পরিবর্তন সেকশন -->
-        <div class="drawer-theme-box" id="drawerLangBox">
-          <div class="drawer-theme-label">
-            <i class="fa-solid fa-language" id="drawerLangIcon"></i>
-            <div class="drawer-theme-text-col">
-              <span class="drawer-theme-title" style="margin-bottom: 2px;">ভাষা / Language</span>
-              <span class="drawer-theme-sub" id="drawerLangStatusText">${typeof window.getAppLanguage === 'function' && window.getAppLanguage() === 'en' ? 'English' : 'বাংলা'}</span>
-            </div>
-          </div>
-          <label class="theme-switch-slider-wrap" for="drawerLangSwitch" title="ক্লিক করে ভাষা পরিবর্তন করুন">
-            <input type="checkbox" id="drawerLangSwitch" class="theme-switch-input" ${typeof window.getAppLanguage === 'function' && window.getAppLanguage() === 'en' ? 'checked' : ''} aria-label="ভাষা পরিবর্তন">
-            <span class="theme-switch-track" style="background: var(--lw-accent);">
-              <span class="theme-track-icon track-sun" style="font-size: 10px; font-weight: bold; color: white;">BN</span>
-              <span class="theme-track-icon track-moon" style="font-size: 10px; font-weight: bold; color: white;">EN</span>
-              <span class="theme-switch-thumb">
-                <span id="drawerLangThumbText" style="font-size: 10px; font-weight: bold; color: var(--lw-accent);">${typeof window.getAppLanguage === 'function' && window.getAppLanguage() === 'en' ? 'EN' : 'BN'}</span>
               </span>
             </span>
           </label>
@@ -419,22 +395,6 @@
     const backdrop = document.getElementById('sideDrawerBackdrop');
     const drawer = document.getElementById('officialSideDrawer');
     const topBarThemeToggle = document.getElementById('topBarThemeToggle');
-    
-    const drawerLangSwitch = document.getElementById('drawerLangSwitch');
-    if (drawerLangSwitch) {
-      drawerLangSwitch.addEventListener('change', (e) => {
-        if (typeof window.toggleAppLanguage === 'function') {
-           window.toggleAppLanguage();
-           const isEn = window.getAppLanguage() === 'en';
-           drawerLangSwitch.checked = isEn;
-           const thumb = document.getElementById('drawerLangThumbText');
-           const status = document.getElementById('drawerLangStatusText');
-           if(thumb) thumb.innerText = isEn ? 'EN' : 'BN';
-           if(status) status.innerText = isEn ? 'English' : 'বাংলা';
-        }
-      });
-    }
-
     const drawerThemeSwitch = document.getElementById('drawerThemeSwitch');
     const drawerThemeStatusText = document.getElementById('drawerThemeStatusText');
     const drawerThumbIcon = document.getElementById('drawerThumbIcon');
@@ -477,17 +437,6 @@
       });
     }
 
-    const topBarLangBtn = document.querySelector('.lang-toggle-btn');
-    if (topBarLangBtn) {
-      topBarLangBtn.addEventListener('click', (e) => {
-         e.preventDefault();
-         if (typeof window.toggleAppLanguage === 'function') {
-            window.toggleAppLanguage();
-            window.location.reload(); // Reload to ensure perfect translation
-         }
-      });
-    }
-    
     // টপ বার থিম টগল বাটন ক্লিক হ্যান্ডলার
     if (topBarThemeToggle) {
       topBarThemeToggle.addEventListener('click', () => {
@@ -549,7 +498,7 @@
       sessionStorage.clear();
       // ফ্রন্টএন্ডে স্মুথ নোটিফিকেশন প্রদান যদি ফাংশন থাকে
       if (typeof showNotification === 'function') {
-        showNotification(window.getAppLanguage && window.getAppLanguage() === 'en' ? 'Logged out successfully.' : 'সফলভাবে লগআউট করা হয়েছে।', 'success');
+        showNotification('সফলভাবে লগআউট করা হয়েছে।', 'success');
       }
       setTimeout(() => {
         window.location.href = `${rootPrefix}sign-in`;
