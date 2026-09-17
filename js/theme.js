@@ -58,7 +58,7 @@
 
     if (notify && typeof window.showNotification === 'function') {
       window.showNotification(
-        theme === 'light' ? '☀️ রোমান্টিক লাইট থিম সক্রিয় করা হয়েছে' : '🌙 ডার্ক প্রিমিয়াম থিম সক্রিয় করা হয়েছে',
+        typeof window.getAppLanguage === 'function' && window.getAppLanguage() === 'en' ? (theme === 'light' ? '☀️ Romantic Light Theme Activated' : '🌙 Premium Dark Theme Activated') : (theme === 'light' ? '☀️ রোমান্টিক লাইট থিম সক্রিয় করা হয়েছে' : '🌙 ডার্ক প্রিমিয়াম থিম সক্রিয় করা হয়েছে'),
         'success'
       );
     }
